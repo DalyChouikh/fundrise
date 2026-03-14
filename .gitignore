@@ -41,3 +41,6 @@ frontend/.vite/
 *.swo
 *~
 .DS_Store
+
+CLAUDE.md
+SKILL.md
