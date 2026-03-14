@@ -1,3 +1,24 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  :root {
+    --sidebar-width: 260px;
+    --topbar-height: 64px;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-brand-bg text-brand-text font-sans;
+  }
+
+  *:focus-visible {
+    @apply outline-2 outline-offset-2 outline-brand-blue;
+  }
+}
