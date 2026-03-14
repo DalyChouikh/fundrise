@@ -1,0 +1,96 @@
+from django.db import models
+
+from apps.core.models import TimeStampedModel
+
+
+class Startup(TimeStampedModel):
+    class Status(models.TextChoices):
+        PENDING_APPROVAL = "pending_approval", "Pending Approval"
+        ACTIVE = "active", "Active"
+        SUSPENDED = "suspended", "Suspended"
+
+    name = models.CharField(max_length=255)
+    description = models.TextField()
+    industry = models.CharField(max_length=100)
+    location = models.CharField(max_length=255)
+    founding_date = models.DateField()
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.PENDING_APPROVAL,
+    )
+    pitch_deck_url = models.URLField(max_length=500, blank=True, default="")
+    logo_url = models.URLField(max_length=500, blank=True, default="")
+    website = models.URLField(max_length=500, blank=True, default="")
+    created_by = models.ForeignKey(
+        "users.UserProfile",
+        on_delete=models.CASCADE,
+        related_name="founded_startups",
+    )
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return self.name
+
+
+class StartupMember(models.Model):
+    class Role(models.TextChoices):
+        FOUNDER = "founder", "Founder"
+        TEAM_MEMBER = "team_member", "Team Member"
+
+    startup = models.ForeignKey(
+        Startup,
+        on_delete=models.CASCADE,
+        related_name="members",
+    )
+    user = models.ForeignKey(
+        "users.UserProfile",
+        on_delete=models.CASCADE,
+        related_name="startup_memberships",
+    )
+    role = models.CharField(
+        max_length=20,
+        choices=Role.choices,
+        default=Role.TEAM_MEMBER,
+    )
+    joined_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["startup", "user"],
+                name="unique_startup_member",
+            ),
+        ]
+        ordering = ["joined_at"]
+
+    def __str__(self):
+        return f"{self.user} - {self.startup} ({self.role})"
+
+
+class StartupFollow(models.Model):
+    startup = models.ForeignKey(
+        Startup,
+        on_delete=models.CASCADE,
+        related_name="followers",
+    )
+    user = models.ForeignKey(
+        "users.UserProfile",
+        on_delete=models.CASCADE,
+        related_name="followed_startups",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["startup", "user"],
+                name="unique_startup_follow",
+            ),
+        ]
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.user} follows {self.startup}"

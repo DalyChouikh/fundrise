@@ -21,6 +21,13 @@ INSTALLED_APPS = [
     "channels",
     # Local apps
     "apps.core",
+    "apps.users",
+    "apps.startups",
+    "apps.campaigns",
+    "apps.investments",
+    "apps.kanban",
+    "apps.chat",
+    "apps.notifications",
 ]
 
 MIDDLEWARE = [
