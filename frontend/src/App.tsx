@@ -6,6 +6,10 @@ import { LoginPage } from "@/pages/auth/LoginPage";
 import { SignupPage } from "@/pages/auth/SignupPage";
 import { RoleSelectionPage } from "@/pages/auth/RoleSelectionPage";
 import { DashboardPage } from "@/pages/dashboard/DashboardPage";
+import { StartupsPage } from "@/pages/startups/StartupsPage";
+import { StartupDetailPage } from "@/pages/startups/StartupDetailPage";
+import { CampaignsPage } from "@/pages/campaigns/CampaignsPage";
+import { CampaignDetailPage } from "@/pages/campaigns/CampaignDetailPage";
 import { PlaceholderPage } from "@/pages/PlaceholderPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 
@@ -26,42 +30,10 @@ export default function App() {
             />
             <Route element={<AppLayout />}>
               <Route path="/dashboard" element={<DashboardPage />} />
-              <Route
-                path="/startups"
-                element={
-                  <PlaceholderPage
-                    title="Startups"
-                    description="Browse and manage startups on the platform."
-                  />
-                }
-              />
-              <Route
-                path="/startups/:id"
-                element={
-                  <PlaceholderPage
-                    title="Startup Details"
-                    description="Detailed startup profile and metrics."
-                  />
-                }
-              />
-              <Route
-                path="/campaigns"
-                element={
-                  <PlaceholderPage
-                    title="Campaigns"
-                    description="Explore active fundraising campaigns."
-                  />
-                }
-              />
-              <Route
-                path="/campaigns/:id"
-                element={
-                  <PlaceholderPage
-                    title="Campaign Details"
-                    description="Campaign details, milestones, and investment options."
-                  />
-                }
-              />
+              <Route path="/startups" element={<StartupsPage />} />
+              <Route path="/startups/:id" element={<StartupDetailPage />} />
+              <Route path="/campaigns" element={<CampaignsPage />} />
+              <Route path="/campaigns/:id" element={<CampaignDetailPage />} />
               <Route
                 path="/investments"
                 element={
