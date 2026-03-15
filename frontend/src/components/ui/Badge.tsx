@@ -13,6 +13,10 @@ const statusConfig: Record<string, { bg: string; text: string; label: string }> 
   rejected: { bg: "bg-red-50", text: "text-red-700", label: "Rejected" },
   cancelled: { bg: "bg-red-50", text: "text-red-700", label: "Cancelled" },
   suspended: { bg: "bg-red-50", text: "text-red-700", label: "Suspended" },
+  founder: { bg: "bg-brand-accent/10", text: "text-brand-accent", label: "Founder" },
+  team_member: { bg: "bg-blue-50", text: "text-brand-blue", label: "Team Member" },
+  investor: { bg: "bg-violet-50", text: "text-violet-700", label: "Investor" },
+  admin: { bg: "bg-gray-900/5", text: "text-gray-800", label: "Admin" },
 };
 
 export function Badge({ status, className = "" }: BadgeProps) {

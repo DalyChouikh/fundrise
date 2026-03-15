@@ -14,6 +14,8 @@ import { InvestmentsPage } from "@/pages/investments/InvestmentsPage";
 import { UsersPage } from "@/pages/admin/UsersPage";
 import { KanbanBoardPage } from "@/pages/kanban/KanbanBoardPage";
 import { KanbanStartupSelector } from "@/pages/kanban/KanbanStartupSelector";
+import { NotificationsPage } from "@/pages/notifications/NotificationsPage";
+import { SettingsPage } from "@/pages/settings/SettingsPage";
 import { PlaceholderPage } from "@/pages/PlaceholderPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 
@@ -59,22 +61,9 @@ export default function App() {
               />
               <Route
                 path="/notifications"
-                element={
-                  <PlaceholderPage
-                    title="Notifications"
-                    description="Stay updated on your campaigns, investments, and activity."
-                  />
-                }
+                element={<NotificationsPage />}
               />
-              <Route
-                path="/settings"
-                element={
-                  <PlaceholderPage
-                    title="Settings"
-                    description="Manage your profile, preferences, and account settings."
-                  />
-                }
-              />
+              <Route path="/settings" element={<SettingsPage />} />
             </Route>
           </Route>
 

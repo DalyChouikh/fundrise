@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Menu, Bell, Search, LogOut, Settings, User } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { api } from "@/lib/api";
 import { Avatar } from "@/components/ui/Avatar";
 
 const pageTitles: Record<string, string> = {
@@ -25,6 +26,7 @@ export function Topbar({ onMenuClick }: TopbarProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const matchedKey = Object.keys(pageTitles).find((key) =>
@@ -40,6 +42,20 @@ export function Topbar({ onMenuClick }: TopbarProps) {
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    const fetchUnread = async () => {
+      try {
+        const data = await api.get<{ count: number }>("/notifications/unread-count/");
+        setUnreadCount(data.count);
+      } catch {
+        // ignore
+      }
+    };
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleSignOut = async () => {
@@ -74,9 +90,16 @@ export function Topbar({ onMenuClick }: TopbarProps) {
         </div>
 
         {/* Notifications */}
-        <button className="relative p-2.5 rounded-xl hover:bg-brand-bg text-brand-muted hover:text-brand-text transition-colors">
+        <button
+          onClick={() => navigate("/notifications")}
+          className="relative p-2.5 rounded-xl hover:bg-brand-bg text-brand-muted hover:text-brand-text transition-colors"
+        >
           <Bell className="w-[18px] h-[18px]" />
-          <span className="absolute top-2 right-2 w-2 h-2 bg-brand-accent rounded-full" />
+          {unreadCount > 0 && (
+            <span className="absolute top-1.5 right-1.5 min-w-[16px] h-4 flex items-center justify-center px-1 bg-brand-accent text-white text-[10px] font-bold rounded-full">
+              {unreadCount > 99 ? "99+" : unreadCount}
+            </span>
+          )}
         </button>
 
         {/* User avatar + dropdown */}
