@@ -87,6 +87,22 @@ class KanbanTaskViewSet(viewsets.ModelViewSet):
             order=(max_order or 0) + 1,
         )
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        # Return full task data with KanbanTaskSerializer
+        task = (
+            KanbanTask.objects.filter(pk=serializer.instance.pk)
+            .select_related("assignee", "created_by")
+            .annotate(comments_count=Count("comments"))
+            .first()
+        )
+        return Response(
+            KanbanTaskSerializer(task).data,
+            status=status.HTTP_201_CREATED,
+        )
+
     @action(detail=True, methods=["post"], url_path="move")
     def move(self, request, startup_pk=None, pk=None):
         task = self.get_object()
@@ -131,4 +147,18 @@ class TaskCommentListCreateView(generics.ListCreateAPIView):
         serializer.save(
             author=self.request.user,
             task_id=self.kwargs["task_pk"],
+        )
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        comment = (
+            TaskComment.objects.filter(pk=serializer.instance.pk)
+            .select_related("author")
+            .first()
+        )
+        return Response(
+            TaskCommentSerializer(comment).data,
+            status=status.HTTP_201_CREATED,
         )
