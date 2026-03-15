@@ -4,13 +4,15 @@ from rest_framework import generics, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from apps.campaigns.models import Campaign, CampaignMilestone, CampaignUpdate
+from apps.campaigns.models import Campaign, CampaignComment, CampaignMilestone, CampaignUpdate
 from apps.campaigns.permissions import (
     IsCampaignStartupFounderOrAdmin,
     IsCampaignStartupMemberFromURL,
     IsCampaignStartupMemberOrAdmin,
 )
 from apps.campaigns.serializers import (
+    CampaignCommentCreateSerializer,
+    CampaignCommentSerializer,
     CampaignCreateSerializer,
     CampaignDetailSerializer,
     CampaignEditSerializer,
@@ -177,3 +179,47 @@ class CampaignMilestoneListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         campaign = get_object_or_404(Campaign, pk=self.kwargs["campaign_pk"])
         serializer.save(campaign=campaign)
+
+
+class CampaignCommentListCreateView(generics.ListCreateAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_serializer_class(self):
+        if self.request.method == "POST":
+            return CampaignCommentCreateSerializer
+        return CampaignCommentSerializer
+
+    def get_queryset(self):
+        return (
+            CampaignComment.objects.filter(
+                campaign_id=self.kwargs["campaign_pk"],
+                parent__isnull=True,
+            )
+            .select_related("author")
+            .prefetch_related("replies__author")
+            .order_by("-created_at")
+        )
+
+    def get_serializer_context(self):
+        ctx = super().get_serializer_context()
+        ctx["campaign_id"] = int(self.kwargs["campaign_pk"])
+        return ctx
+
+    def perform_create(self, serializer):
+        campaign = get_object_or_404(Campaign, pk=self.kwargs["campaign_pk"])
+        serializer.save(campaign=campaign, author=self.request.user)
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        comment = (
+            CampaignComment.objects.filter(pk=serializer.instance.pk)
+            .select_related("author")
+            .prefetch_related("replies__author")
+            .first()
+        )
+        return Response(
+            CampaignCommentSerializer(comment).data,
+            status=status.HTTP_201_CREATED,
+        )

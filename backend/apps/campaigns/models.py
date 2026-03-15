@@ -82,3 +82,30 @@ class CampaignMilestone(TimeStampedModel):
     def __str__(self):
         status = "Done" if self.is_completed else "Pending"
         return f"{self.title} [{status}]"
+
+
+class CampaignComment(TimeStampedModel):
+    campaign = models.ForeignKey(
+        Campaign,
+        on_delete=models.CASCADE,
+        related_name="comments",
+    )
+    author = models.ForeignKey(
+        "users.UserProfile",
+        on_delete=models.CASCADE,
+        related_name="campaign_comments",
+    )
+    parent = models.ForeignKey(
+        "self",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="replies",
+    )
+    content = models.TextField()
+
+    class Meta:
+        ordering = ["created_at"]
+
+    def __str__(self):
+        return f"Comment by {self.author} on {self.campaign.title}"

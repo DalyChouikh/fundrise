@@ -234,3 +234,17 @@ export interface ChatMessagePage {
   previous: string | null;
   results: ChatMessageDetail[];
 }
+
+// Campaign Discussion types
+export interface CampaignComment {
+  id: number;
+  campaign: number;
+  author: string;
+  author_detail: UserProfileMinimal;
+  parent: number | null;
+  content: string;
+  replies: CampaignComment[];
+  reply_count: number;
+  created_at: string;
+  updated_at: string;
+}

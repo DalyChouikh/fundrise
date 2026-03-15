@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from apps.campaigns.models import Campaign, CampaignMilestone, CampaignUpdate
+from apps.campaigns.models import Campaign, CampaignComment, CampaignMilestone, CampaignUpdate
 from apps.startups.models import Startup, StartupMember
 from apps.users.serializers import UserProfileMinimalSerializer
 
@@ -106,3 +106,48 @@ class CampaignMilestoneCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = CampaignMilestone
         fields = ["title", "description", "target_date"]
+
+
+class CampaignCommentSerializer(serializers.ModelSerializer):
+    author_detail = UserProfileMinimalSerializer(source="author", read_only=True)
+    replies = serializers.SerializerMethodField()
+    reply_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CampaignComment
+        fields = [
+            "id", "campaign", "author", "author_detail",
+            "parent", "content", "replies", "reply_count",
+            "created_at", "updated_at",
+        ]
+        read_only_fields = [
+            "id", "campaign", "author", "author_detail",
+            "replies", "reply_count", "created_at", "updated_at",
+        ]
+
+    def get_replies(self, obj):
+        # Only include replies for top-level comments
+        if obj.parent is not None:
+            return []
+        replies = obj.replies.select_related("author").order_by("created_at")
+        return CampaignCommentSerializer(replies, many=True).data
+
+    def get_reply_count(self, obj):
+        return obj.replies.count()
+
+
+class CampaignCommentCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CampaignComment
+        fields = ["content", "parent"]
+
+    def validate_parent(self, value):
+        if value and value.campaign_id != self.context["campaign_id"]:
+            raise serializers.ValidationError(
+                "Parent comment must belong to the same campaign."
+            )
+        if value and value.parent is not None:
+            raise serializers.ValidationError(
+                "Replies can only be one level deep."
+            )
+        return value

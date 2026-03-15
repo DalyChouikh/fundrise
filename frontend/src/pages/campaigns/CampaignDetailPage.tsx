@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -12,6 +12,9 @@ import {
   Building2,
   X,
   XCircle,
+  MessageCircle,
+  Reply,
+  Send,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
@@ -20,7 +23,7 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Avatar } from "@/components/ui/Avatar";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import type { CampaignDetail, CampaignUpdate, CampaignMilestone, Investment } from "@/types";
+import type { CampaignDetail, CampaignUpdate, CampaignMilestone, Investment, CampaignComment } from "@/types";
 
 export function CampaignDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -34,6 +37,7 @@ export function CampaignDetailPage() {
   const [showInvestModal, setShowInvestModal] = useState(false);
   const [investAmount, setInvestAmount] = useState("");
   const [investing, setInvesting] = useState(false);
+  const [comments, setComments] = useState<CampaignComment[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -47,10 +51,14 @@ export function CampaignDetailPage() {
         setUpdates(u);
         setMilestones(m);
 
-        // Fetch investments visible to this user
+        // Fetch comments and investments
         try {
-          const invs = await api.get<Investment[]>("/investments/");
+          const [invs, cmts] = await Promise.all([
+            api.get<Investment[]>("/investments/"),
+            api.get<CampaignComment[]>(`/campaigns/${id}/comments/`),
+          ]);
           setInvestments(invs.filter((inv) => inv.campaign === c.id));
+          setComments(cmts);
         } catch {
           // ignore
         }
@@ -334,6 +342,13 @@ export function CampaignDetailPage() {
               </div>
             )}
           </Card>
+
+          {/* Discussion */}
+          <DiscussionSection
+            campaignId={campaign.id}
+            comments={comments}
+            setComments={setComments}
+          />
         </div>
 
         {/* Sidebar */}
@@ -574,4 +589,255 @@ export function CampaignDetailPage() {
       )}
     </div>
   );
+}
+
+function DiscussionSection({
+  campaignId,
+  comments,
+  setComments,
+}: {
+  campaignId: number;
+  comments: CampaignComment[];
+  setComments: React.Dispatch<React.SetStateAction<CampaignComment[]>>;
+}) {
+  const { profile } = useAuth();
+  const [newComment, setNewComment] = useState("");
+  const [posting, setPosting] = useState(false);
+
+  const handlePost = async () => {
+    const text = newComment.trim();
+    if (!text) return;
+    setPosting(true);
+    try {
+      const comment = await api.post<CampaignComment>(
+        `/campaigns/${campaignId}/comments/`,
+        { content: text }
+      );
+      setComments((prev) => [comment, ...prev]);
+      setNewComment("");
+    } catch {
+      // ignore
+    }
+    setPosting(false);
+  };
+
+  const handleReplyAdded = (parentId: number, reply: CampaignComment) => {
+    setComments((prev) =>
+      prev.map((c) =>
+        c.id === parentId
+          ? { ...c, replies: [...c.replies, reply], reply_count: c.reply_count + 1 }
+          : c
+      )
+    );
+  };
+
+  return (
+    <Card>
+      <div className="flex items-center gap-2 mb-4">
+        <MessageCircle className="w-5 h-5 text-brand-accent" />
+        <h3 className="text-base font-semibold text-brand-text">
+          Discussion ({comments.length})
+        </h3>
+      </div>
+
+      {/* New comment input */}
+      {profile && (
+        <div className="flex gap-3 mb-6">
+          <Avatar
+            src={profile.avatar_url || undefined}
+            name={profile.full_name || "?"}
+            size="sm"
+            className="flex-shrink-0 mt-1"
+          />
+          <div className="flex-1">
+            <textarea
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              placeholder="Ask a question or share your thoughts..."
+              rows={2}
+              className="w-full bg-brand-bg border border-brand-border/50 rounded-xl px-4 py-2.5 text-sm text-brand-text placeholder:text-brand-muted/50 focus:outline-none focus:ring-2 focus:ring-brand-accent/30 focus:border-brand-accent/50 transition-all resize-none"
+            />
+            <div className="flex justify-end mt-2">
+              <Button
+                size="sm"
+                onClick={handlePost}
+                disabled={!newComment.trim() || posting}
+              >
+                <Send className="w-3.5 h-3.5 mr-1.5" />
+                {posting ? "Posting..." : "Post"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Comment list */}
+      {comments.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-8 text-center">
+          <div className="w-12 h-12 rounded-xl bg-brand-bg flex items-center justify-center mb-3">
+            <MessageCircle className="w-5 h-5 text-brand-muted" />
+          </div>
+          <p className="text-sm text-brand-muted">
+            No comments yet. Be the first to start a discussion!
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {comments.map((comment) => (
+            <CommentThread
+              key={comment.id}
+              comment={comment}
+              campaignId={campaignId}
+              onReplyAdded={handleReplyAdded}
+            />
+          ))}
+        </div>
+      )}
+    </Card>
+  );
+}
+
+function CommentThread({
+  comment,
+  campaignId,
+  onReplyAdded,
+}: {
+  comment: CampaignComment;
+  campaignId: number;
+  onReplyAdded: (parentId: number, reply: CampaignComment) => void;
+}) {
+  const { profile } = useAuth();
+  const [showReply, setShowReply] = useState(false);
+  const [replyText, setReplyText] = useState("");
+  const [posting, setPosting] = useState(false);
+  const replyInputRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (showReply) {
+      replyInputRef.current?.focus();
+    }
+  }, [showReply]);
+
+  const handleReply = async () => {
+    const text = replyText.trim();
+    if (!text) return;
+    setPosting(true);
+    try {
+      const reply = await api.post<CampaignComment>(
+        `/campaigns/${campaignId}/comments/`,
+        { content: text, parent: comment.id }
+      );
+      onReplyAdded(comment.id, reply);
+      setReplyText("");
+      setShowReply(false);
+    } catch {
+      // ignore
+    }
+    setPosting(false);
+  };
+
+  return (
+    <div className="p-4 rounded-xl border border-brand-border/30 bg-brand-bg/20">
+      {/* Main comment */}
+      <div className="flex gap-3">
+        <Avatar
+          src={comment.author_detail.avatar_url || undefined}
+          name={comment.author_detail.full_name || "?"}
+          size="sm"
+          className="flex-shrink-0 mt-0.5"
+        />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-baseline gap-2">
+            <span className="text-sm font-medium text-brand-text">
+              {comment.author_detail.full_name}
+            </span>
+            <span className="text-xs text-brand-muted capitalize">
+              {comment.author_detail.role.replace("_", " ")}
+            </span>
+            <span className="text-[10px] text-brand-muted">
+              {formatTimeAgo(comment.created_at)}
+            </span>
+          </div>
+          <p className="text-sm text-brand-text mt-1 leading-relaxed whitespace-pre-line">
+            {comment.content}
+          </p>
+          {profile && (
+            <button
+              onClick={() => setShowReply(!showReply)}
+              className="flex items-center gap-1 mt-2 text-xs text-brand-muted hover:text-brand-accent transition-colors"
+            >
+              <Reply className="w-3.5 h-3.5" />
+              Reply
+              {comment.reply_count > 0 && ` (${comment.reply_count})`}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Replies */}
+      {comment.replies.length > 0 && (
+        <div className="ml-11 mt-3 space-y-3 border-l-2 border-brand-border/20 pl-4">
+          {comment.replies.map((reply) => (
+            <div key={reply.id} className="flex gap-3">
+              <Avatar
+                src={reply.author_detail.avatar_url || undefined}
+                name={reply.author_detail.full_name || "?"}
+                size="sm"
+                className="flex-shrink-0 mt-0.5"
+              />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-sm font-medium text-brand-text">
+                    {reply.author_detail.full_name}
+                  </span>
+                  <span className="text-xs text-brand-muted capitalize">
+                    {reply.author_detail.role.replace("_", " ")}
+                  </span>
+                  <span className="text-[10px] text-brand-muted">
+                    {formatTimeAgo(reply.created_at)}
+                  </span>
+                </div>
+                <p className="text-sm text-brand-text mt-1 leading-relaxed whitespace-pre-line">
+                  {reply.content}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Reply input */}
+      {showReply && (
+        <div className="ml-11 mt-3 flex gap-2">
+          <textarea
+            ref={replyInputRef}
+            value={replyText}
+            onChange={(e) => setReplyText(e.target.value)}
+            placeholder="Write a reply..."
+            rows={1}
+            className="flex-1 bg-white border border-brand-border/50 rounded-lg px-3 py-2 text-sm text-brand-text placeholder:text-brand-muted/50 focus:outline-none focus:ring-2 focus:ring-brand-accent/30 focus:border-brand-accent/50 transition-all resize-none"
+          />
+          <Button
+            size="sm"
+            onClick={handleReply}
+            disabled={!replyText.trim() || posting}
+          >
+            {posting ? "..." : "Reply"}
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function formatTimeAgo(isoDate: string): string {
+  const diffMs = Date.now() - new Date(isoDate).getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  if (diffMins < 1) return "just now";
+  if (diffMins < 60) return `${diffMins}m ago`;
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) return `${diffHours}h ago`;
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays < 30) return `${diffDays}d ago`;
+  return new Date(isoDate).toLocaleDateString();
 }
