@@ -173,3 +173,37 @@ export interface NavItem {
   icon: string;
   roles?: UserRole[];
 }
+
+// Kanban types
+export interface KanbanTask {
+  id: number;
+  column: number;
+  title: string;
+  description: string;
+  assignee: string | null;
+  assignee_detail: UserProfileMinimal | null;
+  order: number;
+  comments_count: number;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface KanbanColumn {
+  id: number;
+  startup: number;
+  name: string;
+  order: number;
+  tasks: KanbanTask[];
+  created_at: string;
+}
+
+export interface TaskComment {
+  id: number;
+  task: number;
+  author: string;
+  author_name: string;
+  author_avatar: string;
+  content: string;
+  created_at: string;
+}

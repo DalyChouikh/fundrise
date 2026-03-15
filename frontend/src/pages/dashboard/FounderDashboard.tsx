@@ -1,26 +1,35 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Target, DollarSign, Users, Heart } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Target, DollarSign, Users, Heart, Clock } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
 import { Card } from "@/components/ui/Card";
-import type { DashboardStatsFounder } from "@/types";
+import { Badge } from "@/components/ui/Badge";
+import type { DashboardStatsFounder, Investment, Campaign } from "@/types";
 
 export function FounderDashboard() {
   const { profile } = useAuth();
   const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStatsFounder | null>(null);
+  const [recentInvestments, setRecentInvestments] = useState<Investment[]>([]);
+  const [recentCampaigns, setRecentCampaigns] = useState<Campaign[]>([]);
 
   useEffect(() => {
-    const fetchStats = async () => {
+    const fetchData = async () => {
       try {
-        const data = await api.get<DashboardStatsFounder>("/dashboard/stats/");
-        setStats(data);
+        const [statsData, investments, campaigns] = await Promise.all([
+          api.get<DashboardStatsFounder>("/dashboard/stats/"),
+          api.get<Investment[]>("/investments/"),
+          api.get<Campaign[]>("/campaigns/"),
+        ]);
+        setStats(statsData);
+        setRecentInvestments(investments.slice(0, 5));
+        setRecentCampaigns(campaigns.slice(0, 3));
       } catch {
         // ignore
       }
     };
-    fetchStats();
+    fetchData();
   }, []);
 
   const statItems = [
@@ -68,6 +77,8 @@ export function FounderDashboard() {
     },
   ];
 
+  const hasActivity = recentInvestments.length > 0 || recentCampaigns.length > 0;
+
   return (
     <div className="space-y-8">
       {/* Welcome */}
@@ -101,21 +112,74 @@ export function FounderDashboard() {
 
       {/* Content */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Recent Activity */}
         <Card>
           <h3 className="text-base font-semibold text-brand-text mb-4">
             Recent Activity
           </h3>
-          <div className="flex flex-col items-center justify-center py-8 text-center">
-            <div className="w-12 h-12 rounded-xl bg-brand-bg flex items-center justify-center mb-3">
-              <Target className="w-5 h-5 text-brand-muted" />
+
+          {!hasActivity ? (
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <div className="w-12 h-12 rounded-xl bg-brand-bg flex items-center justify-center mb-3">
+                <Target className="w-5 h-5 text-brand-muted" />
+              </div>
+              <p className="text-sm text-brand-muted">No activity yet</p>
+              <p className="text-xs text-brand-muted/70 mt-1">
+                Create your first startup to get started
+              </p>
             </div>
-            <p className="text-sm text-brand-muted">No activity yet</p>
-            <p className="text-xs text-brand-muted/70 mt-1">
-              Create your first startup to get started
-            </p>
-          </div>
+          ) : (
+            <div className="space-y-3">
+              {recentCampaigns.map((campaign) => (
+                <Link
+                  key={`c-${campaign.id}`}
+                  to={`/campaigns/${campaign.id}`}
+                  className="flex items-center justify-between p-3 rounded-xl border border-brand-border/30 hover:bg-brand-bg/50 transition-colors"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="p-2 rounded-lg bg-brand-accent/10 flex-shrink-0">
+                      <Target className="w-4 h-4 text-brand-accent" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-brand-text truncate">
+                        {campaign.title}
+                      </p>
+                      <p className="text-xs text-brand-muted">
+                        {campaign.funding_percentage}% funded
+                      </p>
+                    </div>
+                  </div>
+                  <Badge status={campaign.status} />
+                </Link>
+              ))}
+
+              {recentInvestments.map((inv) => (
+                <div
+                  key={`i-${inv.id}`}
+                  className="flex items-center justify-between p-3 rounded-xl border border-brand-border/30"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="p-2 rounded-lg bg-emerald-50 flex-shrink-0">
+                      <DollarSign className="w-4 h-4 text-emerald-600" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-brand-text truncate">
+                        {inv.investor_name} invested ${Number(inv.amount).toLocaleString()}
+                      </p>
+                      <p className="text-xs text-brand-muted flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {new Date(inv.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                  <Badge status={inv.status} />
+                </div>
+              ))}
+            </div>
+          )}
         </Card>
 
+        {/* Quick Actions */}
         <Card>
           <h3 className="text-base font-semibold text-brand-text mb-4">
             Quick Actions

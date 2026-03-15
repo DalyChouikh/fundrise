@@ -1,5 +1,5 @@
 import { useState, useEffect, type FormEvent } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { Plus, Target, Search, X, Calendar, CheckCircle2, XCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
@@ -11,10 +11,22 @@ import type { Campaign, Startup } from "@/types";
 
 export function CampaignsPage() {
   const { profile } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Auto-open create modal via ?action=create
+  useEffect(() => {
+    if (
+      searchParams.get("action") === "create" &&
+      (profile?.role === "founder" || profile?.role === "team_member")
+    ) {
+      setShowCreate(true);
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, profile, setSearchParams]);
 
   const fetchCampaigns = async () => {
     try {

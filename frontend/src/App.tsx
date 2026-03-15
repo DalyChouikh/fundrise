@@ -12,6 +12,8 @@ import { CampaignsPage } from "@/pages/campaigns/CampaignsPage";
 import { CampaignDetailPage } from "@/pages/campaigns/CampaignDetailPage";
 import { InvestmentsPage } from "@/pages/investments/InvestmentsPage";
 import { UsersPage } from "@/pages/admin/UsersPage";
+import { KanbanBoardPage } from "@/pages/kanban/KanbanBoardPage";
+import { KanbanStartupSelector } from "@/pages/kanban/KanbanStartupSelector";
 import { PlaceholderPage } from "@/pages/PlaceholderPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 
@@ -41,23 +43,10 @@ export default function App() {
                 element={<InvestmentsPage />}
               />
               <Route path="/users" element={<UsersPage />} />
-              <Route
-                path="/kanban"
-                element={
-                  <PlaceholderPage
-                    title="Kanban Board"
-                    description="Manage startup tasks and track progress."
-                  />
-                }
-              />
+              <Route path="/kanban" element={<KanbanStartupSelector />} />
               <Route
                 path="/kanban/:startupId"
-                element={
-                  <PlaceholderPage
-                    title="Kanban Board"
-                    description="Manage startup tasks and track progress."
-                  />
-                }
+                element={<KanbanBoardPage />}
               />
               <Route
                 path="/chat"

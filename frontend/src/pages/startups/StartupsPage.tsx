@@ -1,5 +1,5 @@
 import { useState, useEffect, type FormEvent } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   Plus,
   MapPin,
@@ -22,10 +22,19 @@ import type { Startup } from "@/types";
 
 export function StartupsPage() {
   const { profile } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [startups, setStartups] = useState<Startup[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Auto-open create modal via ?action=create
+  useEffect(() => {
+    if (searchParams.get("action") === "create" && profile?.role === "founder") {
+      setShowCreate(true);
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, profile, setSearchParams]);
 
   const fetchStartups = async () => {
     try {
