@@ -7,9 +7,11 @@ import {
   Target,
   FileText,
   CheckCircle,
+  CheckCircle2,
   Clock,
   Building2,
   X,
+  XCircle,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
@@ -98,6 +100,41 @@ export function CampaignDetailPage() {
       setInvesting(false);
     }
   };
+
+  const handleConfirmInvestment = async (investmentId: number) => {
+    try {
+      const updated = await api.post<Investment>(
+        `/investments/${investmentId}/confirm/`,
+        {}
+      );
+      setInvestments((prev) =>
+        prev.map((inv) => (inv.id === investmentId ? updated : inv))
+      );
+      const updatedCampaign = await api.get<CampaignDetail>(
+        `/campaigns/${campaign?.id}/`
+      );
+      setCampaign(updatedCampaign);
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleCancelInvestment = async (investmentId: number) => {
+    try {
+      const updated = await api.post<Investment>(
+        `/investments/${investmentId}/cancel/`,
+        {}
+      );
+      setInvestments((prev) =>
+        prev.map((inv) => (inv.id === investmentId ? updated : inv))
+      );
+    } catch {
+      // ignore
+    }
+  };
+
+  const canManageInvestments =
+    campaign?.is_startup_member || profile?.role === "admin";
 
   if (loading) return <LoadingSpinner fullscreen />;
   if (!campaign) return null;
@@ -329,27 +366,47 @@ export function CampaignDetailPage() {
                 {investments.slice(0, 5).map((inv) => (
                   <div
                     key={inv.id}
-                    className="flex items-center justify-between"
+                    className="p-3 rounded-xl border border-brand-border/30"
                   >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <div className="w-8 h-8 rounded-full bg-brand-bg flex items-center justify-center text-xs font-medium text-brand-muted">
-                        {inv.investor_name?.charAt(0)?.toUpperCase() || "?"}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="w-8 h-8 rounded-full bg-brand-bg flex items-center justify-center text-xs font-medium text-brand-muted">
+                          {inv.investor_name?.charAt(0)?.toUpperCase() || "?"}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-brand-text truncate">
+                            {inv.investor_name}
+                          </p>
+                          <p className="text-xs text-brand-muted">
+                            {new Date(inv.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
                       </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-brand-text truncate">
-                          {inv.investor_name}
+                      <div className="text-right flex-shrink-0">
+                        <p className="text-sm font-semibold text-brand-text">
+                          ${Number(inv.amount).toLocaleString()}
                         </p>
-                        <p className="text-xs text-brand-muted">
-                          {new Date(inv.created_at).toLocaleDateString()}
-                        </p>
+                        <Badge status={inv.status} />
                       </div>
                     </div>
-                    <div className="text-right flex-shrink-0">
-                      <p className="text-sm font-semibold text-brand-text">
-                        ${Number(inv.amount).toLocaleString()}
-                      </p>
-                      <Badge status={inv.status} />
-                    </div>
+                    {canManageInvestments && inv.status === "pending" && (
+                      <div className="flex items-center gap-2 mt-2 pt-2 border-t border-brand-border/20">
+                        <button
+                          onClick={() => handleConfirmInvestment(inv.id)}
+                          className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors"
+                        >
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          Confirm
+                        </button>
+                        <button
+                          onClick={() => handleCancelInvestment(inv.id)}
+                          className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 transition-colors"
+                        >
+                          <XCircle className="w-3.5 h-3.5" />
+                          Cancel
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { DollarSign, TrendingUp, Clock, XCircle, CheckCircle } from "lucide-react";
+import { DollarSign, TrendingUp, Clock, XCircle, CheckCircle, CheckCircle2 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -24,6 +25,7 @@ const tabs: { label: string; value: InvestmentStatus | "all" }[] = [
 ];
 
 export function InvestmentsPage() {
+  const { profile } = useAuth();
   const [investments, setInvestments] = useState<Investment[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<InvestmentStatus | "all">("all");
@@ -41,6 +43,39 @@ export function InvestmentsPage() {
     };
     fetchInvestments();
   }, []);
+
+  const handleConfirm = async (investmentId: number) => {
+    try {
+      const updated = await api.post<Investment>(
+        `/investments/${investmentId}/confirm/`,
+        {}
+      );
+      setInvestments((prev) =>
+        prev.map((inv) => (inv.id === investmentId ? updated : inv))
+      );
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleCancel = async (investmentId: number) => {
+    try {
+      const updated = await api.post<Investment>(
+        `/investments/${investmentId}/cancel/`,
+        {}
+      );
+      setInvestments((prev) =>
+        prev.map((inv) => (inv.id === investmentId ? updated : inv))
+      );
+    } catch {
+      // ignore
+    }
+  };
+
+  const canManageInvestments =
+    profile?.role === "founder" ||
+    profile?.role === "team_member" ||
+    profile?.role === "admin";
 
   const filtered =
     filter === "all"
@@ -159,10 +194,43 @@ export function InvestmentsPage() {
                       </Link>
                       <p className="text-xs text-brand-muted mt-0.5">
                         {inv.campaign_detail.startup_name}
+                        {inv.investor_name &&
+                          canManageInvestments &&
+                          ` — ${inv.investor_name}`}
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-6 flex-shrink-0">
+                  <div className="flex items-center gap-4 flex-shrink-0">
+                    {canManageInvestments && inv.status === "pending" && (
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => handleConfirm(inv.id)}
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors"
+                          title="Confirm investment"
+                        >
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          Confirm
+                        </button>
+                        <button
+                          onClick={() => handleCancel(inv.id)}
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 transition-colors"
+                          title="Cancel investment"
+                        >
+                          <XCircle className="w-3.5 h-3.5" />
+                          Cancel
+                        </button>
+                      </div>
+                    )}
+                    {profile?.role === "investor" && inv.status === "pending" && (
+                      <button
+                        onClick={() => handleCancel(inv.id)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 transition-colors"
+                        title="Cancel investment"
+                      >
+                        <XCircle className="w-3.5 h-3.5" />
+                        Cancel
+                      </button>
+                    )}
                     <div className="text-right">
                       <p className="text-sm font-bold text-brand-text">
                         ${Number(inv.amount).toLocaleString()}
