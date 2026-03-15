@@ -18,6 +18,11 @@ urlpatterns = [
         name="campaign-milestone-list",
     ),
     path(
+        "<int:campaign_pk>/milestones/<int:pk>/",
+        views.CampaignMilestoneDetailView.as_view(),
+        name="campaign-milestone-detail",
+    ),
+    path(
         "<int:campaign_pk>/comments/",
         views.CampaignCommentListCreateView.as_view(),
         name="campaign-comment-list",

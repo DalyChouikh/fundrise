@@ -181,6 +181,16 @@ class CampaignMilestoneListCreateView(generics.ListCreateAPIView):
         serializer.save(campaign=campaign)
 
 
+class CampaignMilestoneDetailView(generics.UpdateAPIView):
+    serializer_class = CampaignMilestoneSerializer
+    permission_classes = [permissions.IsAuthenticated, IsCampaignStartupMemberFromURL]
+
+    def get_queryset(self):
+        return CampaignMilestone.objects.filter(
+            campaign_id=self.kwargs["campaign_pk"]
+        )
+
+
 class CampaignCommentListCreateView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 

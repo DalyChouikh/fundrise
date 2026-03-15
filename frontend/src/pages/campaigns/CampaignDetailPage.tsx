@@ -15,6 +15,7 @@ import {
   MessageCircle,
   Reply,
   Send,
+  Plus,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
@@ -298,50 +299,12 @@ export function CampaignDetailPage() {
           </Card>
 
           {/* Updates */}
-          <Card>
-            <h3 className="text-base font-semibold text-brand-text mb-4">
-              Updates ({updates.length})
-            </h3>
-            {updates.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-8 text-center">
-                <div className="w-12 h-12 rounded-xl bg-brand-bg flex items-center justify-center mb-3">
-                  <FileText className="w-5 h-5 text-brand-muted" />
-                </div>
-                <p className="text-sm text-brand-muted">No updates yet</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {updates.map((update) => (
-                  <div
-                    key={update.id}
-                    className="p-4 rounded-xl border border-brand-border/30 bg-brand-bg/30"
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="text-sm font-semibold text-brand-text">
-                        {update.title}
-                      </h4>
-                      <span className="text-xs text-brand-muted">
-                        {new Date(update.created_at).toLocaleDateString()}
-                      </span>
-                    </div>
-                    <p className="text-sm text-brand-muted leading-relaxed">
-                      {update.content}
-                    </p>
-                    <div className="flex items-center gap-2 mt-3">
-                      <Avatar
-                        src={update.created_by.avatar_url || undefined}
-                        name={update.created_by.full_name}
-                        size="sm"
-                      />
-                      <span className="text-xs text-brand-muted">
-                        {update.created_by.full_name}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </Card>
+          <UpdatesSection
+            campaignId={campaign.id}
+            updates={updates}
+            setUpdates={setUpdates}
+            isStartupMember={campaign.is_startup_member}
+          />
 
           {/* Discussion */}
           <DiscussionSection
@@ -460,58 +423,12 @@ export function CampaignDetailPage() {
           </Card>
 
           {/* Milestones */}
-          <Card>
-            <h3 className="text-base font-semibold text-brand-text mb-3">
-              Milestones ({milestones.length})
-            </h3>
-            {milestones.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-6 text-center">
-                <div className="w-10 h-10 rounded-xl bg-brand-bg flex items-center justify-center mb-2">
-                  <Target className="w-4 h-4 text-brand-muted" />
-                </div>
-                <p className="text-xs text-brand-muted">
-                  No milestones set
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {milestones.map((milestone) => (
-                  <div
-                    key={milestone.id}
-                    className="flex items-start gap-3 p-3 rounded-xl border border-brand-border/30"
-                  >
-                    <div
-                      className={`p-1 rounded-lg mt-0.5 ${
-                        milestone.is_completed
-                          ? "bg-emerald-50 text-emerald-600"
-                          : "bg-brand-bg text-brand-muted"
-                      }`}
-                    >
-                      {milestone.is_completed ? (
-                        <CheckCircle className="w-4 h-4" />
-                      ) : (
-                        <Clock className="w-4 h-4" />
-                      )}
-                    </div>
-                    <div className="min-w-0">
-                      <p
-                        className={`text-sm font-medium ${
-                          milestone.is_completed
-                            ? "text-brand-muted line-through"
-                            : "text-brand-text"
-                        }`}
-                      >
-                        {milestone.title}
-                      </p>
-                      <p className="text-xs text-brand-muted mt-0.5">
-                        Target: {milestone.target_date}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </Card>
+          <MilestonesSection
+            campaignId={campaign.id}
+            milestones={milestones}
+            setMilestones={setMilestones}
+            isStartupMember={campaign.is_startup_member}
+          />
         </div>
       </div>
 
@@ -588,6 +505,324 @@ export function CampaignDetailPage() {
         </div>
       )}
     </div>
+  );
+}
+
+function UpdatesSection({
+  campaignId,
+  updates,
+  setUpdates,
+  isStartupMember,
+}: {
+  campaignId: number;
+  updates: CampaignUpdate[];
+  setUpdates: React.Dispatch<React.SetStateAction<CampaignUpdate[]>>;
+  isStartupMember: boolean;
+}) {
+  const [showForm, setShowForm] = useState(false);
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [posting, setPosting] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!title.trim() || !content.trim()) return;
+    setPosting(true);
+    try {
+      const update = await api.post<CampaignUpdate>(
+        `/campaigns/${campaignId}/updates/`,
+        { title: title.trim(), content: content.trim() }
+      );
+      setUpdates((prev) => [update, ...prev]);
+      setTitle("");
+      setContent("");
+      setShowForm(false);
+    } catch {
+      // ignore
+    }
+    setPosting(false);
+  };
+
+  return (
+    <Card>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-base font-semibold text-brand-text">
+          Updates ({updates.length})
+        </h3>
+        {isStartupMember && !showForm && (
+          <button
+            onClick={() => setShowForm(true)}
+            className="flex items-center gap-1 text-xs font-medium text-brand-accent hover:text-brand-accent/80 transition-colors"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Post Update
+          </button>
+        )}
+      </div>
+
+      {showForm && (
+        <div className="mb-4 p-4 rounded-xl border border-brand-accent/20 bg-brand-accent/[0.03]">
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Update title"
+            className="w-full bg-white border border-brand-border/50 rounded-lg px-3 py-2 text-sm text-brand-text placeholder:text-brand-muted/50 focus:outline-none focus:ring-2 focus:ring-brand-accent/30 focus:border-brand-accent/50 mb-2"
+          />
+          <textarea
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            placeholder="Share what's new with your campaign..."
+            rows={3}
+            className="w-full bg-white border border-brand-border/50 rounded-lg px-3 py-2 text-sm text-brand-text placeholder:text-brand-muted/50 focus:outline-none focus:ring-2 focus:ring-brand-accent/30 focus:border-brand-accent/50 resize-none"
+          />
+          <div className="flex justify-end gap-2 mt-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setShowForm(false);
+                setTitle("");
+                setContent("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleSubmit}
+              disabled={!title.trim() || !content.trim() || posting}
+            >
+              {posting ? "Posting..." : "Post Update"}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {updates.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-8 text-center">
+          <div className="w-12 h-12 rounded-xl bg-brand-bg flex items-center justify-center mb-3">
+            <FileText className="w-5 h-5 text-brand-muted" />
+          </div>
+          <p className="text-sm text-brand-muted">No updates yet</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {updates.map((update) => (
+            <div
+              key={update.id}
+              className="p-4 rounded-xl border border-brand-border/30 bg-brand-bg/30"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-sm font-semibold text-brand-text">
+                  {update.title}
+                </h4>
+                <span className="text-xs text-brand-muted">
+                  {new Date(update.created_at).toLocaleDateString()}
+                </span>
+              </div>
+              <p className="text-sm text-brand-muted leading-relaxed">
+                {update.content}
+              </p>
+              <div className="flex items-center gap-2 mt-3">
+                <Avatar
+                  src={update.created_by.avatar_url || undefined}
+                  name={update.created_by.full_name}
+                  size="sm"
+                />
+                <span className="text-xs text-brand-muted">
+                  {update.created_by.full_name}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </Card>
+  );
+}
+
+function MilestonesSection({
+  campaignId,
+  milestones,
+  setMilestones,
+  isStartupMember,
+}: {
+  campaignId: number;
+  milestones: CampaignMilestone[];
+  setMilestones: React.Dispatch<React.SetStateAction<CampaignMilestone[]>>;
+  isStartupMember: boolean;
+}) {
+  const [showForm, setShowForm] = useState(false);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [targetDate, setTargetDate] = useState("");
+  const [posting, setPosting] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!title.trim() || !targetDate) return;
+    setPosting(true);
+    try {
+      const milestone = await api.post<CampaignMilestone>(
+        `/campaigns/${campaignId}/milestones/`,
+        {
+          title: title.trim(),
+          description: description.trim(),
+          target_date: targetDate,
+        }
+      );
+      setMilestones((prev) => [...prev, milestone]);
+      setTitle("");
+      setDescription("");
+      setTargetDate("");
+      setShowForm(false);
+    } catch {
+      // ignore
+    }
+    setPosting(false);
+  };
+
+  const toggleCompletion = async (milestone: CampaignMilestone) => {
+    try {
+      const updated = await api.patch<CampaignMilestone>(
+        `/campaigns/${campaignId}/milestones/${milestone.id}/`,
+        { is_completed: !milestone.is_completed }
+      );
+      setMilestones((prev) =>
+        prev.map((m) => (m.id === milestone.id ? updated : m))
+      );
+    } catch {
+      // ignore
+    }
+  };
+
+  return (
+    <Card>
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-base font-semibold text-brand-text">
+          Milestones ({milestones.length})
+        </h3>
+        {isStartupMember && !showForm && (
+          <button
+            onClick={() => setShowForm(true)}
+            className="flex items-center gap-1 text-xs font-medium text-brand-accent hover:text-brand-accent/80 transition-colors"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Add
+          </button>
+        )}
+      </div>
+
+      {showForm && (
+        <div className="mb-3 p-3 rounded-xl border border-brand-accent/20 bg-brand-accent/[0.03]">
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Milestone title"
+            className="w-full bg-white border border-brand-border/50 rounded-lg px-3 py-2 text-sm text-brand-text placeholder:text-brand-muted/50 focus:outline-none focus:ring-2 focus:ring-brand-accent/30 mb-2"
+          />
+          <input
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Description (optional)"
+            className="w-full bg-white border border-brand-border/50 rounded-lg px-3 py-2 text-sm text-brand-text placeholder:text-brand-muted/50 focus:outline-none focus:ring-2 focus:ring-brand-accent/30 mb-2"
+          />
+          <input
+            type="date"
+            value={targetDate}
+            onChange={(e) => setTargetDate(e.target.value)}
+            className="w-full bg-white border border-brand-border/50 rounded-lg px-3 py-2 text-sm text-brand-text focus:outline-none focus:ring-2 focus:ring-brand-accent/30"
+          />
+          <div className="flex justify-end gap-2 mt-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setShowForm(false);
+                setTitle("");
+                setDescription("");
+                setTargetDate("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleSubmit}
+              disabled={!title.trim() || !targetDate || posting}
+            >
+              {posting ? "Adding..." : "Add"}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {milestones.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-6 text-center">
+          <div className="w-10 h-10 rounded-xl bg-brand-bg flex items-center justify-center mb-2">
+            <Target className="w-4 h-4 text-brand-muted" />
+          </div>
+          <p className="text-xs text-brand-muted">No milestones set</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {milestones.map((milestone) => (
+            <div
+              key={milestone.id}
+              className="flex items-start gap-3 p-3 rounded-xl border border-brand-border/30"
+            >
+              {isStartupMember ? (
+                <button
+                  onClick={() => toggleCompletion(milestone)}
+                  className={`p-1 rounded-lg mt-0.5 transition-colors ${
+                    milestone.is_completed
+                      ? "bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
+                      : "bg-brand-bg text-brand-muted hover:bg-brand-border/30"
+                  }`}
+                  title={
+                    milestone.is_completed
+                      ? "Mark as incomplete"
+                      : "Mark as complete"
+                  }
+                >
+                  {milestone.is_completed ? (
+                    <CheckCircle className="w-4 h-4" />
+                  ) : (
+                    <Clock className="w-4 h-4" />
+                  )}
+                </button>
+              ) : (
+                <div
+                  className={`p-1 rounded-lg mt-0.5 ${
+                    milestone.is_completed
+                      ? "bg-emerald-50 text-emerald-600"
+                      : "bg-brand-bg text-brand-muted"
+                  }`}
+                >
+                  {milestone.is_completed ? (
+                    <CheckCircle className="w-4 h-4" />
+                  ) : (
+                    <Clock className="w-4 h-4" />
+                  )}
+                </div>
+              )}
+              <div className="min-w-0">
+                <p
+                  className={`text-sm font-medium ${
+                    milestone.is_completed
+                      ? "text-brand-muted line-through"
+                      : "text-brand-text"
+                  }`}
+                >
+                  {milestone.title}
+                </p>
+                <p className="text-xs text-brand-muted mt-0.5">
+                  Target: {milestone.target_date}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </Card>
   );
 }
 
