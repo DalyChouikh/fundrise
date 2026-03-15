@@ -3,7 +3,7 @@ from rest_framework import generics, permissions
 
 from apps.users.models import UserProfile
 from apps.users.permissions import IsAdmin
-from apps.users.serializers import AdminUserSerializer, UserProfileSerializer
+from apps.users.serializers import AdminUserSerializer, UserProfileMinimalSerializer, UserProfileSerializer
 
 
 class UserProfileMeView(generics.RetrieveUpdateAPIView):
@@ -44,3 +44,19 @@ class UserDetailView(generics.RetrieveUpdateAPIView):
     serializer_class = AdminUserSerializer
     permission_classes = [permissions.IsAuthenticated, IsAdmin]
     queryset = UserProfile.objects.all()
+
+
+class UserSearchView(generics.ListAPIView):
+    """Search users by name — available to all authenticated users."""
+
+    serializer_class = UserProfileMinimalSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        search = self.request.query_params.get("search", "")
+        if len(search) < 2:
+            return UserProfile.objects.none()
+        return (
+            UserProfile.objects.filter(Q(full_name__icontains=search))
+            .exclude(id=self.request.user.id)[:20]
+        )

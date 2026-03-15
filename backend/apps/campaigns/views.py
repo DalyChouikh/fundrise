@@ -20,6 +20,7 @@ from apps.campaigns.serializers import (
     CampaignUpdateReadSerializer,
     CampaignUpdateWriteSerializer,
 )
+from apps.chat.models import ChatRoom, ChatRoomParticipant
 from apps.startups.models import StartupMember
 from apps.notifications.utils import create_notification
 
@@ -64,6 +65,20 @@ class CampaignViewSet(viewsets.ModelViewSet):
             Q(status=Campaign.Status.ACTIVE)
             | Q(startup_id__in=user_startup_ids)
         ).distinct()
+
+    def perform_create(self, serializer):
+        campaign = serializer.save()
+        # Auto-create a campaign chat room with all startup members
+        room = ChatRoom.objects.create(
+            room_type=ChatRoom.RoomType.CAMPAIGN,
+            campaign=campaign,
+        )
+        members = StartupMember.objects.filter(
+            startup=campaign.startup
+        ).select_related("user")
+        ChatRoomParticipant.objects.bulk_create(
+            [ChatRoomParticipant(room=room, user=m.user) for m in members]
+        )
 
     @action(detail=True, methods=["post"], url_path="submit")
     def submit(self, request, pk=None):

@@ -207,3 +207,30 @@ export interface TaskComment {
   content: string;
   created_at: string;
 }
+
+// Chat types
+export interface ChatMessageDetail {
+  id: number;
+  room: number;
+  sender: string;
+  sender_detail: UserProfileMinimal;
+  content: string;
+  created_at: string;
+}
+
+export interface ChatRoom {
+  id: number;
+  room_type: "campaign" | "direct";
+  campaign: number | null;
+  campaign_title: string | null;
+  participants_detail: UserProfileMinimal[];
+  last_message: ChatMessageDetail | null;
+  created_at: string;
+}
+
+export interface ChatMessagePage {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: ChatMessageDetail[];
+}

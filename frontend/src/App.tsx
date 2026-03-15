@@ -16,7 +16,7 @@ import { KanbanBoardPage } from "@/pages/kanban/KanbanBoardPage";
 import { KanbanStartupSelector } from "@/pages/kanban/KanbanStartupSelector";
 import { NotificationsPage } from "@/pages/notifications/NotificationsPage";
 import { SettingsPage } from "@/pages/settings/SettingsPage";
-import { PlaceholderPage } from "@/pages/PlaceholderPage";
+import { ChatPage } from "@/pages/chat/ChatPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 
 export default function App() {
@@ -52,12 +52,7 @@ export default function App() {
               />
               <Route
                 path="/chat"
-                element={
-                  <PlaceholderPage
-                    title="Chat"
-                    description="Real-time messaging with team members and investors."
-                  />
-                }
+                element={<ChatPage />}
               />
               <Route
                 path="/notifications"
