@@ -83,8 +83,8 @@ export function SignupPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold tracking-tight">
-            <span className="text-brand-accent">Funder</span>
-            <span className="text-brand-text">aise</span>
+            <span className="text-brand-accent">Funde</span>
+            <span className="text-brand-text">raise</span>
           </h1>
           <p className="text-brand-muted mt-2 text-sm">
             Create your account to get started.
