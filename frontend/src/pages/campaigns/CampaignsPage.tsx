@@ -1,6 +1,6 @@
 import { useState, useEffect, type FormEvent } from "react";
 import { Link } from "react-router-dom";
-import { Plus, Target, Search, X, Calendar } from "lucide-react";
+import { Plus, Target, Search, X, Calendar, CheckCircle2, XCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
 import { Card } from "@/components/ui/Card";
@@ -39,6 +39,32 @@ export function CampaignsPage() {
 
   const canCreate =
     profile?.role === "founder" || profile?.role === "team_member";
+
+  const handleApprove = async (campaignId: number) => {
+    try {
+      await api.post(`/campaigns/${campaignId}/approve/`, {});
+      setCampaigns((prev) =>
+        prev.map((c) =>
+          c.id === campaignId ? { ...c, status: "active" as const } : c
+        )
+      );
+    } catch {
+      // silently fail
+    }
+  };
+
+  const handleReject = async (campaignId: number) => {
+    try {
+      await api.post(`/campaigns/${campaignId}/reject/`, {});
+      setCampaigns((prev) =>
+        prev.map((c) =>
+          c.id === campaignId ? { ...c, status: "rejected" as const } : c
+        )
+      );
+    } catch {
+      // silently fail
+    }
+  };
 
   if (loading) return <LoadingSpinner fullscreen />;
 
@@ -146,6 +172,32 @@ export function CampaignsPage() {
                     Deadline:{" "}
                     {new Date(campaign.deadline).toLocaleDateString()}
                   </div>
+
+                  {profile?.role === "admin" &&
+                    campaign.status === "pending_approval" && (
+                      <div className="flex items-center gap-2 mt-3 pt-3 border-t border-brand-border/20">
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleApprove(campaign.id);
+                          }}
+                          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors"
+                        >
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          Approve
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleReject(campaign.id);
+                          }}
+                          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 transition-colors"
+                        >
+                          <XCircle className="w-3.5 h-3.5" />
+                          Reject
+                        </button>
+                      </div>
+                    )}
                 </div>
               </Card>
             </Link>

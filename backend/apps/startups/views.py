@@ -81,6 +81,35 @@ class StartupViewSet(viewsets.ModelViewSet):
             return Response({"following": False}, status=status.HTTP_200_OK)
         return Response({"following": True}, status=status.HTTP_201_CREATED)
 
+    @action(detail=True, methods=["post"], url_path="approve")
+    def approve(self, request, pk=None):
+        if request.user.role != "admin":
+            return Response(
+                {"detail": "Only admins can approve startups."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        startup = self.get_object()
+        if startup.status == Startup.Status.ACTIVE:
+            return Response(
+                {"detail": "Startup is already active."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        startup.status = Startup.Status.ACTIVE
+        startup.save(update_fields=["status", "updated_at"])
+        return Response({"status": "active"})
+
+    @action(detail=True, methods=["post"], url_path="reject")
+    def reject(self, request, pk=None):
+        if request.user.role != "admin":
+            return Response(
+                {"detail": "Only admins can reject startups."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        startup = self.get_object()
+        startup.status = Startup.Status.SUSPENDED
+        startup.save(update_fields=["status", "updated_at"])
+        return Response({"status": "suspended"})
+
 
 class StartupMemberListCreateView(generics.ListCreateAPIView):
     def get_serializer_class(self):

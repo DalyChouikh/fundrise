@@ -8,6 +8,8 @@ import {
   Building2,
   X,
   Search,
+  CheckCircle2,
+  XCircle,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
@@ -55,6 +57,32 @@ export function StartupsPage() {
                 followers_count: s.followers_count + (res.following ? 1 : -1),
               }
             : s
+        )
+      );
+    } catch {
+      // silently fail
+    }
+  };
+
+  const handleApprove = async (startupId: number) => {
+    try {
+      await api.post(`/startups/${startupId}/approve/`, {});
+      setStartups((prev) =>
+        prev.map((s) =>
+          s.id === startupId ? { ...s, status: "active" as const } : s
+        )
+      );
+    } catch {
+      // silently fail
+    }
+  };
+
+  const handleReject = async (startupId: number) => {
+    try {
+      await api.post(`/startups/${startupId}/reject/`, {});
+      setStartups((prev) =>
+        prev.map((s) =>
+          s.id === startupId ? { ...s, status: "suspended" as const } : s
         )
       );
     } catch {
@@ -198,6 +226,32 @@ export function StartupsPage() {
                       {startup.created_by.full_name}
                     </span>
                   </div>
+
+                  {profile?.role === "admin" &&
+                    startup.status === "pending_approval" && (
+                      <div className="flex items-center gap-2 mt-3 pt-3 border-t border-brand-border/20">
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleApprove(startup.id);
+                          }}
+                          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors"
+                        >
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          Approve
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleReject(startup.id);
+                          }}
+                          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 transition-colors"
+                        >
+                          <XCircle className="w-3.5 h-3.5" />
+                          Reject
+                        </button>
+                      </div>
+                    )}
                 </div>
               </Card>
             </Link>

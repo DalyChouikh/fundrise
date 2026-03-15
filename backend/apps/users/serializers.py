@@ -43,3 +43,22 @@ class UserProfileSerializer(serializers.ModelSerializer):
         if "role" in validated_data:
             validated_data["role_selected"] = True
         return super().update(instance, validated_data)
+
+
+class AdminUserSerializer(serializers.ModelSerializer):
+    """Admin-only serializer that allows setting any role including admin."""
+
+    class Meta:
+        model = UserProfile
+        fields = [
+            "id",
+            "email",
+            "full_name",
+            "avatar_url",
+            "role",
+            "bio",
+            "role_selected",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "email", "created_at", "updated_at"]

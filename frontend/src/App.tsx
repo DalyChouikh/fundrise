@@ -11,6 +11,7 @@ import { StartupDetailPage } from "@/pages/startups/StartupDetailPage";
 import { CampaignsPage } from "@/pages/campaigns/CampaignsPage";
 import { CampaignDetailPage } from "@/pages/campaigns/CampaignDetailPage";
 import { InvestmentsPage } from "@/pages/investments/InvestmentsPage";
+import { UsersPage } from "@/pages/admin/UsersPage";
 import { PlaceholderPage } from "@/pages/PlaceholderPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 
@@ -39,6 +40,7 @@ export default function App() {
                 path="/investments"
                 element={<InvestmentsPage />}
               />
+              <Route path="/users" element={<UsersPage />} />
               <Route
                 path="/kanban"
                 element={

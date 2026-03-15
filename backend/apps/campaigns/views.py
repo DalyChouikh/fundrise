@@ -77,6 +77,35 @@ class CampaignViewSet(viewsets.ModelViewSet):
         serializer = CampaignDetailSerializer(campaign, context={"request": request})
         return Response(serializer.data)
 
+    @action(detail=True, methods=["post"], url_path="approve")
+    def approve(self, request, pk=None):
+        if request.user.role != "admin":
+            return Response(
+                {"detail": "Only admins can approve campaigns."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        campaign = self.get_object()
+        if campaign.status == Campaign.Status.ACTIVE:
+            return Response(
+                {"detail": "Campaign is already active."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        campaign.status = Campaign.Status.ACTIVE
+        campaign.save(update_fields=["status", "updated_at"])
+        return Response({"status": "active"})
+
+    @action(detail=True, methods=["post"], url_path="reject")
+    def reject(self, request, pk=None):
+        if request.user.role != "admin":
+            return Response(
+                {"detail": "Only admins can reject campaigns."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        campaign = self.get_object()
+        campaign.status = Campaign.Status.REJECTED
+        campaign.save(update_fields=["status", "updated_at"])
+        return Response({"status": "rejected"})
+
 
 class CampaignUpdateListCreateView(generics.ListCreateAPIView):
     def get_serializer_class(self):
