@@ -11,4 +11,5 @@ urlpatterns = [
     path("api/kanban/", include("apps.kanban.urls")),
     path("api/chat/", include("apps.chat.urls")),
     path("api/notifications/", include("apps.notifications.urls")),
+    path("api/copilot/", include("apps.copilot.urls")),
 ]

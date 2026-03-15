@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     "apps.kanban",
     "apps.chat",
     "apps.notifications",
+    "apps.copilot",
 ]
 
 MIDDLEWARE = [
@@ -107,6 +108,9 @@ CORS_ALLOW_CREDENTIALS = True
 # Supabase
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
 SUPABASE_JWT_SECRET = os.environ.get("SUPABASE_JWT_SECRET", "")
+
+# AI Copilot
+GITHUB_MODELS_TOKEN = os.environ.get("GITHUB_MODELS_TOKEN", "")
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [

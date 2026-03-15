@@ -248,3 +248,27 @@ export interface CampaignComment {
   created_at: string;
   updated_at: string;
 }
+
+// Copilot types
+export interface CopilotMessage {
+  id: number;
+  role: "user" | "assistant";
+  content: string;
+  created_at: string;
+}
+
+export interface CopilotConversation {
+  id: string;
+  title: string;
+  last_message: CopilotMessage | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CopilotConversationDetail {
+  id: string;
+  title: string;
+  messages: CopilotMessage[];
+  created_at: string;
+  updated_at: string;
+}
