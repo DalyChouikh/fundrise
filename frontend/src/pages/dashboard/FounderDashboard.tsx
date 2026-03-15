@@ -1,16 +1,72 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Target, DollarSign, Users, Heart } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { api } from "@/lib/api";
 import { Card } from "@/components/ui/Card";
-
-const stats = [
-  { label: "Active Campaigns", value: "0", icon: Target, color: "text-brand-accent" },
-  { label: "Total Raised", value: "$0", icon: DollarSign, color: "text-emerald-600" },
-  { label: "Team Members", value: "0", icon: Users, color: "text-brand-blue" },
-  { label: "Followers", value: "0", icon: Heart, color: "text-rose-500" },
-];
+import type { DashboardStatsFounder } from "@/types";
 
 export function FounderDashboard() {
   const { profile } = useAuth();
+  const navigate = useNavigate();
+  const [stats, setStats] = useState<DashboardStatsFounder | null>(null);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const data = await api.get<DashboardStatsFounder>("/dashboard/stats/");
+        setStats(data);
+      } catch {
+        // ignore
+      }
+    };
+    fetchStats();
+  }, []);
+
+  const statItems = [
+    {
+      label: "Active Campaigns",
+      value: String(stats?.active_campaigns || 0),
+      icon: Target,
+      color: "text-brand-accent",
+    },
+    {
+      label: "Total Raised",
+      value: `$${Number(stats?.total_raised || 0).toLocaleString()}`,
+      icon: DollarSign,
+      color: "text-emerald-600",
+    },
+    {
+      label: "Team Members",
+      value: String(stats?.team_members || 0),
+      icon: Users,
+      color: "text-brand-blue",
+    },
+    {
+      label: "Followers",
+      value: String(stats?.followers || 0),
+      icon: Heart,
+      color: "text-rose-500",
+    },
+  ];
+
+  const quickActions = [
+    {
+      label: "Create a startup",
+      desc: "Set up your startup profile",
+      onClick: () => navigate("/startups?action=create"),
+    },
+    {
+      label: "Launch a campaign",
+      desc: "Start raising funds",
+      onClick: () => navigate("/campaigns?action=create"),
+    },
+    {
+      label: "Invite team members",
+      desc: "Collaborate with your team",
+      onClick: () => navigate("/startups"),
+    },
+  ];
 
   return (
     <div className="space-y-8">
@@ -26,7 +82,7 @@ export function FounderDashboard() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((stat) => (
+        {statItems.map((stat) => (
           <Card key={stat.label} hover>
             <div className="flex items-start justify-between">
               <div>
@@ -65,13 +121,10 @@ export function FounderDashboard() {
             Quick Actions
           </h3>
           <div className="space-y-2">
-            {[
-              { label: "Create a startup", desc: "Set up your startup profile" },
-              { label: "Launch a campaign", desc: "Start raising funds" },
-              { label: "Invite team members", desc: "Collaborate with your team" },
-            ].map((action) => (
+            {quickActions.map((action) => (
               <button
                 key={action.label}
+                onClick={action.onClick}
                 className="w-full flex items-center justify-between p-3.5 rounded-xl border border-brand-border/40 hover:border-brand-border hover:bg-brand-bg/50 transition-all duration-200 text-left"
               >
                 <div>

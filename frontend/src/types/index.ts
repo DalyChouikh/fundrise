@@ -103,14 +103,46 @@ export interface CampaignMilestone {
 
 export type InvestmentStatus = "pending" | "confirmed" | "cancelled";
 
+export interface InvestmentCampaignDetail {
+  id: number;
+  title: string;
+  startup_name: string;
+  funding_goal: string;
+  current_funding: string;
+  status: CampaignStatus;
+}
+
 export interface Investment {
   id: number;
   investor: string;
+  investor_name: string;
   campaign: number;
+  campaign_detail: InvestmentCampaignDetail;
   amount: string;
   status: InvestmentStatus;
   created_at: string;
   updated_at: string;
+}
+
+export interface DashboardStatsFounder {
+  active_campaigns: number;
+  total_raised: string;
+  team_members: number;
+  followers: number;
+}
+
+export interface DashboardStatsInvestor {
+  total_invested: string;
+  active_investments: number;
+  following_count: number;
+  portfolio_value: string;
+}
+
+export interface DashboardStatsAdmin {
+  total_users: number;
+  active_startups: number;
+  active_campaigns: number;
+  total_invested: string;
 }
 
 export type NotificationType =

@@ -10,6 +10,7 @@ import { StartupsPage } from "@/pages/startups/StartupsPage";
 import { StartupDetailPage } from "@/pages/startups/StartupDetailPage";
 import { CampaignsPage } from "@/pages/campaigns/CampaignsPage";
 import { CampaignDetailPage } from "@/pages/campaigns/CampaignDetailPage";
+import { InvestmentsPage } from "@/pages/investments/InvestmentsPage";
 import { PlaceholderPage } from "@/pages/PlaceholderPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 
@@ -36,12 +37,7 @@ export default function App() {
               <Route path="/campaigns/:id" element={<CampaignDetailPage />} />
               <Route
                 path="/investments"
-                element={
-                  <PlaceholderPage
-                    title="Investments"
-                    description="Track your investment portfolio and returns."
-                  />
-                }
+                element={<InvestmentsPage />}
               />
               <Route
                 path="/kanban"
