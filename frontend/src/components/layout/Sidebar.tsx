@@ -100,8 +100,8 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         {/* Header */}
         <div className="h-[var(--topbar-height)] flex items-center justify-between px-6 border-b border-brand-border/30">
           <h1 className="text-xl font-bold tracking-tight">
-            <span className="text-brand-accent">Funder</span>
-            <span className="text-brand-text">aise</span>
+            <span className="text-brand-accent">Funde</span>
+            <span className="text-brand-text">raise</span>
           </h1>
           <button
             onClick={onClose}

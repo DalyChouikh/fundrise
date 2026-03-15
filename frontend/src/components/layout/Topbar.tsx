@@ -1,5 +1,6 @@
-import { useLocation } from "react-router-dom";
-import { Menu, Bell, Search } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { Menu, Bell, Search, LogOut, Settings, User } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar } from "@/components/ui/Avatar";
 
@@ -20,13 +21,32 @@ interface TopbarProps {
 }
 
 export function Topbar({ onMenuClick }: TopbarProps) {
-  const { profile } = useAuth();
+  const { profile, signOut } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const matchedKey = Object.keys(pageTitles).find((key) =>
     location.pathname.startsWith(key)
   );
   const pageTitle = matchedKey ? pageTitles[matchedKey] : "Funderaise";
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleSignOut = async () => {
+    setDropdownOpen(false);
+    await signOut();
+    navigate("/login");
+  };
 
   return (
     <header className="h-[var(--topbar-height)] bg-white/80 backdrop-blur-sm border-b border-brand-border/30 flex items-center justify-between px-6 sticky top-0 z-30">
@@ -59,14 +79,51 @@ export function Topbar({ onMenuClick }: TopbarProps) {
           <span className="absolute top-2 right-2 w-2 h-2 bg-brand-accent rounded-full" />
         </button>
 
-        {/* User avatar */}
+        {/* User avatar + dropdown */}
         {profile && (
-          <div className="ml-1">
-            <Avatar
-              src={profile.avatar_url || undefined}
-              name={profile.full_name}
-              size="sm"
-            />
+          <div className="relative ml-1" ref={dropdownRef}>
+            <button
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+              className="rounded-xl hover:ring-2 hover:ring-brand-border/50 transition-all"
+            >
+              <Avatar
+                src={profile.avatar_url || undefined}
+                name={profile.full_name}
+                size="sm"
+              />
+            </button>
+
+            {dropdownOpen && (
+              <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-card-hover border border-brand-border/30 py-1.5 z-50">
+                <div className="px-4 py-2.5 border-b border-brand-border/20">
+                  <p className="text-sm font-semibold text-brand-text truncate">{profile.full_name}</p>
+                  <p className="text-xs text-brand-muted truncate">{profile.email}</p>
+                </div>
+                <button
+                  onClick={() => { setDropdownOpen(false); navigate("/settings"); }}
+                  className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-brand-muted hover:text-brand-text hover:bg-brand-bg transition-colors"
+                >
+                  <Settings className="w-4 h-4" />
+                  Settings
+                </button>
+                <button
+                  onClick={() => { setDropdownOpen(false); navigate("/settings"); }}
+                  className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-brand-muted hover:text-brand-text hover:bg-brand-bg transition-colors"
+                >
+                  <User className="w-4 h-4" />
+                  Profile
+                </button>
+                <div className="border-t border-brand-border/20 mt-1 pt-1">
+                  <button
+                    onClick={handleSignOut}
+                    className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-red-500 hover:text-red-600 hover:bg-red-50/50 transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Sign out
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -2,6 +2,7 @@ import logging
 from uuid import UUID
 
 import jwt
+from jwt import PyJWKClient
 from django.conf import settings
 from rest_framework.authentication import BaseAuthentication
 from rest_framework.exceptions import AuthenticationFailed
@@ -10,11 +11,24 @@ from apps.users.models import UserProfile
 
 logger = logging.getLogger(__name__)
 
+# Module-level JWKS client with built-in caching (lifespan=300s by default)
+_jwks_client = None
+
+
+def _get_jwks_client():
+    global _jwks_client
+    if _jwks_client is None:
+        supabase_url = settings.SUPABASE_URL.rstrip("/")
+        jwks_url = f"{supabase_url}/auth/v1/.well-known/jwks.json"
+        _jwks_client = PyJWKClient(jwks_url, cache_keys=True, lifespan=300)
+    return _jwks_client
+
 
 class SupabaseJWTAuthentication(BaseAuthentication):
     """
     DRF authentication backend that validates Supabase JWT tokens.
 
+    Supports both asymmetric (ES256 via JWKS) and symmetric (HS256) signing.
     Expects: Authorization: Bearer <supabase-jwt-token>
     Returns: (UserProfile, decoded_payload)
     """
@@ -39,18 +53,38 @@ class SupabaseJWTAuthentication(BaseAuthentication):
         return self.keyword
 
     def _decode_token(self, token):
-        jwt_secret = settings.SUPABASE_JWT_SECRET
-        if not jwt_secret:
-            logger.error("SUPABASE_JWT_SECRET is not configured")
-            raise AuthenticationFailed("Authentication service is misconfigured.")
+        try:
+            header = jwt.get_unverified_header(token)
+        except jwt.InvalidTokenError as e:
+            logger.warning("JWT header decode failed: %s", str(e))
+            raise AuthenticationFailed("Invalid token.")
+
+        alg = header.get("alg", "")
 
         try:
-            payload = jwt.decode(
-                token,
-                jwt_secret,
-                algorithms=["HS256"],
-                audience="authenticated",
-            )
+            if alg.startswith("ES") or alg.startswith("RS") or alg.startswith("PS"):
+                # Asymmetric algorithm — use JWKS public key
+                signing_key = _get_jwks_client().get_signing_key_from_jwt(token)
+                payload = jwt.decode(
+                    token,
+                    signing_key.key,
+                    algorithms=[alg],
+                    audience="authenticated",
+                )
+            else:
+                # Symmetric algorithm (HS256/HS384/HS512) — use shared secret
+                jwt_secret = settings.SUPABASE_JWT_SECRET
+                if not jwt_secret:
+                    logger.error("SUPABASE_JWT_SECRET is not configured")
+                    raise AuthenticationFailed(
+                        "Authentication service is misconfigured."
+                    )
+                payload = jwt.decode(
+                    token,
+                    jwt_secret,
+                    algorithms=["HS256", "HS384", "HS512"],
+                    audience="authenticated",
+                )
         except jwt.ExpiredSignatureError:
             raise AuthenticationFailed("Token has expired.")
         except jwt.InvalidAudienceError:
