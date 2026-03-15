@@ -21,6 +21,7 @@ from apps.campaigns.serializers import (
     CampaignUpdateWriteSerializer,
 )
 from apps.startups.models import StartupMember
+from apps.notifications.utils import create_notification
 
 
 class CampaignViewSet(viewsets.ModelViewSet):
@@ -92,6 +93,13 @@ class CampaignViewSet(viewsets.ModelViewSet):
             )
         campaign.status = Campaign.Status.ACTIVE
         campaign.save(update_fields=["status", "updated_at"])
+        create_notification(
+            recipient=campaign.startup.created_by,
+            notification_type="campaign_approved",
+            title="Campaign Approved",
+            message=f'Your campaign "{campaign.title}" has been approved and is now active.',
+            related_object=campaign,
+        )
         return Response({"status": "active"})
 
     @action(detail=True, methods=["post"], url_path="reject")
@@ -104,6 +112,13 @@ class CampaignViewSet(viewsets.ModelViewSet):
         campaign = self.get_object()
         campaign.status = Campaign.Status.REJECTED
         campaign.save(update_fields=["status", "updated_at"])
+        create_notification(
+            recipient=campaign.startup.created_by,
+            notification_type="campaign_rejected",
+            title="Campaign Rejected",
+            message=f'Your campaign "{campaign.title}" has been rejected.',
+            related_object=campaign,
+        )
         return Response({"status": "rejected"})
 
 

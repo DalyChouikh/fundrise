@@ -13,6 +13,7 @@ from apps.kanban.serializers import (
     TaskCommentCreateSerializer,
     TaskCommentSerializer,
 )
+from apps.notifications.utils import create_notification
 
 
 class KanbanBoardView(generics.ListAPIView):
@@ -98,10 +99,36 @@ class KanbanTaskViewSet(viewsets.ModelViewSet):
             .annotate(comments_count=Count("comments"))
             .first()
         )
+        # Notify assignee if assigned on creation
+        if task.assignee and task.assignee != request.user:
+            create_notification(
+                recipient=task.assignee,
+                notification_type="task_assigned",
+                title="Task Assigned",
+                message=f'You have been assigned to "{task.title}".',
+                related_object=task,
+            )
         return Response(
             KanbanTaskSerializer(task).data,
             status=status.HTTP_201_CREATED,
         )
+
+    def perform_update(self, serializer):
+        old_assignee = serializer.instance.assignee
+        instance = serializer.save()
+        # Notify new assignee if assignee changed
+        if (
+            instance.assignee
+            and instance.assignee != old_assignee
+            and instance.assignee != self.request.user
+        ):
+            create_notification(
+                recipient=instance.assignee,
+                notification_type="task_assigned",
+                title="Task Assigned",
+                message=f'You have been assigned to "{instance.title}".',
+                related_object=instance,
+            )
 
     @action(detail=True, methods=["post"], url_path="move")
     def move(self, request, startup_pk=None, pk=None):
@@ -155,9 +182,24 @@ class TaskCommentListCreateView(generics.ListCreateAPIView):
         self.perform_create(serializer)
         comment = (
             TaskComment.objects.filter(pk=serializer.instance.pk)
-            .select_related("author")
+            .select_related("author", "task__created_by", "task__assignee")
             .first()
         )
+        # Notify task creator and assignee about new comment
+        task = comment.task
+        recipients = set()
+        if task.created_by and task.created_by != request.user:
+            recipients.add(task.created_by)
+        if task.assignee and task.assignee != request.user:
+            recipients.add(task.assignee)
+        for recipient in recipients:
+            create_notification(
+                recipient=recipient,
+                notification_type="task_comment",
+                title="New Comment on Task",
+                message=f'{request.user.full_name} commented on "{task.title}".',
+                related_object=task,
+            )
         return Response(
             TaskCommentSerializer(comment).data,
             status=status.HTTP_201_CREATED,

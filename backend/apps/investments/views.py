@@ -11,6 +11,7 @@ from apps.investments.permissions import (
     IsInvestmentOwnerOrAdmin,
 )
 from apps.investments.serializers import InvestmentCreateSerializer, InvestmentListSerializer
+from apps.notifications.utils import create_notification
 from apps.startups.models import StartupMember
 from apps.users.permissions import IsInvestor
 
@@ -52,7 +53,21 @@ class InvestmentViewSet(
         return qs.filter(campaign__startup_id__in=user_startup_ids)
 
     def perform_create(self, serializer):
-        serializer.save(investor=self.request.user)
+        investment = serializer.save(investor=self.request.user)
+        # Notify startup founders about new investment
+        campaign = investment.campaign
+        founders = StartupMember.objects.filter(
+            startup=campaign.startup, role=StartupMember.Role.FOUNDER
+        ).select_related("user")
+        for member in founders:
+            if member.user != self.request.user:
+                create_notification(
+                    recipient=member.user,
+                    notification_type="investment_received",
+                    title="New Investment Received",
+                    message=f"{self.request.user.full_name} invested ${investment.amount} in {campaign.title}.",
+                    related_object=investment,
+                )
 
     @action(
         detail=True,
@@ -76,6 +91,14 @@ class InvestmentViewSet(
             Campaign.objects.filter(pk=investment.campaign_id).update(
                 current_funding=F("current_funding") + investment.amount
             )
+        # Notify investor that investment was confirmed
+        create_notification(
+            recipient=investment.investor,
+            notification_type="investment_confirmed",
+            title="Investment Confirmed",
+            message=f"Your ${investment.amount} investment in {investment.campaign.title} has been confirmed.",
+            related_object=investment,
+        )
         return Response(InvestmentListSerializer(investment).data)
 
     @action(

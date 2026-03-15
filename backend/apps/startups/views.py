@@ -19,6 +19,7 @@ from apps.startups.serializers import (
     StartupMemberCreateSerializer,
     StartupMemberSerializer,
 )
+from apps.notifications.utils import create_notification
 from apps.users.permissions import IsFounder
 
 
@@ -79,6 +80,15 @@ class StartupViewSet(viewsets.ModelViewSet):
         if not created:
             follow_obj.delete()
             return Response({"following": False}, status=status.HTTP_200_OK)
+        # Notify startup creator about new follower
+        if startup.created_by != request.user:
+            create_notification(
+                recipient=startup.created_by,
+                notification_type="new_follower",
+                title="New Follower",
+                message=f"{request.user.full_name} started following {startup.name}.",
+                related_object=startup,
+            )
         return Response({"following": True}, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=["post"], url_path="approve")
@@ -96,6 +106,13 @@ class StartupViewSet(viewsets.ModelViewSet):
             )
         startup.status = Startup.Status.ACTIVE
         startup.save(update_fields=["status", "updated_at"])
+        create_notification(
+            recipient=startup.created_by,
+            notification_type="startup_approved",
+            title="Startup Approved",
+            message=f'Your startup "{startup.name}" has been approved and is now active.',
+            related_object=startup,
+        )
         return Response({"status": "active"})
 
     @action(detail=True, methods=["post"], url_path="reject")
@@ -108,6 +125,13 @@ class StartupViewSet(viewsets.ModelViewSet):
         startup = self.get_object()
         startup.status = Startup.Status.SUSPENDED
         startup.save(update_fields=["status", "updated_at"])
+        create_notification(
+            recipient=startup.created_by,
+            notification_type="startup_approved",
+            title="Startup Suspended",
+            message=f'Your startup "{startup.name}" has been suspended.',
+            related_object=startup,
+        )
         return Response({"status": "suspended"})
 
 
