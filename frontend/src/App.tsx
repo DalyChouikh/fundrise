@@ -4,6 +4,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
 import { LoginPage } from "@/pages/auth/LoginPage";
 import { SignupPage } from "@/pages/auth/SignupPage";
+import { RoleSelectionPage } from "@/pages/auth/RoleSelectionPage";
 import { DashboardPage } from "@/pages/dashboard/DashboardPage";
 import { PlaceholderPage } from "@/pages/PlaceholderPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
@@ -19,6 +20,10 @@ export default function App() {
 
           {/* Protected routes with layout */}
           <Route element={<ProtectedRoute />}>
+            <Route
+              path="/onboarding/role"
+              element={<RoleSelectionPage />}
+            />
             <Route element={<AppLayout />}>
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route

@@ -7,6 +7,7 @@ export interface UserProfile {
   avatar_url: string;
   role: UserRole;
   bio: string;
+  role_selected: boolean;
   created_at: string;
   updated_at: string;
 }

@@ -104,10 +104,11 @@ class SupabaseJWTAuthentication(BaseAuthentication):
         email = payload.get("email", "")
         user_metadata = payload.get("user_metadata", {})
         full_name = user_metadata.get("full_name", "")
-        role = user_metadata.get("role", UserProfile.Role.INVESTOR)
+        role = user_metadata.get("role", "")
 
         valid_roles = {choice[0] for choice in UserProfile.Role.choices}
-        if role not in valid_roles:
+        has_explicit_role = role in valid_roles
+        if not has_explicit_role:
             role = UserProfile.Role.INVESTOR
 
         user, created = UserProfile.objects.get_or_create(
@@ -116,6 +117,7 @@ class SupabaseJWTAuthentication(BaseAuthentication):
                 "email": email,
                 "full_name": full_name,
                 "role": role,
+                "role_selected": has_explicit_role,
             },
         )
 

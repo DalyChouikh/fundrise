@@ -26,6 +26,7 @@ class UserProfile(TimeStampedModel):
         default=Role.INVESTOR,
     )
     bio = models.TextField(blank=True, default="")
+    role_selected = models.BooleanField(default=False)
 
     class Meta:
         ordering = ["-created_at"]
