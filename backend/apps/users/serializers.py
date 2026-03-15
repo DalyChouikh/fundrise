@@ -3,6 +3,13 @@ from rest_framework import serializers
 from apps.users.models import UserProfile
 
 
+class UserProfileMinimalSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = ["id", "full_name", "avatar_url", "role"]
+        read_only_fields = fields
+
+
 class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile

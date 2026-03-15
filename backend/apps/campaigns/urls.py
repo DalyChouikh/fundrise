@@ -1,3 +1,21 @@
-from django.urls import path
+from django.urls import include, path
+from rest_framework.routers import DefaultRouter
 
-urlpatterns = []
+from apps.campaigns import views
+
+router = DefaultRouter()
+router.register(r"", views.CampaignViewSet, basename="campaign")
+
+urlpatterns = [
+    path(
+        "<int:campaign_pk>/updates/",
+        views.CampaignUpdateListCreateView.as_view(),
+        name="campaign-update-list",
+    ),
+    path(
+        "<int:campaign_pk>/milestones/",
+        views.CampaignMilestoneListCreateView.as_view(),
+        name="campaign-milestone-list",
+    ),
+    path("", include(router.urls)),
+]
