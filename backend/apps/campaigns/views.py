@@ -159,6 +159,20 @@ class CampaignUpdateListCreateView(generics.ListCreateAPIView):
         campaign = get_object_or_404(Campaign, pk=self.kwargs["campaign_pk"])
         serializer.save(campaign=campaign, created_by=self.request.user)
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        update = (
+            CampaignUpdate.objects.filter(pk=serializer.instance.pk)
+            .select_related("created_by")
+            .first()
+        )
+        return Response(
+            CampaignUpdateReadSerializer(update).data,
+            status=status.HTTP_201_CREATED,
+        )
+
 
 class CampaignMilestoneListCreateView(generics.ListCreateAPIView):
     def get_serializer_class(self):
