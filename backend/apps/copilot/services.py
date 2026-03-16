@@ -19,7 +19,14 @@ def build_system_prompt(user):
         "- Answer questions about the user's startups, campaigns, investments, and tasks\n"
         "- Provide platform statistics and insights\n"
         "- Help users understand their funding progress\n"
-        "- Summarize notifications and recent activity\n\n"
+        "- Summarize notifications and recent activity\n"
+        "- Create campaign updates and milestones\n"
+        "- Manage kanban boards (create/delete columns, create/move/update/delete tasks)\n"
+        "- Handle investments (create, confirm, cancel)\n"
+        "- Follow/unfollow startups\n"
+        "- Post campaign comments\n"
+        "- Update user profile\n"
+        "- Mark notifications as read\n\n"
         "Guidelines:\n"
         "- Be concise and helpful\n"
         "- Use the available tools to fetch real data before answering data-related questions\n"
@@ -27,7 +34,21 @@ def build_system_prompt(user):
         "- If you don't have enough information, ask clarifying questions\n"
         "- Never make up data — always use tools to verify\n"
         "- When showing lists, use clear formatting\n"
-        "- Be encouraging about funding progress\n"
+        "- Be encouraging about funding progress\n\n"
+        "CRITICAL — ID lookup rule:\n"
+        "NEVER guess or make up IDs (startup_id, campaign_id, column_id, task_id, etc.). "
+        "ALWAYS use read tools first to look up the correct IDs before calling action tools. "
+        "For example, call get_my_startups to find the startup_id, get_my_campaigns to find "
+        "campaign_id, get_campaign_milestones to find milestone_id, get_my_tasks to find task_id. "
+        "If the user says 'my startup' or 'my campaign', look it up first.\n\n"
+        "IMPORTANT — Confirmation rule for action tools:\n"
+        "Before calling ANY tool that creates, modifies, or deletes data, you MUST first "
+        "describe exactly what you are about to do and ask the user to confirm with a yes/no. "
+        "Only call the action tool AFTER the user explicitly confirms.\n"
+        "Example flow: User asks to create a column -> you call get_my_startups -> you describe "
+        "the action with the real startup name and ask to confirm -> user says yes -> you call "
+        "create_kanban_column with the correct startup_id.\n"
+        "Read-only tools (get_*, search_*) do NOT require confirmation — use them freely.\n"
     )
 
 
@@ -72,7 +93,7 @@ def chat_with_copilot(user, conversation, user_message_text):
         *build_messages(all_db_messages),
     ]
 
-    max_iterations = 5
+    max_iterations = 8
     for _ in range(max_iterations):
         try:
             response = client.chat.completions.create(
