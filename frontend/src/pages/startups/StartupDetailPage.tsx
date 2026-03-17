@@ -10,6 +10,12 @@ import {
   Target,
   Building2,
   Plus,
+  UserPlus,
+  Copy,
+  Check,
+  X,
+  Mail,
+  Clock,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
@@ -18,7 +24,7 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Avatar } from "@/components/ui/Avatar";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import type { StartupDetail, Campaign } from "@/types";
+import type { StartupDetail, Campaign, StartupInvitation, InvitationCreateResponse } from "@/types";
 
 export function StartupDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -27,6 +33,19 @@ export function StartupDetailPage() {
   const [startup, setStartup] = useState<StartupDetail | null>(null);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Invite state
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [inviteResult, setInviteResult] = useState<InvitationCreateResponse | null>(null);
+  const [inviteError, setInviteError] = useState("");
+  const [copied, setCopied] = useState(false);
+  const [pendingInvites, setPendingInvites] = useState<StartupInvitation[]>([]);
+
+  const isFounder = startup?.members.some(
+    (m) => m.role === "founder" && m.user.id === profile?.id
+  );
 
   useEffect(() => {
     const fetchData = async () => {
@@ -37,6 +56,17 @@ export function StartupDetailPage() {
         ]);
         setStartup(s);
         setCampaigns(c.filter((camp) => camp.startup === s.id));
+
+        // Fetch pending invites if user is founder
+        const userIsFounder = s.members.some(
+          (m) => m.role === "founder" && m.user.id === profile?.id
+        );
+        if (userIsFounder) {
+          api
+            .get<StartupInvitation[]>(`/startups/${id}/invitations/list/`)
+            .then(setPendingInvites)
+            .catch(() => {});
+        }
       } catch {
         navigate("/startups", { replace: true });
       } finally {
@@ -44,7 +74,59 @@ export function StartupDetailPage() {
       }
     };
     fetchData();
-  }, [id, navigate]);
+  }, [id, navigate, profile?.id]);
+
+  const handleInvite = async () => {
+    if (!inviteEmail || !id) return;
+    setInviteLoading(true);
+    setInviteError("");
+    setInviteResult(null);
+    try {
+      const result = await api.post<InvitationCreateResponse>(
+        `/startups/${id}/invitations/`,
+        { email: inviteEmail }
+      );
+      setInviteResult(result);
+      // Refresh pending invites
+      api
+        .get<StartupInvitation[]>(`/startups/${id}/invitations/list/`)
+        .then(setPendingInvites)
+        .catch(() => {});
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to send invitation.";
+      try {
+        const parsed = JSON.parse(message.replace(/^API Error \d+: /, ""));
+        setInviteError(parsed.email?.[0] || parsed.detail || message);
+      } catch {
+        setInviteError(message);
+      }
+    } finally {
+      setInviteLoading(false);
+    }
+  };
+
+  const handleCancelInvite = async (inviteId: string) => {
+    if (!id) return;
+    try {
+      await api.post(`/startups/${id}/invitations/${inviteId}/cancel/`, {});
+      setPendingInvites((prev) => prev.filter((i) => i.id !== inviteId));
+    } catch {
+      // silently fail
+    }
+  };
+
+  const handleCopyLink = async (url: string) => {
+    await navigator.clipboard.writeText(url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const resetInviteModal = () => {
+    setShowInviteModal(false);
+    setInviteEmail("");
+    setInviteResult(null);
+    setInviteError("");
+  };
 
   const handleFollow = async () => {
     if (!startup) return;
@@ -263,9 +345,20 @@ export function StartupDetailPage() {
 
           {/* Team */}
           <Card>
-            <h3 className="text-base font-semibold text-brand-text mb-3">
-              Team
-            </h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-base font-semibold text-brand-text">
+                Team
+              </h3>
+              {isFounder && (
+                <button
+                  onClick={() => setShowInviteModal(true)}
+                  className="flex items-center gap-1.5 text-xs font-medium text-brand-accent hover:text-brand-accent/80 transition-colors"
+                >
+                  <UserPlus className="w-3.5 h-3.5" />
+                  Invite
+                </button>
+              )}
+            </div>
             <div className="space-y-3">
               {startup.members.map((member) => (
                 <div
@@ -288,6 +381,38 @@ export function StartupDetailPage() {
                 </div>
               ))}
             </div>
+
+            {/* Pending Invitations */}
+            {isFounder && pendingInvites.length > 0 && (
+              <div className="mt-4 pt-4 border-t border-brand-border/40">
+                <p className="text-xs font-medium text-brand-muted mb-2.5 flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5" />
+                  Pending Invitations
+                </p>
+                <div className="space-y-2">
+                  {pendingInvites.map((inv) => (
+                    <div
+                      key={inv.id}
+                      className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-brand-bg/50"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Mail className="w-3.5 h-3.5 text-brand-muted flex-shrink-0" />
+                        <span className="text-xs text-brand-text truncate">
+                          {inv.email}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => handleCancelInvite(inv.id)}
+                        className="text-brand-muted hover:text-red-500 transition-colors flex-shrink-0"
+                        title="Cancel invitation"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </Card>
 
           {/* Founder */}
@@ -313,6 +438,121 @@ export function StartupDetailPage() {
           )}
         </div>
       </div>
+
+      {/* Invite Modal */}
+      {showInviteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div
+            className="absolute inset-0 bg-brand-text/40 backdrop-blur-sm"
+            onClick={resetInviteModal}
+          />
+          <div className="relative w-full max-w-[420px] bg-white rounded-2xl shadow-modal p-6">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-lg font-bold text-brand-text">
+                Invite Team Member
+              </h3>
+              <button
+                onClick={resetInviteModal}
+                className="text-brand-muted hover:text-brand-text transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {inviteResult ? (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-emerald-50 text-emerald-700 text-sm">
+                  <Check className="w-4 h-4 flex-shrink-0" />
+                  <span>
+                    Invitation sent to <strong>{inviteResult.email}</strong>
+                    {inviteResult.email_sent
+                      ? " — email delivered!"
+                      : " — email could not be sent, share the link instead."}
+                  </span>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-brand-muted mb-1.5">
+                    Invite link
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      readOnly
+                      value={inviteResult.invite_url}
+                      className="flex-1 px-3 py-2 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text text-sm outline-none"
+                    />
+                    <button
+                      onClick={() => handleCopyLink(inviteResult.invite_url)}
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-brand-border/60 text-sm font-medium text-brand-text hover:bg-brand-bg transition-colors"
+                    >
+                      {copied ? (
+                        <>
+                          <Check className="w-4 h-4 text-emerald-600" />
+                          Copied
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-4 h-4" />
+                          Copy
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    setInviteResult(null);
+                    setInviteEmail("");
+                  }}
+                  className="w-full"
+                >
+                  Invite Another
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-brand-text mb-1.5">
+                    Email address
+                  </label>
+                  <input
+                    type="email"
+                    value={inviteEmail}
+                    onChange={(e) => setInviteEmail(e.target.value)}
+                    placeholder="colleague@example.com"
+                    className="w-full px-4 py-2.5 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text placeholder:text-brand-muted text-sm outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/10 transition-all"
+                    onKeyDown={(e) => e.key === "Enter" && handleInvite()}
+                  />
+                </div>
+
+                {inviteError && (
+                  <div className="px-4 py-3 rounded-xl bg-red-50 text-red-700 text-sm">
+                    {inviteError}
+                  </div>
+                )}
+
+                <p className="text-xs text-brand-muted leading-relaxed">
+                  An invitation email will be sent with a link to join your startup.
+                  The invitee will be added as a team member.
+                </p>
+
+                <Button
+                  onClick={handleInvite}
+                  loading={inviteLoading}
+                  className="w-full"
+                  size="lg"
+                >
+                  <Mail className="w-4 h-4 mr-2" />
+                  Send Invitation
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

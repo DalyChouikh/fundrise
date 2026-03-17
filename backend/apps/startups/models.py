@@ -1,4 +1,7 @@
+import uuid
+
 from django.db import models
+from django.db.models import Q
 
 from apps.core.models import TimeStampedModel
 
@@ -94,3 +97,42 @@ class StartupFollow(models.Model):
 
     def __str__(self):
         return f"{self.user} follows {self.startup}"
+
+
+class StartupInvitation(TimeStampedModel):
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pending"
+        ACCEPTED = "accepted", "Accepted"
+        CANCELLED = "cancelled", "Cancelled"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    startup = models.ForeignKey(
+        Startup,
+        on_delete=models.CASCADE,
+        related_name="invitations",
+    )
+    email = models.EmailField()
+    token = models.CharField(max_length=64, unique=True, db_index=True)
+    invited_by = models.ForeignKey(
+        "users.UserProfile",
+        on_delete=models.CASCADE,
+        related_name="sent_invitations",
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.PENDING,
+    )
+
+    class Meta:
+        ordering = ["-created_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["startup", "email"],
+                condition=Q(status="pending"),
+                name="unique_pending_invite",
+            ),
+        ]
+
+    def __str__(self):
+        return f"Invite {self.email} to {self.startup} ({self.status})"

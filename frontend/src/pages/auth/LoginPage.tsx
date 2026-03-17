@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { Navigate, Link, useLocation } from "react-router-dom";
+import { Navigate, Link, useLocation, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -7,14 +7,17 @@ import { Card } from "@/components/ui/Card";
 export function LoginPage() {
   const { session, signIn, signInWithGoogle, loading: authLoading } = useAuth();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
-  const from = (location.state as { from?: { pathname: string } })?.from
-    ?.pathname || "/dashboard";
+  const redirectParam = searchParams.get("redirect");
+  const from = redirectParam
+    || (location.state as { from?: { pathname: string } })?.from?.pathname
+    || "/dashboard";
 
   if (authLoading) return null;
   if (session) return <Navigate to={from} replace />;

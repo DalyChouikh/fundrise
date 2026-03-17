@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Startup, StartupMember, StartupFollow
+from .models import Startup, StartupMember, StartupFollow, StartupInvitation
 
 
 class StartupMemberInline(admin.TabularInline):
@@ -26,3 +26,11 @@ class StartupMemberAdmin(admin.ModelAdmin):
 @admin.register(StartupFollow)
 class StartupFollowAdmin(admin.ModelAdmin):
     list_display = ("user", "startup", "created_at")
+
+
+@admin.register(StartupInvitation)
+class StartupInvitationAdmin(admin.ModelAdmin):
+    list_display = ("email", "startup", "status", "invited_by", "created_at")
+    list_filter = ("status",)
+    search_fields = ("email", "startup__name")
+    readonly_fields = ("token", "created_at", "updated_at")

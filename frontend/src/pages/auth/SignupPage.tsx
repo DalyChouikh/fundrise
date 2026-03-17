@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { Navigate, Link } from "react-router-dom";
+import { Navigate, Link, useSearchParams } from "react-router-dom";
 import { Building2, TrendingUp } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/Button";
@@ -9,6 +9,9 @@ type SelectableRole = "founder" | "investor";
 
 export function SignupPage() {
   const { session, signUp, signInWithGoogle, loading: authLoading } = useAuth();
+  const [searchParams] = useSearchParams();
+  const inviteToken = searchParams.get("invite");
+
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,7 +22,10 @@ export function SignupPage() {
   const [success, setSuccess] = useState(false);
 
   if (authLoading) return null;
-  if (session) return <Navigate to="/dashboard" replace />;
+  if (session) {
+    if (inviteToken) return <Navigate to={`/invite/${inviteToken}`} replace />;
+    return <Navigate to="/dashboard" replace />;
+  }
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -28,7 +34,7 @@ export function SignupPage() {
 
     const { error: authError } = await signUp(email, password, {
       full_name: fullName,
-      role,
+      role: inviteToken ? "team_member" : role,
     });
 
     if (authError) {
@@ -43,6 +49,10 @@ export function SignupPage() {
   const handleGoogleSignIn = async () => {
     setError("");
     setGoogleLoading(true);
+    // Persist invite token for OAuth redirect flow
+    if (inviteToken) {
+      localStorage.setItem("pendingInviteToken", inviteToken);
+    }
     const { error: authError } = await signInWithGoogle();
     if (authError) {
       setError(authError.message);
@@ -65,9 +75,14 @@ export function SignupPage() {
           <p className="text-sm text-brand-muted mb-6">
             We sent a confirmation link to <strong>{email}</strong>. Click it to
             activate your account.
+            {inviteToken && (
+              <span className="block mt-2">
+                After confirming, sign in to accept the team invitation.
+              </span>
+            )}
           </p>
           <Link
-            to="/login"
+            to={inviteToken ? `/login?redirect=/invite/${inviteToken}` : "/login"}
             className="text-brand-accent font-medium text-sm hover:underline"
           >
             Back to sign in
@@ -168,73 +183,81 @@ export function SignupPage() {
               />
             </div>
 
-            {/* Role selector */}
-            <div>
-              <label className="block text-sm font-medium text-brand-text mb-2.5">
-                I want to
-              </label>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setRole("founder")}
-                  className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all duration-200 ${
-                    role === "founder"
-                      ? "border-brand-accent bg-brand-accent/[0.04]"
-                      : "border-brand-border/50 hover:border-brand-border bg-white"
-                  }`}
-                >
-                  <Building2
-                    className={`w-6 h-6 ${
+            {/* Role selector — hidden when signing up via invite */}
+            {!inviteToken && (
+              <div>
+                <label className="block text-sm font-medium text-brand-text mb-2.5">
+                  I want to
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setRole("founder")}
+                    className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all duration-200 ${
                       role === "founder"
-                        ? "text-brand-accent"
-                        : "text-brand-muted"
-                    }`}
-                  />
-                  <span
-                    className={`text-sm font-semibold ${
-                      role === "founder"
-                        ? "text-brand-text"
-                        : "text-brand-muted"
+                        ? "border-brand-accent bg-brand-accent/[0.04]"
+                        : "border-brand-border/50 hover:border-brand-border bg-white"
                     }`}
                   >
-                    Launch
-                  </span>
-                  <span className="text-xs text-brand-muted text-center leading-tight">
-                    Fund my startup
-                  </span>
-                </button>
+                    <Building2
+                      className={`w-6 h-6 ${
+                        role === "founder"
+                          ? "text-brand-accent"
+                          : "text-brand-muted"
+                      }`}
+                    />
+                    <span
+                      className={`text-sm font-semibold ${
+                        role === "founder"
+                          ? "text-brand-text"
+                          : "text-brand-muted"
+                      }`}
+                    >
+                      Launch
+                    </span>
+                    <span className="text-xs text-brand-muted text-center leading-tight">
+                      Fund my startup
+                    </span>
+                  </button>
 
-                <button
-                  type="button"
-                  onClick={() => setRole("investor")}
-                  className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all duration-200 ${
-                    role === "investor"
-                      ? "border-brand-accent bg-brand-accent/[0.04]"
-                      : "border-brand-border/50 hover:border-brand-border bg-white"
-                  }`}
-                >
-                  <TrendingUp
-                    className={`w-6 h-6 ${
+                  <button
+                    type="button"
+                    onClick={() => setRole("investor")}
+                    className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all duration-200 ${
                       role === "investor"
-                        ? "text-brand-accent"
-                        : "text-brand-muted"
-                    }`}
-                  />
-                  <span
-                    className={`text-sm font-semibold ${
-                      role === "investor"
-                        ? "text-brand-text"
-                        : "text-brand-muted"
+                        ? "border-brand-accent bg-brand-accent/[0.04]"
+                        : "border-brand-border/50 hover:border-brand-border bg-white"
                     }`}
                   >
-                    Invest
-                  </span>
-                  <span className="text-xs text-brand-muted text-center leading-tight">
-                    Discover startups
-                  </span>
-                </button>
+                    <TrendingUp
+                      className={`w-6 h-6 ${
+                        role === "investor"
+                          ? "text-brand-accent"
+                          : "text-brand-muted"
+                      }`}
+                    />
+                    <span
+                      className={`text-sm font-semibold ${
+                        role === "investor"
+                          ? "text-brand-text"
+                          : "text-brand-muted"
+                      }`}
+                    >
+                      Invest
+                    </span>
+                    <span className="text-xs text-brand-muted text-center leading-tight">
+                      Discover startups
+                    </span>
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
+
+            {inviteToken && (
+              <div className="px-4 py-3 rounded-xl bg-brand-accent/[0.06] border border-brand-accent/20 text-sm text-brand-text">
+                You're signing up to join a startup as a <strong>team member</strong>.
+              </div>
+            )}
 
             <Button type="submit" loading={loading} className="w-full" size="lg">
               Create account
@@ -246,7 +269,7 @@ export function SignupPage() {
         <p className="text-center text-sm text-brand-muted mt-6">
           Already have an account?{" "}
           <Link
-            to="/login"
+            to={inviteToken ? `/login?redirect=/invite/${inviteToken}` : "/login"}
             className="text-brand-accent font-medium hover:underline"
           >
             Sign in

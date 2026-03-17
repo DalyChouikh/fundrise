@@ -10,12 +10,20 @@ export function ProtectedRoute() {
   if (!session)
     return <Navigate to="/login" state={{ from: location }} replace />;
 
-  if (
-    profile &&
-    !profile.role_selected &&
-    location.pathname !== "/onboarding/role"
-  ) {
-    return <Navigate to="/onboarding/role" replace />;
+  // If user has a pending invite token, redirect there instead of role selection
+  if (profile && !profile.role_selected) {
+    const pendingInvite = localStorage.getItem("pendingInviteToken");
+    if (pendingInvite) {
+      return <Navigate to={`/invite/${pendingInvite}`} replace />;
+    }
+    if (location.pathname !== "/onboarding/role") {
+      return <Navigate to="/onboarding/role" replace />;
+    }
+  }
+
+  // Clean up stale invite token once role is selected
+  if (profile?.role_selected) {
+    localStorage.removeItem("pendingInviteToken");
   }
 
   return <Outlet />;

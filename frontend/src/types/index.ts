@@ -249,6 +249,31 @@ export interface CampaignComment {
   updated_at: string;
 }
 
+// Invitation types
+export interface StartupInvitation {
+  id: string;
+  email: string;
+  status: "pending" | "accepted" | "cancelled";
+  invited_by: UserProfileMinimal;
+  created_at: string;
+}
+
+export interface InvitationPublicInfo {
+  startup_name: string;
+  startup_id: number;
+  startup_logo_url: string;
+  invited_by_name: string;
+  masked_email: string;
+  status: string;
+}
+
+export interface InvitationCreateResponse {
+  id: string;
+  email: string;
+  invite_url: string;
+  email_sent: boolean;
+}
+
 // Copilot types
 export interface CopilotMessage {
   id: number;

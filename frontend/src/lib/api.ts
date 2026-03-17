@@ -53,6 +53,14 @@ class ApiClient {
     return res.json();
   }
 
+  async getPublic<T>(path: string): Promise<T> {
+    const res = await fetch(`${this.baseUrl}${path}`, {
+      headers: { "Content-Type": "application/json" },
+    });
+    if (!res.ok) throw new ApiError(res.status, await res.text());
+    return res.json();
+  }
+
   async delete(path: string): Promise<void> {
     const res = await fetch(`${this.baseUrl}${path}`, {
       method: "DELETE",

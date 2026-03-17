@@ -1,8 +1,12 @@
 from django.contrib import admin
 from django.urls import path, include
 
+from apps.startups import views as startup_views
+
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("api/invitations/<str:token>/", startup_views.InvitationPublicDetailView.as_view(), name="invitation-detail"),
+    path("api/invitations/<str:token>/accept/", startup_views.InvitationAcceptView.as_view(), name="invitation-accept"),
     path("api/", include("apps.core.urls")),
     path("api/users/", include("apps.users.urls")),
     path("api/startups/", include("apps.startups.urls")),

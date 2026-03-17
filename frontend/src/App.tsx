@@ -17,6 +17,7 @@ import { KanbanStartupSelector } from "@/pages/kanban/KanbanStartupSelector";
 import { NotificationsPage } from "@/pages/notifications/NotificationsPage";
 import { SettingsPage } from "@/pages/settings/SettingsPage";
 import { ChatPage } from "@/pages/chat/ChatPage";
+import { InviteAcceptPage } from "@/pages/invites/InviteAcceptPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 
 export default function App() {
@@ -27,6 +28,7 @@ export default function App() {
           {/* Public routes */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
+          <Route path="/invite/:token" element={<InviteAcceptPage />} />
 
           {/* Protected routes with layout */}
           <Route element={<ProtectedRoute />}>

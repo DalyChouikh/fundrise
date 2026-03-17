@@ -4,6 +4,7 @@ from uuid import UUID
 import jwt
 from jwt import PyJWKClient
 from django.conf import settings
+from django.db import IntegrityError
 from rest_framework.authentication import BaseAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 
@@ -111,15 +112,31 @@ class SupabaseJWTAuthentication(BaseAuthentication):
         if not has_explicit_role:
             role = UserProfile.Role.INVESTOR
 
-        user, created = UserProfile.objects.get_or_create(
-            id=supabase_uid,
-            defaults={
-                "email": email,
-                "full_name": full_name,
-                "role": role,
-                "role_selected": has_explicit_role,
-            },
-        )
+        try:
+            user, created = UserProfile.objects.get_or_create(
+                id=supabase_uid,
+                defaults={
+                    "email": email,
+                    "full_name": full_name,
+                    "role": role,
+                    "role_selected": has_explicit_role,
+                },
+            )
+        except IntegrityError:
+            # Email already exists under a different UUID (e.g. user signed up
+            # via email then linked Google OAuth, which has a new Supabase UID).
+            # Migrate the existing profile to the new UUID.
+            try:
+                old_user = UserProfile.objects.get(email=email)
+                old_id = old_user.id
+                UserProfile.objects.filter(id=old_id).update(id=supabase_uid)
+                logger.info(
+                    "Migrated UserProfile UUID for %s: %s -> %s",
+                    email, old_id, supabase_uid,
+                )
+                return UserProfile.objects.get(id=supabase_uid)
+            except UserProfile.DoesNotExist:
+                raise AuthenticationFailed("Could not resolve user account.")
 
         if created:
             logger.info("Auto-created UserProfile for %s (%s)", email, supabase_uid)

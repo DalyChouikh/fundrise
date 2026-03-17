@@ -17,5 +17,20 @@ urlpatterns = [
         views.StartupMemberDestroyView.as_view(),
         name="startup-member-detail",
     ),
+    path(
+        "<int:startup_pk>/invitations/",
+        views.StartupInvitationCreateView.as_view(),
+        name="startup-invitation-create",
+    ),
+    path(
+        "<int:startup_pk>/invitations/list/",
+        views.StartupInvitationListView.as_view(),
+        name="startup-invitation-list",
+    ),
+    path(
+        "<int:startup_pk>/invitations/<uuid:pk>/cancel/",
+        views.StartupInvitationCancelView.as_view(),
+        name="startup-invitation-cancel",
+    ),
     path("", include(router.urls)),
 ]

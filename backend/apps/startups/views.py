@@ -1,17 +1,26 @@
+import secrets
+
+from django.conf import settings
 from django.db import transaction
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from apps.startups.models import Startup, StartupFollow, StartupMember
+from apps.chat.models import ChatRoom, ChatRoomParticipant
+from apps.startups.email import send_invite_email
+from apps.startups.models import Startup, StartupFollow, StartupInvitation, StartupMember
 from apps.startups.permissions import (
     IsStartupCreatorOrAdmin,
     IsStartupFounderFromURL,
     IsStartupMemberOrAdmin,
 )
 from apps.startups.serializers import (
+    InvitationCreateSerializer,
+    InvitationListSerializer,
+    InvitationPublicSerializer,
     StartupCreateSerializer,
     StartupDetailSerializer,
     StartupEditSerializer,
@@ -159,3 +168,164 @@ class StartupMemberListCreateView(generics.ListCreateAPIView):
 class StartupMemberDestroyView(generics.DestroyAPIView):
     queryset = StartupMember.objects.all()
     permission_classes = [permissions.IsAuthenticated, IsStartupFounderFromURL]
+
+
+# --- Invitation Views ---
+
+
+class StartupInvitationCreateView(APIView):
+    permission_classes = [permissions.IsAuthenticated, IsStartupFounderFromURL]
+
+    def post(self, request, startup_pk):
+        startup = get_object_or_404(Startup, pk=startup_pk)
+        serializer = InvitationCreateSerializer(
+            data=request.data,
+            context={"startup": startup, "request": request},
+        )
+        serializer.is_valid(raise_exception=True)
+
+        email = serializer.validated_data["email"]
+        token = secrets.token_urlsafe(32)
+
+        invitation = StartupInvitation.objects.create(
+            startup=startup,
+            email=email,
+            token=token,
+            invited_by=request.user,
+        )
+
+        email_sent = send_invite_email(invitation)
+        invite_url = f"{settings.FRONTEND_URL}/invite/{token}"
+
+        return Response(
+            {
+                "id": str(invitation.id),
+                "email": email,
+                "invite_url": invite_url,
+                "email_sent": email_sent,
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class StartupInvitationListView(generics.ListAPIView):
+    serializer_class = InvitationListSerializer
+    permission_classes = [permissions.IsAuthenticated, IsStartupFounderFromURL]
+
+    def get_queryset(self):
+        return (
+            StartupInvitation.objects.filter(
+                startup_id=self.kwargs["startup_pk"],
+                status="pending",
+            )
+            .select_related("invited_by")
+        )
+
+
+class StartupInvitationCancelView(APIView):
+    permission_classes = [permissions.IsAuthenticated, IsStartupFounderFromURL]
+
+    def post(self, request, startup_pk, pk):
+        invitation = get_object_or_404(
+            StartupInvitation,
+            pk=pk,
+            startup_id=startup_pk,
+            status="pending",
+        )
+        invitation.status = "cancelled"
+        invitation.save(update_fields=["status", "updated_at"])
+        return Response({"status": "cancelled"})
+
+
+class InvitationPublicDetailView(generics.RetrieveAPIView):
+    authentication_classes = []
+    permission_classes = [permissions.AllowAny]
+    serializer_class = InvitationPublicSerializer
+    lookup_field = "token"
+    queryset = StartupInvitation.objects.select_related("startup", "invited_by")
+
+
+class InvitationAcceptView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, token):
+        with transaction.atomic():
+            invitation = get_object_or_404(
+                StartupInvitation.objects.select_for_update().select_related(
+                    "startup", "invited_by"
+                ),
+                token=token,
+            )
+
+            if invitation.status != "pending":
+                return Response(
+                    {"detail": f"This invitation has already been {invitation.status}."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            if request.user.email.lower() != invitation.email.lower():
+                return Response(
+                    {"detail": "This invitation was sent to a different email address."},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+
+            if request.user.role_selected and request.user.role not in ("team_member",):
+                return Response(
+                    {
+                        "detail": (
+                            f"Users with the '{request.user.role}' role cannot accept "
+                            "team member invitations."
+                        )
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            if StartupMember.objects.filter(
+                startup=invitation.startup, user=request.user
+            ).exists():
+                return Response(
+                    {"detail": "You are already a member of this startup."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            StartupMember.objects.create(
+                startup=invitation.startup,
+                user=request.user,
+                role=StartupMember.Role.TEAM_MEMBER,
+            )
+
+            if request.user.role != "team_member":
+                request.user.role = "team_member"
+                request.user.role_selected = True
+                request.user.save(update_fields=["role", "role_selected"])
+
+            invitation.status = "accepted"
+            invitation.save(update_fields=["status", "updated_at"])
+
+            # Add the new member to all campaign chat rooms for this startup
+            campaign_rooms = ChatRoom.objects.filter(
+                room_type=ChatRoom.RoomType.CAMPAIGN,
+                campaign__startup=invitation.startup,
+            ).exclude(
+                room_participants__user=request.user,
+            )
+            ChatRoomParticipant.objects.bulk_create(
+                [ChatRoomParticipant(room=room, user=request.user) for room in campaign_rooms],
+                ignore_conflicts=True,
+            )
+
+        create_notification(
+            recipient=invitation.invited_by,
+            notification_type="new_follower",
+            title="Invitation Accepted",
+            message=(
+                f"{request.user.full_name} has accepted your invitation "
+                f"to join {invitation.startup.name}."
+            ),
+            related_object=invitation.startup,
+        )
+
+        return Response({
+            "startup_id": invitation.startup.id,
+            "startup_name": invitation.startup.name,
+        })
