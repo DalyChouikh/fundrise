@@ -4,6 +4,7 @@ import { CheckCircle, XCircle, Mail, Users, LogIn, UserPlus, LogOut } from "luci
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/Button";
+import { Logo } from "@/components/ui/Logo";
 import { Card } from "@/components/ui/Card";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import type { InvitationPublicInfo } from "@/types";
@@ -154,11 +155,8 @@ export function InviteAcceptPage() {
     <div className="min-h-screen bg-brand-bg flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-[440px]">
         {/* Logo */}
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold tracking-tight">
-            <span className="text-brand-accent">Funde</span>
-            <span className="text-brand-text">raise</span>
-          </h1>
+        <div className="flex justify-center mb-8">
+          <Logo size="lg" />
         </div>
 
         <Card padding="lg">
@@ -238,7 +236,7 @@ export function InviteAcceptPage() {
         </Card>
 
         <p className="text-center text-xs text-brand-muted mt-6">
-          This invitation was sent via Funderaise.
+          This invitation was sent via Funderaise
         </p>
       </div>
     </div>

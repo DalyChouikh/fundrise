@@ -3,6 +3,7 @@ import { Navigate, Link, useLocation, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { Logo } from "@/components/ui/Logo";
 
 export function LoginPage() {
   const { session, signIn, signInWithGoogle, loading: authLoading } = useAuth();
@@ -49,10 +50,9 @@ export function LoginPage() {
       <div className="w-full max-w-[420px]">
         {/* Logo */}
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold tracking-tight">
-            <span className="text-brand-accent">Funde</span>
-            <span className="text-brand-text">raise</span>
-          </h1>
+          <div className="flex justify-center mb-3">
+            <Logo size="lg" />
+          </div>
           <p className="text-brand-muted mt-2 text-sm">
             Welcome back. Sign in to continue.
           </p>

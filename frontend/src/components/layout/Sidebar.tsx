@@ -2,6 +2,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import { LogOut, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar } from "@/components/ui/Avatar";
+import { Logo } from "@/components/ui/Logo";
 import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import type { NavItem } from "@/types";
 
@@ -99,10 +100,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       >
         {/* Header */}
         <div className="h-[var(--topbar-height)] flex items-center justify-between px-6 border-b border-brand-border/30">
-          <h1 className="text-xl font-bold tracking-tight">
-            <span className="text-brand-accent">Funde</span>
-            <span className="text-brand-text">raise</span>
-          </h1>
+          <Logo size="sm" />
           <button
             onClick={onClose}
             className="lg:hidden p-1 rounded-lg hover:bg-brand-bg text-brand-muted transition-colors"

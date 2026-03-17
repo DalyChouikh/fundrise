@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { Logo } from "@/components/ui/Logo";
 import type { UserProfile } from "@/types";
 
 type SelectableRole = "founder" | "investor";
@@ -34,11 +35,14 @@ export function RoleSelectionPage() {
     <div className="min-h-screen bg-brand-bg flex items-center justify-center px-4">
       <div className="w-full max-w-[480px]">
         <div className="text-center mb-8">
+          <div className="flex justify-center mb-4">
+            <Logo size="lg" />
+          </div>
           <h1 className="text-2xl font-bold tracking-tight text-brand-text">
             Welcome{profile?.full_name ? `, ${profile.full_name}` : ""}!
           </h1>
           <p className="text-brand-muted mt-2 text-sm">
-            How would you like to use Funderaise?
+            How would you like to use the platform?
           </p>
         </div>
 
