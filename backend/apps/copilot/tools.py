@@ -241,6 +241,39 @@ def get_my_tasks(user):
     }
 
 
+def get_kanban_board(user, startup_id):
+    if not _check_startup_member(user, startup_id):
+        return {"error": "Permission denied. You must be a member of this startup."}
+
+    columns = (
+        KanbanColumn.objects.filter(startup_id=startup_id)
+        .prefetch_related("tasks__assignee")
+        .order_by("order")
+    )
+    return {
+        "startup_id": startup_id,
+        "columns": [
+            {
+                "id": col.id,
+                "name": col.name,
+                "order": col.order,
+                "tasks": [
+                    {
+                        "id": t.id,
+                        "title": t.title,
+                        "description": (t.description or "")[:200],
+                        "assignee_name": t.assignee.full_name if t.assignee else None,
+                        "assignee_email": t.assignee.email if t.assignee else None,
+                        "order": t.order,
+                    }
+                    for t in col.tasks.all()
+                ],
+            }
+            for col in columns
+        ],
+    }
+
+
 def get_platform_stats(user):
     if user.role == "admin":
         return {
@@ -917,6 +950,23 @@ TOOL_DEFINITIONS = [
     {
         "type": "function",
         "function": {
+            "name": "get_kanban_board",
+            "description": "Get the full kanban board for a startup, including all columns and tasks with their IDs, titles, and assignees. Use this to look up column_id and task_id before creating, moving, or updating tasks.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "startup_id": {
+                        "type": "integer",
+                        "description": "The ID of the startup whose kanban board to retrieve",
+                    },
+                },
+                "required": ["startup_id"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "get_platform_stats",
             "description": "Get dashboard statistics based on user's role. Admins get platform-wide stats, founders get startup stats, investors get portfolio stats.",
             "parameters": {
@@ -1343,6 +1393,7 @@ TOOL_REGISTRY = {
     "search_campaigns": search_campaigns,
     "get_notifications_summary": get_notifications_summary,
     "get_campaign_milestones": get_campaign_milestones,
+    "get_kanban_board": get_kanban_board,
     # Action tools
     "create_campaign_update": create_campaign_update,
     "create_campaign_milestone": create_campaign_milestone,
