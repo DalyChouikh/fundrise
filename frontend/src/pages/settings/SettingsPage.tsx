@@ -5,7 +5,7 @@ import { api } from "@/lib/api";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { Avatar } from "@/components/ui/Avatar";
+import { AvatarUpload } from "@/components/upload/AvatarUpload";
 
 export function SettingsPage() {
   const { profile, refreshProfile } = useAuth();
@@ -45,9 +45,10 @@ export function SettingsPage() {
       {/* Profile Card */}
       <Card>
         <div className="flex items-center gap-4 mb-6 pb-6 border-b border-brand-border/20">
-          <Avatar
-            src={form.avatar_url || undefined}
+          <AvatarUpload
+            currentUrl={form.avatar_url || undefined}
             name={form.full_name || "User"}
+            onUpload={(url) => setForm((f) => ({ ...f, avatar_url: url }))}
             size="lg"
           />
           <div>
@@ -95,21 +96,6 @@ export function SettingsPage() {
               placeholder="Tell us about yourself..."
               rows={3}
               className="w-full px-4 py-2.5 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text placeholder:text-brand-muted text-sm outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/10 transition-all resize-none"
-            />
-          </div>
-
-          <div>
-            <label className="text-sm font-medium text-brand-text mb-1.5 block">
-              Avatar URL
-            </label>
-            <input
-              type="url"
-              value={form.avatar_url}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, avatar_url: e.target.value }))
-              }
-              placeholder="https://..."
-              className="w-full px-4 py-2.5 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text placeholder:text-brand-muted text-sm outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/10 transition-all"
             />
           </div>
 
