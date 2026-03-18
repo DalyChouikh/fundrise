@@ -27,6 +27,10 @@ class UserProfile(TimeStampedModel):
     )
     bio = models.TextField(blank=True, default="")
     role_selected = models.BooleanField(default=False)
+    onboarding_completed = models.BooleanField(default=False)
+    company = models.CharField(max_length=255, blank=True, default="")
+    job_title = models.CharField(max_length=255, blank=True, default="")
+    linkedin_url = models.URLField(max_length=500, blank=True, default="")
 
     class Meta:
         ordering = ["-created_at"]
@@ -41,3 +45,41 @@ class UserProfile(TimeStampedModel):
     @property
     def is_anonymous(self):
         return False
+
+
+class InvestorProfile(TimeStampedModel):
+    class PreferredStage(models.TextChoices):
+        PRE_SEED = "pre_seed", "Pre-Seed"
+        SEED = "seed", "Seed"
+        SERIES_A = "series_a", "Series A"
+        SERIES_B_PLUS = "series_b_plus", "Series B+"
+
+    class AccreditationStatus(models.TextChoices):
+        ACCREDITED = "accredited", "Accredited"
+        NON_ACCREDITED = "non_accredited", "Non-Accredited"
+        PREFER_NOT_TO_SAY = "prefer_not_to_say", "Prefer Not to Say"
+
+    user = models.OneToOneField(
+        UserProfile,
+        on_delete=models.CASCADE,
+        related_name="investor_profile",
+    )
+    preferred_industries = models.JSONField(default=list, blank=True)
+    check_size_min = models.IntegerField(null=True, blank=True)
+    check_size_max = models.IntegerField(null=True, blank=True)
+    preferred_stage = models.CharField(
+        max_length=20,
+        choices=PreferredStage.choices,
+        blank=True,
+        default="",
+    )
+    accreditation_status = models.CharField(
+        max_length=20,
+        choices=AccreditationStatus.choices,
+        blank=True,
+        default="",
+    )
+    accreditation_description = models.TextField(blank=True, default="")
+
+    def __str__(self):
+        return f"InvestorProfile({self.user.full_name})"
