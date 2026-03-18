@@ -19,6 +19,8 @@ import { Badge } from "@/components/ui/Badge";
 import { Avatar } from "@/components/ui/Avatar";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import type { Startup } from "@/types";
+import { LogoUpload } from "@/components/upload/LogoUpload";
+import { FileUpload } from "@/components/upload/FileUpload";
 
 export function StartupsPage() {
   const { profile } = useAuth();
@@ -298,6 +300,8 @@ function CreateStartupModal({
     location: "",
     founding_date: "",
     website: "",
+    logo_url: "",
+    pitch_deck_url: "",
   });
 
   const handleSubmit = async (e: FormEvent) => {
@@ -306,7 +310,10 @@ function CreateStartupModal({
     setLoading(true);
 
     try {
-      await api.post("/startups/", form);
+      const payload: Record<string, unknown> = { ...form };
+      if (!payload.logo_url) delete payload.logo_url;
+      if (!payload.pitch_deck_url) delete payload.pitch_deck_url;
+      await api.post("/startups/", payload);
       onCreated();
     } catch {
       setError("Failed to create startup. Please check your inputs.");
@@ -340,6 +347,11 @@ function CreateStartupModal({
               {error}
             </div>
           )}
+
+          <LogoUpload
+            startupName={form.name}
+            onUpload={(url) => updateField("logo_url", url)}
+          />
 
           <div>
             <label className="block text-sm font-medium text-brand-text mb-1.5">
@@ -424,6 +436,13 @@ function CreateStartupModal({
               />
             </div>
           </div>
+
+          <FileUpload
+            bucket="documents"
+            label="Pitch Deck (PDF)"
+            onUpload={(url) => updateField("pitch_deck_url", url)}
+            hint="Upload your pitch deck as PDF, max 10MB"
+          />
 
           <div className="flex justify-end gap-3 pt-2">
             <Button type="button" variant="secondary" onClick={onClose}>
