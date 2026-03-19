@@ -297,7 +297,12 @@ class InvitationAcceptView(APIView):
             if request.user.role != "team_member":
                 request.user.role = "team_member"
                 request.user.role_selected = True
-                request.user.save(update_fields=["role", "role_selected"])
+                request.user.onboarding_completed = True
+                request.user.save(update_fields=["role", "role_selected", "onboarding_completed"])
+            else:
+                if not request.user.onboarding_completed:
+                    request.user.onboarding_completed = True
+                    request.user.save(update_fields=["onboarding_completed"])
 
             invitation.status = "accepted"
             invitation.save(update_fields=["status", "updated_at"])
