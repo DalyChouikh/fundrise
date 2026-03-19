@@ -8,6 +8,10 @@ export interface UserProfile {
   role: UserRole;
   bio: string;
   role_selected: boolean;
+  onboarding_completed: boolean;
+  company: string;
+  job_title: string;
+  linkedin_url: string;
   created_at: string;
   updated_at: string;
 }
@@ -17,6 +21,17 @@ export interface UserProfileMinimal {
   full_name: string;
   avatar_url: string;
   role: UserRole;
+}
+
+export interface InvestorProfile {
+  preferred_industries: string[];
+  check_size_min: number | null;
+  check_size_max: number | null;
+  preferred_stage: string;
+  accreditation_status: string;
+  accreditation_description: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export type StartupStatus = "pending_approval" | "active" | "suspended";
