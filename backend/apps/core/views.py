@@ -35,12 +35,16 @@ def dashboard_stats(request):
             )["total"]
             or 0
         )
+        pending_users = UserProfile.objects.filter(
+            approval_status="pending_approval"
+        ).count()
         return Response(
             {
                 "total_users": total_users,
                 "active_startups": active_startups,
                 "active_campaigns": active_campaigns,
                 "total_invested": str(total_invested),
+                "pending_users": pending_users,
             }
         )
 

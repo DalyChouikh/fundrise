@@ -71,6 +71,14 @@ class StartupViewSet(viewsets.ModelViewSet):
             | Q(id__in=user_startup_ids)
         ).distinct()
 
+    def create(self, request, *args, **kwargs):
+        if request.user.approval_status != "approved":
+            return Response(
+                {"detail": "Your account must be approved to create a startup."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        return super().create(request, *args, **kwargs)
+
     def perform_create(self, serializer):
         with transaction.atomic():
             startup = serializer.save(created_by=self.request.user)
@@ -298,11 +306,18 @@ class InvitationAcceptView(APIView):
                 request.user.role = "team_member"
                 request.user.role_selected = True
                 request.user.onboarding_completed = True
-                request.user.save(update_fields=["role", "role_selected", "onboarding_completed"])
+                request.user.approval_status = "approved"
+                request.user.save(update_fields=["role", "role_selected", "onboarding_completed", "approval_status"])
             else:
+                updates = []
                 if not request.user.onboarding_completed:
                     request.user.onboarding_completed = True
-                    request.user.save(update_fields=["onboarding_completed"])
+                    updates.append("onboarding_completed")
+                if request.user.approval_status != "approved":
+                    request.user.approval_status = "approved"
+                    updates.append("approval_status")
+                if updates:
+                    request.user.save(update_fields=updates)
 
             invitation.status = "accepted"
             invitation.save(update_fields=["status", "updated_at"])

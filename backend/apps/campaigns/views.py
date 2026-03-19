@@ -68,6 +68,14 @@ class CampaignViewSet(viewsets.ModelViewSet):
             | Q(startup_id__in=user_startup_ids)
         ).distinct()
 
+    def create(self, request, *args, **kwargs):
+        if request.user.approval_status != "approved":
+            return Response(
+                {"detail": "Your account must be approved to create a campaign."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        return super().create(request, *args, **kwargs)
+
     def perform_create(self, serializer):
         campaign = serializer.save()
         # Auto-create a campaign chat room with all startup members

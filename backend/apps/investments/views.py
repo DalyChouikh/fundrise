@@ -52,6 +52,14 @@ class InvestmentViewSet(
         ).values_list("startup_id", flat=True)
         return qs.filter(campaign__startup_id__in=user_startup_ids)
 
+    def create(self, request, *args, **kwargs):
+        if request.user.approval_status != "approved":
+            return Response(
+                {"detail": "Your account must be approved to invest."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        return super().create(request, *args, **kwargs)
+
     def perform_create(self, serializer):
         investment = serializer.save(investor=self.request.user)
         # Notify startup founders about new investment
