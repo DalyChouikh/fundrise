@@ -12,6 +12,8 @@ export interface UserProfile {
   company: string;
   job_title: string;
   linkedin_url: string;
+  approval_status: "pending_approval" | "approved" | "rejected";
+  rejection_reason: string;
   created_at: string;
   updated_at: string;
 }
@@ -158,6 +160,7 @@ export interface DashboardStatsAdmin {
   active_startups: number;
   active_campaigns: number;
   total_invested: string;
+  pending_users: number;
 }
 
 export type NotificationType =
@@ -171,7 +174,9 @@ export type NotificationType =
   | "new_message"
   | "new_follower"
   | "task_assigned"
-  | "task_comment";
+  | "task_comment"
+  | "user_approved"
+  | "user_rejected";
 
 export interface Notification {
   id: number;
