@@ -16,6 +16,8 @@ class Notification(models.Model):
         NEW_FOLLOWER = "new_follower", "New Follower"
         TASK_ASSIGNED = "task_assigned", "Task Assigned"
         TASK_COMMENT = "task_comment", "Task Comment"
+        USER_APPROVED = "user_approved", "User Approved"
+        USER_REJECTED = "user_rejected", "User Rejected"
 
     recipient = models.ForeignKey(
         "users.UserProfile",

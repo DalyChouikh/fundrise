@@ -32,6 +32,18 @@ class UserProfile(TimeStampedModel):
     job_title = models.CharField(max_length=255, blank=True, default="")
     linkedin_url = models.URLField(max_length=500, blank=True, default="")
 
+    class ApprovalStatus(models.TextChoices):
+        PENDING = "pending_approval", "Pending Approval"
+        APPROVED = "approved", "Approved"
+        REJECTED = "rejected", "Rejected"
+
+    approval_status = models.CharField(
+        max_length=20,
+        choices=ApprovalStatus.choices,
+        default=ApprovalStatus.PENDING,
+    )
+    rejection_reason = models.TextField(blank=True, default="")
+
     class Meta:
         ordering = ["-created_at"]
 
