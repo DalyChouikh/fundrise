@@ -121,7 +121,15 @@ export function StartupsPage() {
           </p>
         </div>
         {profile?.role === "founder" && (
-          <Button onClick={() => setShowCreate(true)}>
+          <Button
+            onClick={() => setShowCreate(true)}
+            disabled={profile?.approval_status !== "approved"}
+            title={
+              profile?.approval_status !== "approved"
+                ? "Account pending approval"
+                : undefined
+            }
+          >
             <Plus className="w-4 h-4 mr-1.5" />
             New Startup
           </Button>

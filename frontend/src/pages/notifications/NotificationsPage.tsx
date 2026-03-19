@@ -9,6 +9,8 @@ import {
   CheckCircle,
   ClipboardList,
   CheckCheck,
+  UserCheck,
+  UserX,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { Card } from "@/components/ui/Card";
@@ -31,6 +33,8 @@ const typeConfig: Record<
   new_follower: { icon: Heart, color: "text-rose-500", bg: "bg-rose-50" },
   task_assigned: { icon: ClipboardList, color: "text-brand-accent", bg: "bg-orange-50" },
   task_comment: { icon: MessageSquare, color: "text-brand-accent", bg: "bg-orange-50" },
+  user_approved: { icon: UserCheck, color: "text-emerald-600", bg: "bg-emerald-50" },
+  user_rejected: { icon: UserX, color: "text-red-500", bg: "bg-red-50" },
 };
 
 export function NotificationsPage() {

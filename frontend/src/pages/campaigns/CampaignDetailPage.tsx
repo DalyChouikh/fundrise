@@ -156,7 +156,9 @@ export function CampaignDetailPage() {
   );
 
   const canInvest =
-    profile?.role === "investor" && campaign.status === "active";
+    profile?.role === "investor" &&
+    campaign.status === "active" &&
+    profile?.approval_status === "approved";
 
   return (
     <div className="space-y-6">
