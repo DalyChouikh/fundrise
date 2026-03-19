@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from apps.users.models import UserProfile
+from apps.users.models import InvestorProfile, UserProfile
 
 
 class UserProfileMinimalSerializer(serializers.ModelSerializer):
@@ -21,6 +21,10 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "role",
             "bio",
             "role_selected",
+            "onboarding_completed",
+            "company",
+            "job_title",
+            "linkedin_url",
             "created_at",
             "updated_at",
         ]
@@ -58,7 +62,27 @@ class AdminUserSerializer(serializers.ModelSerializer):
             "role",
             "bio",
             "role_selected",
+            "onboarding_completed",
+            "company",
+            "job_title",
+            "linkedin_url",
             "created_at",
             "updated_at",
         ]
         read_only_fields = ["id", "email", "created_at", "updated_at"]
+
+
+class InvestorProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InvestorProfile
+        fields = [
+            "preferred_industries",
+            "check_size_min",
+            "check_size_max",
+            "preferred_stage",
+            "accreditation_status",
+            "accreditation_description",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["created_at", "updated_at"]

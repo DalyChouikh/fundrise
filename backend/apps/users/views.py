@@ -1,9 +1,16 @@
 from django.db.models import Q
-from rest_framework import generics, permissions
+from rest_framework import generics, permissions, status
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from apps.users.models import UserProfile
+from apps.users.models import InvestorProfile, UserProfile
 from apps.users.permissions import IsAdmin
-from apps.users.serializers import AdminUserSerializer, UserProfileMinimalSerializer, UserProfileSerializer
+from apps.users.serializers import (
+    AdminUserSerializer,
+    InvestorProfileSerializer,
+    UserProfileMinimalSerializer,
+    UserProfileSerializer,
+)
 
 
 class UserProfileMeView(generics.RetrieveUpdateAPIView):
@@ -60,3 +67,39 @@ class UserSearchView(generics.ListAPIView):
             UserProfile.objects.filter(Q(full_name__icontains=search))
             .exclude(id=self.request.user.id)[:20]
         )
+
+
+class InvestorProfileView(APIView):
+    """GET/POST /api/users/me/investor-profile/ — get or upsert investor profile."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        try:
+            profile = request.user.investor_profile
+        except InvestorProfile.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        serializer = InvestorProfileSerializer(profile)
+        return Response(serializer.data)
+
+    def post(self, request):
+        profile, _created = InvestorProfile.objects.update_or_create(
+            user=request.user,
+            defaults={},
+        )
+        serializer = InvestorProfileSerializer(profile, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+
+class CompleteOnboardingView(APIView):
+    """POST /api/users/me/complete-onboarding/ — mark onboarding as done."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        request.user.onboarding_completed = True
+        request.user.save(update_fields=["onboarding_completed"])
+        serializer = UserProfileSerializer(request.user)
+        return Response(serializer.data)

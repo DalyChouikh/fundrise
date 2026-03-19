@@ -4,6 +4,8 @@ from apps.users import views
 
 urlpatterns = [
     path("me/", views.UserProfileMeView.as_view(), name="user-me"),
+    path("me/investor-profile/", views.InvestorProfileView.as_view(), name="investor-profile"),
+    path("me/complete-onboarding/", views.CompleteOnboardingView.as_view(), name="complete-onboarding"),
     path("search/", views.UserSearchView.as_view(), name="user-search"),
     path("", views.UserListView.as_view(), name="user-list"),
     path("<uuid:pk>/", views.UserDetailView.as_view(), name="user-detail"),
