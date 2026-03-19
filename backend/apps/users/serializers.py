@@ -25,12 +25,16 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "company",
             "job_title",
             "linkedin_url",
+            "approval_status",
+            "rejection_reason",
             "created_at",
             "updated_at",
         ]
         read_only_fields = [
             "id",
             "email",
+            "approval_status",
+            "rejection_reason",
             "created_at",
             "updated_at",
         ]
@@ -66,6 +70,8 @@ class AdminUserSerializer(serializers.ModelSerializer):
             "company",
             "job_title",
             "linkedin_url",
+            "approval_status",
+            "rejection_reason",
             "created_at",
             "updated_at",
         ]

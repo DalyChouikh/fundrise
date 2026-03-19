@@ -1,8 +1,11 @@
 from django.db.models import Q
+from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.notifications.utils import create_notification
+from apps.users.email import send_approval_email, send_rejection_email
 from apps.users.models import InvestorProfile, UserProfile
 from apps.users.permissions import IsAdmin
 from apps.users.serializers import (
@@ -42,6 +45,9 @@ class UserListView(generics.ListAPIView):
         role = self.request.query_params.get("role")
         if role:
             qs = qs.filter(role=role)
+        approval_status = self.request.query_params.get("approval_status")
+        if approval_status:
+            qs = qs.filter(approval_status=approval_status)
         return qs
 
 
@@ -103,3 +109,51 @@ class CompleteOnboardingView(APIView):
         request.user.save(update_fields=["onboarding_completed"])
         serializer = UserProfileSerializer(request.user)
         return Response(serializer.data)
+
+
+class UserApproveView(APIView):
+    """POST /api/users/<uuid>/approve/ — admin approves a user."""
+
+    permission_classes = [permissions.IsAuthenticated, IsAdmin]
+
+    def post(self, request, pk):
+        user = get_object_or_404(UserProfile, pk=pk)
+        user.approval_status = "approved"
+        user.rejection_reason = ""
+        user.save(update_fields=["approval_status", "rejection_reason"])
+        create_notification(
+            recipient=user,
+            notification_type="user_approved",
+            title="Account Approved",
+            message="Your account has been approved! You now have full access to the platform.",
+            related_object=user,
+        )
+        send_approval_email(user)
+        return Response(AdminUserSerializer(user).data)
+
+
+class UserRejectView(APIView):
+    """POST /api/users/<uuid>/reject/ — admin rejects a user with reason."""
+
+    permission_classes = [permissions.IsAuthenticated, IsAdmin]
+
+    def post(self, request, pk):
+        reason = request.data.get("reason", "").strip()
+        if not reason:
+            return Response(
+                {"detail": "Reason is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        user = get_object_or_404(UserProfile, pk=pk)
+        user.approval_status = "rejected"
+        user.rejection_reason = reason
+        user.save(update_fields=["approval_status", "rejection_reason"])
+        create_notification(
+            recipient=user,
+            notification_type="user_rejected",
+            title="Account Not Approved",
+            message=f"Your account was not approved. Reason: {reason}",
+            related_object=user,
+        )
+        send_rejection_email(user, reason)
+        return Response(AdminUserSerializer(user).data)
