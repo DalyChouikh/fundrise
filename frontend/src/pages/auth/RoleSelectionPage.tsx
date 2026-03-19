@@ -24,7 +24,7 @@ export function RoleSelectionPage() {
     try {
       await api.patch<UserProfile>("/users/me/", { role });
       await refreshProfile();
-      navigate("/dashboard", { replace: true });
+      navigate("/onboarding/profile", { replace: true });
     } catch {
       setError("Failed to save your role. Please try again.");
       setLoading(false);

@@ -26,5 +26,15 @@ export function ProtectedRoute() {
     localStorage.removeItem("pendingInviteToken");
   }
 
+  // Redirect to onboarding if not completed (skip for team_members)
+  if (
+    profile?.role_selected &&
+    !profile?.onboarding_completed &&
+    profile?.role !== "team_member" &&
+    location.pathname !== "/onboarding/profile"
+  ) {
+    return <Navigate to="/onboarding/profile" replace />;
+  }
+
   return <Outlet />;
 }

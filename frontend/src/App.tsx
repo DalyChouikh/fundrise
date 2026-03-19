@@ -18,6 +18,7 @@ import { NotificationsPage } from "@/pages/notifications/NotificationsPage";
 import { SettingsPage } from "@/pages/settings/SettingsPage";
 import { ChatPage } from "@/pages/chat/ChatPage";
 import { InviteAcceptPage } from "@/pages/invites/InviteAcceptPage";
+import { OnboardingPage } from "@/pages/onboarding/OnboardingPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 
 export default function App() {
@@ -35,6 +36,10 @@ export default function App() {
             <Route
               path="/onboarding/role"
               element={<RoleSelectionPage />}
+            />
+            <Route
+              path="/onboarding/profile"
+              element={<OnboardingPage />}
             />
             <Route element={<AppLayout />}>
               <Route path="/dashboard" element={<DashboardPage />} />
