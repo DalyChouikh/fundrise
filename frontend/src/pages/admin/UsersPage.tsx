@@ -21,12 +21,16 @@ export function UsersPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("");
   const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [rejectingUser, setRejectingUser] = useState<UserProfile | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
 
   const fetchUsers = async () => {
     try {
       const params = new URLSearchParams();
       if (searchQuery) params.set("search", searchQuery);
       if (roleFilter) params.set("role", roleFilter);
+      if (statusFilter) params.set("approval_status", statusFilter);
       const query = params.toString();
       const data = await api.get<UserProfile[]>(
         `/users/${query ? `?${query}` : ""}`
@@ -41,7 +45,7 @@ export function UsersPage() {
 
   useEffect(() => {
     fetchUsers();
-  }, [roleFilter]);
+  }, [roleFilter, statusFilter]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -57,6 +61,41 @@ export function UsersPage() {
         prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u))
       );
       setEditingUser(null);
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleApproveUser = async (userId: string) => {
+    try {
+      await api.post(`/users/${userId}/approve/`, {});
+      setUsers((prev) =>
+        prev.map((u) =>
+          u.id === userId
+            ? { ...u, approval_status: "approved" as const, rejection_reason: "" }
+            : u
+        )
+      );
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleRejectUser = async () => {
+    if (!rejectingUser || !rejectReason.trim()) return;
+    try {
+      await api.post(`/users/${rejectingUser.id}/reject/`, {
+        reason: rejectReason,
+      });
+      setUsers((prev) =>
+        prev.map((u) =>
+          u.id === rejectingUser.id
+            ? { ...u, approval_status: "rejected" as const, rejection_reason: rejectReason }
+            : u
+        )
+      );
+      setRejectingUser(null);
+      setRejectReason("");
     } catch {
       // ignore
     }
@@ -97,6 +136,16 @@ export function UsersPage() {
             </option>
           ))}
         </select>
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="px-4 py-2.5 rounded-xl bg-white border border-brand-border/50 text-brand-text text-sm shadow-card outline-none focus:border-brand-blue/50 transition-colors"
+        >
+          <option value="">All Status</option>
+          <option value="pending_approval">Pending</option>
+          <option value="approved">Approved</option>
+          <option value="rejected">Rejected</option>
+        </select>
       </div>
 
       {/* Users Table */}
@@ -125,6 +174,9 @@ export function UsersPage() {
                   </th>
                   <th className="text-left text-xs font-medium text-brand-muted uppercase tracking-wider px-6 py-3">
                     Role
+                  </th>
+                  <th className="text-left text-xs font-medium text-brand-muted uppercase tracking-wider px-6 py-3">
+                    Status
                   </th>
                   <th className="text-left text-xs font-medium text-brand-muted uppercase tracking-wider px-6 py-3">
                     Joined
@@ -160,17 +212,66 @@ export function UsersPage() {
                     <td className="px-6 py-4">
                       <Badge status={user.role} />
                     </td>
+                    <td className="px-6 py-4">
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          user.approval_status === "approved"
+                            ? "bg-emerald-50 text-emerald-700"
+                            : user.approval_status === "rejected"
+                              ? "bg-red-50 text-red-700"
+                              : "bg-amber-50 text-amber-700"
+                        }`}
+                      >
+                        {user.approval_status === "approved"
+                          ? "Approved"
+                          : user.approval_status === "rejected"
+                            ? "Rejected"
+                            : "Pending"}
+                      </span>
+                    </td>
                     <td className="px-6 py-4 text-sm text-brand-muted">
                       {new Date(user.created_at).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setEditingUser(user)}
-                      >
-                        Edit Role
-                      </Button>
+                      <div className="flex items-center justify-end gap-2">
+                        {user.approval_status === "pending_approval" && (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleApproveUser(user.id)}
+                              className="text-emerald-600 hover:text-emerald-700"
+                            >
+                              Approve
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setRejectingUser(user)}
+                              className="text-red-500 hover:text-red-600"
+                            >
+                              Reject
+                            </Button>
+                          </>
+                        )}
+                        {user.approval_status === "rejected" && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleApproveUser(user.id)}
+                            className="text-emerald-600 hover:text-emerald-700"
+                          >
+                            Re-Approve
+                          </Button>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setEditingUser(user)}
+                        >
+                          Edit Role
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -237,6 +338,72 @@ export function UsersPage() {
                   </button>
                 ))}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reject User Modal */}
+      {rejectingUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => {
+              setRejectingUser(null);
+              setRejectReason("");
+            }}
+          />
+          <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4">
+            <div className="flex items-center justify-between p-6 border-b border-brand-border/20">
+              <h2 className="text-lg font-bold text-brand-text">Reject User</h2>
+              <button
+                onClick={() => {
+                  setRejectingUser(null);
+                  setRejectReason("");
+                }}
+                className="p-1.5 rounded-xl hover:bg-brand-bg text-brand-muted transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <Avatar
+                  src={rejectingUser.avatar_url || undefined}
+                  name={rejectingUser.full_name}
+                  size="md"
+                />
+                <div>
+                  <p className="text-sm font-medium text-brand-text">
+                    {rejectingUser.full_name}
+                  </p>
+                  <p className="text-xs text-brand-muted">
+                    {rejectingUser.email}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-brand-text mb-1.5">
+                  Reason for rejection
+                </label>
+                <textarea
+                  value={rejectReason}
+                  onChange={(e) => setRejectReason(e.target.value)}
+                  placeholder="Provide a reason..."
+                  rows={3}
+                  className="w-full px-4 py-2.5 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text placeholder:text-brand-muted text-sm outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/10 transition-all resize-none"
+                />
+              </div>
+
+              <Button
+                onClick={handleRejectUser}
+                disabled={!rejectReason.trim()}
+                className="w-full bg-red-500 hover:bg-red-600"
+              >
+                Reject User
+              </Button>
             </div>
           </div>
         </div>
