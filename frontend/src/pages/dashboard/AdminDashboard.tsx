@@ -11,20 +11,23 @@ import {
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { Card } from "@/components/ui/Card";
-import type { DashboardStatsAdmin, Startup, Campaign } from "@/types";
+import type { DashboardStatsAdmin, Startup, Campaign, UserProfile } from "@/types";
+import { Avatar } from "@/components/ui/Avatar";
 
 export function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStatsAdmin | null>(null);
   const [pendingStartups, setPendingStartups] = useState<Startup[]>([]);
   const [pendingCampaigns, setPendingCampaigns] = useState<Campaign[]>([]);
+  const [pendingUsers, setPendingUsers] = useState<UserProfile[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [statsData, startups, campaigns] = await Promise.all([
+        const [statsData, startups, campaigns, usersData] = await Promise.all([
           api.get<DashboardStatsAdmin>("/dashboard/stats/"),
           api.get<Startup[]>("/startups/"),
           api.get<Campaign[]>("/campaigns/"),
+          api.get<UserProfile[]>("/users/?approval_status=pending_approval"),
         ]);
         setStats(statsData);
         setPendingStartups(
@@ -33,6 +36,7 @@ export function AdminDashboard() {
         setPendingCampaigns(
           campaigns.filter((c) => c.status === "pending_approval")
         );
+        setPendingUsers(usersData);
       } catch {
         // ignore
       }
@@ -76,6 +80,26 @@ export function AdminDashboard() {
     }
   };
 
+  const handleApproveUser = async (id: string) => {
+    try {
+      await api.post(`/users/${id}/approve/`, {});
+      setPendingUsers((prev) => prev.filter((u) => u.id !== id));
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleRejectUser = async (id: string) => {
+    const reason = window.prompt("Reason for rejection:");
+    if (!reason) return;
+    try {
+      await api.post(`/users/${id}/reject/`, { reason });
+      setPendingUsers((prev) => prev.filter((u) => u.id !== id));
+    } catch {
+      // ignore
+    }
+  };
+
   const statItems = [
     {
       label: "Total Users",
@@ -101,9 +125,15 @@ export function AdminDashboard() {
       icon: DollarSign,
       color: "text-violet-600",
     },
+    {
+      label: "Pending Users",
+      value: String(stats?.pending_users || 0),
+      icon: Clock,
+      color: "text-amber-600",
+    },
   ];
 
-  const totalPending = pendingStartups.length + pendingCampaigns.length;
+  const totalPending = pendingUsers.length + pendingStartups.length + pendingCampaigns.length;
 
   return (
     <div className="space-y-8">
@@ -159,6 +189,45 @@ export function AdminDashboard() {
             </div>
           ) : (
             <div className="space-y-3 max-h-80 overflow-y-auto">
+              {pendingUsers.map((user) => (
+                <div
+                  key={`u-${user.id}`}
+                  className="flex items-center justify-between p-3 rounded-xl border border-brand-border/40"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <Avatar
+                      src={user.avatar_url || undefined}
+                      name={user.full_name}
+                      size="sm"
+                    />
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-brand-text truncate">
+                        {user.full_name}
+                      </p>
+                      <p className="text-xs text-brand-muted">
+                        {user.role} &middot; {user.email}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    <button
+                      onClick={() => handleApproveUser(user.id)}
+                      className="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 transition-colors"
+                      title="Approve"
+                    >
+                      <CheckCircle2 className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleRejectUser(user.id)}
+                      className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
+                      title="Reject"
+                    >
+                      <XCircle className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+
               {pendingStartups.map((startup) => (
                 <div
                   key={`s-${startup.id}`}
