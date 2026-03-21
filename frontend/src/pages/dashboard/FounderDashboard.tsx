@@ -6,6 +6,13 @@ import { api } from "@/lib/api";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import type { DashboardStatsFounder, Investment, Campaign } from "@/types";
+import {
+  AreaChart, Area, BarChart, Bar, LineChart, Line,
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+} from "recharts";
+import { ChartCard } from "@/components/ui/ChartCard";
+import { CHART_COLORS, AXIS_STYLE, GRID_STROKE, formatCurrency } from "@/lib/chartUtils";
+import type { FounderAnalytics } from "@/types";
 
 export function FounderDashboard() {
   const { profile } = useAuth();
@@ -13,6 +20,11 @@ export function FounderDashboard() {
   const [stats, setStats] = useState<DashboardStatsFounder | null>(null);
   const [recentInvestments, setRecentInvestments] = useState<Investment[]>([]);
   const [recentCampaigns, setRecentCampaigns] = useState<Campaign[]>([]);
+  const [analytics, setAnalytics] = useState<FounderAnalytics | null>(null);
+
+  useEffect(() => {
+    api.get<FounderAnalytics>("/dashboard/analytics/").then(setAnalytics).catch(() => {});
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -217,6 +229,71 @@ export function FounderDashboard() {
           </div>
         </Card>
       </div>
+
+      {/* Analytics Charts */}
+      {analytics && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <ChartCard title="Funding Over Time">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={analytics.funding_over_time}>
+                <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} />
+                <XAxis dataKey="month" {...AXIS_STYLE} />
+                <YAxis {...AXIS_STYLE} />
+                <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                <Area
+                  type="monotone"
+                  dataKey="amount"
+                  stroke={CHART_COLORS.accent}
+                  fill={CHART_COLORS.accent}
+                  fillOpacity={0.2}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </ChartCard>
+
+          <ChartCard title="Investment Activity">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={analytics.investments_per_period}>
+                <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} />
+                <XAxis dataKey="month" {...AXIS_STYLE} />
+                <YAxis {...AXIS_STYLE} />
+                <Tooltip formatter={(value: number) => `${value} investments`} />
+                <Bar dataKey="count" fill={CHART_COLORS.blue} radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartCard>
+
+          <ChartCard title="Campaign Comparison">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={analytics.campaign_comparison} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} />
+                <XAxis type="number" {...AXIS_STYLE} />
+                <YAxis dataKey="title" type="category" {...AXIS_STYLE} width={100} />
+                <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                <Bar dataKey="goal" fill="#E5E5E0" radius={[0, 4, 4, 0]} />
+                <Bar dataKey="raised" fill={CHART_COLORS.accent} radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartCard>
+
+          <ChartCard title="Follower Growth">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={analytics.follower_growth}>
+                <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} />
+                <XAxis dataKey="month" {...AXIS_STYLE} />
+                <YAxis {...AXIS_STYLE} />
+                <Tooltip formatter={(value: number) => `${value} followers`} />
+                <Line
+                  type="monotone"
+                  dataKey="count"
+                  stroke={CHART_COLORS.rose}
+                  dot={{ fill: CHART_COLORS.rose, r: 4 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </ChartCard>
+        </div>
+      )}
     </div>
   );
 }
