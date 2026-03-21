@@ -83,27 +83,27 @@ export function FounderDashboard() {
     <div className="space-y-8">
       {/* Welcome */}
       <div>
-        <h1 className="text-2xl font-bold text-brand-text">
+        <h1 className="text-3xl font-bold text-brand-text">
           Welcome back, {profile?.full_name?.split(" ")[0] || "Founder"}
         </h1>
-        <p className="text-brand-muted mt-1">
+        <p className="text-base text-brand-muted mt-1">
           Here&apos;s what&apos;s happening with your startups.
         </p>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {statItems.map((stat) => (
           <Card key={stat.label} hover>
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-sm text-brand-muted">{stat.label}</p>
-                <p className="text-2xl font-bold text-brand-text mt-1">
+                <p className="text-3xl font-bold text-brand-text mt-1">
                   {stat.value}
                 </p>
               </div>
-              <div className="p-2.5 rounded-xl bg-brand-bg">
-                <stat.icon className={`w-5 h-5 ${stat.color}`} />
+              <div className="p-3 rounded-xl bg-brand-bg">
+                <stat.icon className={`w-6 h-6 ${stat.color}`} />
               </div>
             </div>
           </Card>
@@ -114,14 +114,14 @@ export function FounderDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Activity */}
         <Card>
-          <h3 className="text-base font-semibold text-brand-text mb-4">
+          <h3 className="text-lg font-semibold text-brand-text mb-4">
             Recent Activity
           </h3>
 
           {!hasActivity ? (
             <div className="flex flex-col items-center justify-center py-8 text-center">
-              <div className="w-12 h-12 rounded-xl bg-brand-bg flex items-center justify-center mb-3">
-                <Target className="w-5 h-5 text-brand-muted" />
+              <div className="w-14 h-14 rounded-xl bg-brand-bg flex items-center justify-center mb-3">
+                <Target className="w-6 h-6 text-brand-muted" />
               </div>
               <p className="text-sm text-brand-muted">No activity yet</p>
               <p className="text-xs text-brand-muted/70 mt-1">
@@ -134,7 +134,7 @@ export function FounderDashboard() {
                 <Link
                   key={`c-${campaign.id}`}
                   to={`/campaigns/${campaign.id}`}
-                  className="flex items-center justify-between p-3 rounded-xl border border-brand-border/30 hover:bg-brand-bg/50 transition-colors"
+                  className="flex items-center justify-between p-3.5 rounded-xl border border-brand-border/30 hover:bg-brand-bg/50 transition-colors"
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="p-2 rounded-lg bg-brand-accent/10 flex-shrink-0">
@@ -156,7 +156,7 @@ export function FounderDashboard() {
               {recentInvestments.map((inv) => (
                 <div
                   key={`i-${inv.id}`}
-                  className="flex items-center justify-between p-3 rounded-xl border border-brand-border/30"
+                  className="flex items-center justify-between p-3.5 rounded-xl border border-brand-border/30"
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="p-2 rounded-lg bg-emerald-50 flex-shrink-0">
@@ -181,7 +181,7 @@ export function FounderDashboard() {
 
         {/* Quick Actions */}
         <Card>
-          <h3 className="text-base font-semibold text-brand-text mb-4">
+          <h3 className="text-lg font-semibold text-brand-text mb-4">
             Quick Actions
           </h3>
           <div className="space-y-2">
