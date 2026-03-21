@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Wallet, TrendingUp, Heart, DollarSign } from "lucide-react";
+import { Wallet, TrendingUp, Heart, DollarSign, Building2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
 import { Card } from "@/components/ui/Card";
@@ -61,27 +61,27 @@ export function InvestorDashboard() {
     <div className="space-y-8">
       {/* Welcome */}
       <div>
-        <h1 className="text-2xl font-bold text-brand-text">
+        <h1 className="text-3xl font-bold text-brand-text">
           Welcome back, {profile?.full_name?.split(" ")[0] || "Investor"}
         </h1>
-        <p className="text-brand-muted mt-1">
+        <p className="text-base text-brand-muted mt-1">
           Discover and invest in promising startups.
         </p>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {statItems.map((stat) => (
           <Card key={stat.label} hover>
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-sm text-brand-muted">{stat.label}</p>
-                <p className="text-2xl font-bold text-brand-text mt-1">
+                <p className="text-3xl font-bold text-brand-text mt-1">
                   {stat.value}
                 </p>
               </div>
-              <div className="p-2.5 rounded-xl bg-brand-bg">
-                <stat.icon className={`w-5 h-5 ${stat.color}`} />
+              <div className="p-3 rounded-xl bg-brand-bg">
+                <stat.icon className={`w-6 h-6 ${stat.color}`} />
               </div>
             </div>
           </Card>
@@ -91,13 +91,13 @@ export function InvestorDashboard() {
       {/* Content */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
-          <h3 className="text-base font-semibold text-brand-text mb-4">
+          <h3 className="text-lg font-semibold text-brand-text mb-4">
             Featured Campaigns
           </h3>
           {campaigns.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-center">
-              <div className="w-12 h-12 rounded-xl bg-brand-bg flex items-center justify-center mb-3">
-                <TrendingUp className="w-5 h-5 text-brand-muted" />
+              <div className="w-14 h-14 rounded-xl bg-brand-bg flex items-center justify-center mb-3">
+                <TrendingUp className="w-6 h-6 text-brand-muted" />
               </div>
               <p className="text-sm text-brand-muted">No active campaigns</p>
               <p className="text-xs text-brand-muted/70 mt-1">
@@ -112,15 +112,28 @@ export function InvestorDashboard() {
                   to={`/campaigns/${c.id}`}
                   className="block p-4 rounded-xl border border-brand-border/30 hover:border-brand-border hover:bg-brand-bg/30 transition-all"
                 >
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="text-sm font-semibold text-brand-text">
-                      {c.title}
-                    </h4>
-                    <span className="text-xs text-brand-muted">
-                      {c.startup_name}
-                    </span>
+                  <div className="flex items-center gap-2.5 mb-2">
+                    {c.startup_logo_url ? (
+                      <img
+                        src={c.startup_logo_url}
+                        alt={c.startup_name}
+                        className="w-8 h-8 rounded-lg object-cover"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded-lg bg-brand-accent/10 flex items-center justify-center">
+                        <Building2 className="w-4 h-4 text-brand-accent" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-sm font-semibold text-brand-text truncate">
+                        {c.title}
+                      </h4>
+                      <span className="text-xs text-brand-muted">
+                        {c.startup_name}
+                      </span>
+                    </div>
                   </div>
-                  <div className="w-full h-2 rounded-full bg-brand-bg overflow-hidden">
+                  <div className="w-full h-2.5 rounded-full bg-brand-bg overflow-hidden">
                     <div
                       className="h-full rounded-full bg-brand-accent transition-all"
                       style={{
@@ -139,13 +152,13 @@ export function InvestorDashboard() {
         </Card>
 
         <Card>
-          <h3 className="text-base font-semibold text-brand-text mb-4">
+          <h3 className="text-lg font-semibold text-brand-text mb-4">
             Recent Investments
           </h3>
           {investments.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-center">
-              <div className="w-12 h-12 rounded-xl bg-brand-bg flex items-center justify-center mb-3">
-                <Wallet className="w-5 h-5 text-brand-muted" />
+              <div className="w-14 h-14 rounded-xl bg-brand-bg flex items-center justify-center mb-3">
+                <Wallet className="w-6 h-6 text-brand-muted" />
               </div>
               <p className="text-sm text-brand-muted">No investments yet</p>
               <p className="text-xs text-brand-muted/70 mt-1">
@@ -158,7 +171,7 @@ export function InvestorDashboard() {
                 <Link
                   key={inv.id}
                   to={`/campaigns/${inv.campaign_detail.id}`}
-                  className="flex items-center justify-between p-3 rounded-xl border border-brand-border/30 hover:border-brand-border transition-all"
+                  className="flex items-center justify-between p-3.5 rounded-xl border border-brand-border/30 hover:border-brand-border transition-all"
                 >
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-brand-text truncate">
