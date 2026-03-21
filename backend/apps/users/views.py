@@ -99,6 +99,17 @@ class InvestorProfileView(APIView):
         return Response(serializer.data)
 
 
+class DeleteAccountView(APIView):
+    """POST /api/users/me/delete/ — user deletes their own account."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        user.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 class CompleteOnboardingView(APIView):
     """POST /api/users/me/complete-onboarding/ — mark onboarding as done."""
 

@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
-import { User, Mail, Shield, Save } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { User, Mail, Shield, Save, Trash2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
 import { Card } from "@/components/ui/Card";
@@ -8,9 +9,11 @@ import { Badge } from "@/components/ui/Badge";
 import { AvatarUpload } from "@/components/upload/AvatarUpload";
 
 export function SettingsPage() {
-  const { profile, refreshProfile } = useAuth();
+  const { profile, refreshProfile, signOut } = useAuth();
+  const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [form, setForm] = useState({
     full_name: profile?.full_name || "",
     bio: profile?.bio || "",
@@ -120,7 +123,7 @@ export function SettingsPage() {
             <span className="text-sm text-brand-text">{profile?.email}</span>
           </div>
           <div className="flex items-center justify-between py-2">
-            <span className="text-sm text-brand-muted">Role</span>
+            <span className="text-sm text-brand-muted">Account Type</span>
             <Badge status={profile?.role || ""} />
           </div>
           <div className="flex items-center justify-between py-2">
@@ -132,6 +135,40 @@ export function SettingsPage() {
             </span>
           </div>
         </div>
+      </Card>
+
+      {/* Danger Zone */}
+      <Card>
+        <h3 className="text-base font-semibold text-red-500 mb-2 flex items-center gap-2">
+          <Trash2 className="w-4 h-4" />
+          Danger Zone
+        </h3>
+        <p className="text-sm text-brand-muted mb-4">
+          Permanently delete your account and all associated data. This action cannot be undone.
+        </p>
+        <Button
+          variant="secondary"
+          size="sm"
+          loading={deleting}
+          onClick={async () => {
+            const confirmed = window.confirm(
+              "Are you sure you want to delete your account? This action is permanent and cannot be undone."
+            );
+            if (!confirmed) return;
+            setDeleting(true);
+            try {
+              await api.post("/users/me/delete/", {});
+              await signOut();
+              navigate("/login");
+            } catch {
+              setDeleting(false);
+            }
+          }}
+          className="!text-red-500 !border-red-200 hover:!bg-red-50"
+        >
+          <Trash2 className="w-4 h-4 mr-1.5" />
+          Delete Account
+        </Button>
       </Card>
     </div>
   );
