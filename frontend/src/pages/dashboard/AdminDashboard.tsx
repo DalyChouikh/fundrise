@@ -13,12 +13,24 @@ import { api } from "@/lib/api";
 import { Card } from "@/components/ui/Card";
 import type { DashboardStatsAdmin, Startup, Campaign, UserProfile } from "@/types";
 import { Avatar } from "@/components/ui/Avatar";
+import {
+  AreaChart, Area, BarChart, Bar,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell,
+} from "recharts";
+import { ChartCard } from "@/components/ui/ChartCard";
+import { CHART_COLORS, AXIS_STYLE, GRID_STROKE, formatCurrency } from "@/lib/chartUtils";
+import type { AdminAnalytics } from "@/types";
 
 export function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStatsAdmin | null>(null);
   const [pendingStartups, setPendingStartups] = useState<Startup[]>([]);
   const [pendingCampaigns, setPendingCampaigns] = useState<Campaign[]>([]);
   const [pendingUsers, setPendingUsers] = useState<UserProfile[]>([]);
+  const [analytics, setAnalytics] = useState<AdminAnalytics | null>(null);
+
+  useEffect(() => {
+    api.get<AdminAnalytics>("/dashboard/analytics/").then(setAnalytics).catch(() => {});
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -134,6 +146,12 @@ export function AdminDashboard() {
   ];
 
   const totalPending = pendingUsers.length + pendingStartups.length + pendingCampaigns.length;
+
+  const approvalColors: Record<string, string> = {
+    approved: CHART_COLORS.emerald,
+    pending_approval: CHART_COLORS.amber,
+    rejected: CHART_COLORS.rose,
+  };
 
   return (
     <div className="space-y-8">
@@ -377,6 +395,72 @@ export function AdminDashboard() {
           </div>
         </Card>
       </div>
+
+      {/* Analytics Charts */}
+      {analytics && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <ChartCard title="User Registrations">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={analytics.user_registrations}>
+                <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} />
+                <XAxis dataKey="month" {...AXIS_STYLE} />
+                <YAxis {...AXIS_STYLE} />
+                <Tooltip formatter={(value: any) => `${value} users`} />
+                <Area
+                  type="monotone"
+                  dataKey="count"
+                  stroke={CHART_COLORS.blue}
+                  fill={CHART_COLORS.blue}
+                  fillOpacity={0.2}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </ChartCard>
+
+          <ChartCard title="Platform Growth">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={analytics.platform_growth}>
+                <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} />
+                <XAxis dataKey="month" {...AXIS_STYLE} />
+                <YAxis {...AXIS_STYLE} />
+                <Tooltip />
+                <Legend />
+                <Area type="monotone" dataKey="users" stroke={CHART_COLORS.blue} fill={CHART_COLORS.blue} fillOpacity={0.15} />
+                <Area type="monotone" dataKey="startups" stroke={CHART_COLORS.accent} fill={CHART_COLORS.accent} fillOpacity={0.15} />
+                <Area type="monotone" dataKey="campaigns" stroke={CHART_COLORS.emerald} fill={CHART_COLORS.emerald} fillOpacity={0.15} />
+              </AreaChart>
+            </ResponsiveContainer>
+          </ChartCard>
+
+          <ChartCard title="Approval Funnel">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={analytics.approval_funnel}>
+                <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} />
+                <XAxis dataKey="status" {...AXIS_STYLE} />
+                <YAxis {...AXIS_STYLE} />
+                <Tooltip formatter={(value: any) => `${value} users`} />
+                <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                  {analytics.approval_funnel.map((entry, i) => (
+                    <Cell key={i} fill={approvalColors[entry.status] || CHART_COLORS.blue} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartCard>
+
+          <ChartCard title="Investment Volume">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={analytics.investment_volume}>
+                <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} />
+                <XAxis dataKey="month" {...AXIS_STYLE} />
+                <YAxis {...AXIS_STYLE} />
+                <Tooltip formatter={(value: any) => formatCurrency(Number(value))} />
+                <Bar dataKey="amount" fill={CHART_COLORS.violet} radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartCard>
+        </div>
+      )}
     </div>
   );
 }
