@@ -63,6 +63,11 @@ class CampaignViewSet(viewsets.ModelViewSet):
             user=user
         ).values_list("startup_id", flat=True)
 
+        # Founders/team members only see campaigns from their own startups
+        if user.role in ("founder", "team_member"):
+            return qs.filter(startup_id__in=user_startup_ids).distinct()
+
+        # Investors see all active campaigns + their own startup campaigns
         return qs.filter(
             Q(status=Campaign.Status.ACTIVE)
             | Q(startup_id__in=user_startup_ids)

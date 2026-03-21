@@ -65,6 +65,13 @@ class StartupViewSet(viewsets.ModelViewSet):
             user=user
         ).values_list("startup_id", flat=True)
 
+        # Founders/team members only see their own startups
+        if user.role in ("founder", "team_member"):
+            return qs.filter(
+                Q(created_by=user) | Q(id__in=user_startup_ids)
+            ).distinct()
+
+        # Investors see all active startups
         return qs.filter(
             Q(status=Startup.Status.ACTIVE)
             | Q(created_by=user)
