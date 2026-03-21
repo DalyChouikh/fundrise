@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Menu, Bell, Search, LogOut, Settings, User } from "lucide-react";
+import { Menu, Bell, LogOut, Settings, User } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
 import { Avatar } from "@/components/ui/Avatar";
@@ -79,16 +79,6 @@ export function Topbar({ onMenuClick }: TopbarProps) {
 
       {/* Right section */}
       <div className="flex items-center gap-2">
-        {/* Search */}
-        <div className="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl bg-brand-bg border border-brand-border/50 text-brand-muted text-sm w-64 transition-colors focus-within:border-brand-blue/50">
-          <Search className="w-4 h-4 flex-shrink-0" />
-          <input
-            type="text"
-            placeholder="Search..."
-            className="bg-transparent outline-none w-full text-brand-text placeholder:text-brand-muted"
-          />
-        </div>
-
         {/* Notifications */}
         <button
           onClick={() => navigate("/notifications")}
