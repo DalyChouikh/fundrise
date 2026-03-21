@@ -139,25 +139,25 @@ export function AdminDashboard() {
     <div className="space-y-8">
       {/* Welcome */}
       <div>
-        <h1 className="text-2xl font-bold text-brand-text">Admin Dashboard</h1>
-        <p className="text-brand-muted mt-1">
+        <h1 className="text-3xl font-bold text-brand-text">Admin Dashboard</h1>
+        <p className="text-base text-brand-muted mt-1">
           Platform overview and moderation tools.
         </p>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
         {statItems.map((stat) => (
           <Card key={stat.label} hover>
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-sm text-brand-muted">{stat.label}</p>
-                <p className="text-2xl font-bold text-brand-text mt-1">
+                <p className="text-3xl font-bold text-brand-text mt-1">
                   {stat.value}
                 </p>
               </div>
-              <div className="p-2.5 rounded-xl bg-brand-bg">
-                <stat.icon className={`w-5 h-5 ${stat.color}`} />
+              <div className="p-3 rounded-xl bg-brand-bg">
+                <stat.icon className={`w-6 h-6 ${stat.color}`} />
               </div>
             </div>
           </Card>
@@ -168,7 +168,7 @@ export function AdminDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Pending Approvals */}
         <Card>
-          <h3 className="text-base font-semibold text-brand-text mb-4">
+          <h3 className="text-lg font-semibold text-brand-text mb-4">
             Pending Approvals
             {totalPending > 0 && (
               <span className="ml-2 inline-flex items-center justify-center w-5 h-5 rounded-full bg-amber-100 text-amber-700 text-xs font-bold">
@@ -179,8 +179,8 @@ export function AdminDashboard() {
 
           {totalPending === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-center">
-              <div className="w-12 h-12 rounded-xl bg-brand-bg flex items-center justify-center mb-3">
-                <Clock className="w-5 h-5 text-brand-muted" />
+              <div className="w-14 h-14 rounded-xl bg-brand-bg flex items-center justify-center mb-3">
+                <Clock className="w-6 h-6 text-brand-muted" />
               </div>
               <p className="text-sm text-brand-muted">No pending approvals</p>
               <p className="text-xs text-brand-muted/70 mt-1">
@@ -192,13 +192,13 @@ export function AdminDashboard() {
               {pendingUsers.map((user) => (
                 <div
                   key={`u-${user.id}`}
-                  className="flex items-center justify-between p-3 rounded-xl border border-brand-border/40"
+                  className="flex items-center justify-between p-3.5 rounded-xl border border-brand-border/40"
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <Avatar
                       src={user.avatar_url || undefined}
                       name={user.full_name}
-                      size="sm"
+                      size="md"
                     />
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-brand-text truncate">
@@ -215,14 +215,14 @@ export function AdminDashboard() {
                       className="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 transition-colors"
                       title="Approve"
                     >
-                      <CheckCircle2 className="w-4 h-4" />
+                      <CheckCircle2 className="w-5 h-5" />
                     </button>
                     <button
                       onClick={() => handleRejectUser(user.id)}
                       className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
                       title="Reject"
                     >
-                      <XCircle className="w-4 h-4" />
+                      <XCircle className="w-5 h-5" />
                     </button>
                   </div>
                 </div>
@@ -231,11 +231,11 @@ export function AdminDashboard() {
               {pendingStartups.map((startup) => (
                 <div
                   key={`s-${startup.id}`}
-                  className="flex items-center justify-between p-3 rounded-xl border border-brand-border/40"
+                  className="flex items-center justify-between p-3.5 rounded-xl border border-brand-border/40"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-8 h-8 rounded-lg bg-brand-accent/10 flex items-center justify-center flex-shrink-0">
-                      <Building2 className="w-4 h-4 text-brand-accent" />
+                    <div className="w-10 h-10 rounded-lg bg-brand-accent/10 flex items-center justify-center flex-shrink-0">
+                      <Building2 className="w-5 h-5 text-brand-accent" />
                     </div>
                     <div className="min-w-0">
                       <Link
@@ -253,14 +253,14 @@ export function AdminDashboard() {
                       className="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 transition-colors"
                       title="Approve"
                     >
-                      <CheckCircle2 className="w-4 h-4" />
+                      <CheckCircle2 className="w-5 h-5" />
                     </button>
                     <button
                       onClick={() => handleRejectStartup(startup.id)}
                       className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
                       title="Reject"
                     >
-                      <XCircle className="w-4 h-4" />
+                      <XCircle className="w-5 h-5" />
                     </button>
                   </div>
                 </div>
@@ -269,11 +269,11 @@ export function AdminDashboard() {
               {pendingCampaigns.map((campaign) => (
                 <div
                   key={`c-${campaign.id}`}
-                  className="flex items-center justify-between p-3 rounded-xl border border-brand-border/40"
+                  className="flex items-center justify-between p-3.5 rounded-xl border border-brand-border/40"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
-                      <Target className="w-4 h-4 text-emerald-600" />
+                    <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
+                      <Target className="w-5 h-5 text-emerald-600" />
                     </div>
                     <div className="min-w-0">
                       <Link
@@ -293,14 +293,14 @@ export function AdminDashboard() {
                       className="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 transition-colors"
                       title="Approve"
                     >
-                      <CheckCircle2 className="w-4 h-4" />
+                      <CheckCircle2 className="w-5 h-5" />
                     </button>
                     <button
                       onClick={() => handleRejectCampaign(campaign.id)}
                       className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
                       title="Reject"
                     >
-                      <XCircle className="w-4 h-4" />
+                      <XCircle className="w-5 h-5" />
                     </button>
                   </div>
                 </div>
@@ -311,7 +311,7 @@ export function AdminDashboard() {
 
         {/* Quick Links */}
         <Card>
-          <h3 className="text-base font-semibold text-brand-text mb-4">
+          <h3 className="text-lg font-semibold text-brand-text mb-4">
             Management
           </h3>
           <div className="space-y-2">
