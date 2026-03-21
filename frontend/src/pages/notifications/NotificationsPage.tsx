@@ -80,10 +80,10 @@ export function NotificationsPage() {
   if (loading) return <LoadingSpinner fullscreen />;
 
   return (
-    <div className="space-y-6 max-w-2xl">
+    <div className="space-y-8 max-w-2xl">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-brand-text">Notifications</h1>
+          <h1 className="text-3xl font-bold text-brand-text">Notifications</h1>
           <p className="text-brand-muted mt-1 text-sm">
             {unreadCount > 0
               ? `You have ${unreadCount} unread notification${unreadCount > 1 ? "s" : ""}.`
@@ -101,8 +101,8 @@ export function NotificationsPage() {
       {notifications.length === 0 ? (
         <Card>
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="w-16 h-16 rounded-2xl bg-brand-bg flex items-center justify-center mb-5">
-              <Bell className="w-7 h-7 text-brand-muted" />
+            <div className="w-20 h-20 rounded-2xl bg-brand-bg flex items-center justify-center mb-5">
+              <Bell className="w-9 h-9 text-brand-muted" />
             </div>
             <h2 className="text-lg font-semibold text-brand-text mb-2">
               No notifications yet
@@ -137,14 +137,14 @@ export function NotificationsPage() {
                 >
                   <div className="flex items-start gap-3">
                     <div
-                      className={`p-2 rounded-lg ${config.bg} flex-shrink-0 mt-0.5`}
+                      className={`p-2.5 rounded-xl ${config.bg} flex-shrink-0 mt-0.5`}
                     >
-                      <Icon className={`w-4 h-4 ${config.color}`} />
+                      <Icon className={`w-5 h-5 ${config.color}`} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
                         <p
-                          className={`text-sm ${
+                          className={`text-base ${
                             notif.is_read
                               ? "text-brand-muted"
                               : "font-medium text-brand-text"
@@ -153,13 +153,13 @@ export function NotificationsPage() {
                           {notif.title}
                         </p>
                         {!notif.is_read && (
-                          <div className="w-2 h-2 rounded-full bg-brand-accent flex-shrink-0 mt-1.5" />
+                          <div className="w-2.5 h-2.5 rounded-full bg-brand-accent flex-shrink-0 mt-1.5" />
                         )}
                       </div>
                       <p className="text-xs text-brand-muted mt-0.5">
                         {notif.message}
                       </p>
-                      <p className="text-[10px] text-brand-muted/70 mt-1">
+                      <p className="text-xs text-brand-muted/70 mt-1">
                         {new Date(notif.created_at).toLocaleString()}
                       </p>
                     </div>
