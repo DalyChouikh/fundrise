@@ -1,6 +1,6 @@
 import { useState, useEffect, type FormEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Plus, Target, Search, X, Calendar, CheckCircle2, XCircle } from "lucide-react";
+import { Plus, Target, Search, X, Calendar, CheckCircle2, XCircle, Building2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
 import { Card } from "@/components/ui/Card";
@@ -81,10 +81,10 @@ export function CampaignsPage() {
   if (loading) return <LoadingSpinner fullscreen />;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-brand-text">Campaigns</h1>
+          <h1 className="text-3xl font-bold text-brand-text">Campaigns</h1>
           <p className="text-brand-muted mt-1 text-sm">
             {profile?.role === "investor"
               ? "Explore active fundraising campaigns."
@@ -108,8 +108,8 @@ export function CampaignsPage() {
       </div>
 
       {/* Search */}
-      <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-brand-border/50 text-brand-muted text-sm w-full max-w-sm shadow-card focus-within:border-brand-blue/50 transition-colors">
-        <Search className="w-4 h-4 flex-shrink-0" />
+      <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-white border border-brand-border/50 text-brand-muted text-sm w-full max-w-md shadow-card focus-within:border-brand-blue/50 transition-colors">
+        <Search className="w-5 h-5 flex-shrink-0" />
         <input
           type="text"
           placeholder="Search by title or startup..."
@@ -122,8 +122,8 @@ export function CampaignsPage() {
       {filtered.length === 0 ? (
         <Card>
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="w-16 h-16 rounded-2xl bg-brand-bg flex items-center justify-center mb-5">
-              <Target className="w-7 h-7 text-brand-muted" />
+            <div className="w-20 h-20 rounded-2xl bg-brand-bg flex items-center justify-center mb-5">
+              <Target className="w-9 h-9 text-brand-muted" />
             </div>
             <h2 className="text-lg font-semibold text-brand-text mb-2">
               {searchQuery ? "No matches found" : "No campaigns yet"}
@@ -143,14 +143,27 @@ export function CampaignsPage() {
             <Link key={campaign.id} to={`/campaigns/${campaign.id}`}>
               <Card hover className="h-full">
                 <div className="flex flex-col h-full">
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <h3 className="font-semibold text-brand-text text-sm">
-                        {campaign.title}
-                      </h3>
-                      <p className="text-xs text-brand-muted mt-0.5">
-                        {campaign.startup_name}
-                      </p>
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      {campaign.startup_logo_url ? (
+                        <img
+                          src={campaign.startup_logo_url}
+                          alt={campaign.startup_name}
+                          className="w-10 h-10 rounded-xl object-cover"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-xl bg-brand-accent/10 flex items-center justify-center">
+                          <Building2 className="w-5 h-5 text-brand-accent" />
+                        </div>
+                      )}
+                      <div>
+                        <h3 className="font-semibold text-brand-text text-base">
+                          {campaign.title}
+                        </h3>
+                        <p className="text-sm text-brand-muted mt-0.5">
+                          {campaign.startup_name}
+                        </p>
+                      </div>
                     </div>
                     <Badge status={campaign.status} />
                   </div>
@@ -169,7 +182,7 @@ export function CampaignsPage() {
                         of ${Number(campaign.funding_goal).toLocaleString()}
                       </span>
                     </div>
-                    <div className="w-full h-2 rounded-full bg-brand-bg overflow-hidden">
+                    <div className="w-full h-2.5 rounded-full bg-brand-bg overflow-hidden">
                       <div
                         className="h-full rounded-full bg-brand-accent transition-all"
                         style={{
@@ -295,9 +308,9 @@ function CreateCampaignModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+      <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-xl mx-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-brand-border/20">
-          <h2 className="text-lg font-bold text-brand-text">
+          <h2 className="text-xl font-bold text-brand-text">
             Create Campaign
           </h2>
           <button
@@ -320,7 +333,7 @@ function CreateCampaignModal({
               Startup *
             </label>
             {startups.length === 0 ? (
-              <p className="text-sm text-brand-muted px-4 py-2.5 rounded-xl bg-brand-bg border border-brand-border/60">
+              <p className="text-sm text-brand-muted px-4 py-3 rounded-xl bg-brand-bg border border-brand-border/60">
                 No active startups available. Create and get a startup approved
                 first.
               </p>
@@ -329,7 +342,7 @@ function CreateCampaignModal({
                 required
                 value={form.startup}
                 onChange={(e) => updateField("startup", e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text text-sm outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/10 transition-all"
+                className="w-full px-4 py-3 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text text-sm outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/10 transition-all"
               >
                 <option value="">Select a startup</option>
                 {startups.map((s) => (
@@ -351,7 +364,7 @@ function CreateCampaignModal({
               value={form.title}
               onChange={(e) => updateField("title", e.target.value)}
               placeholder="e.g. Series A Round"
-              className="w-full px-4 py-2.5 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text placeholder:text-brand-muted text-sm outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/10 transition-all"
+              className="w-full px-4 py-3 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text placeholder:text-brand-muted text-sm outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/10 transition-all"
             />
           </div>
 
@@ -365,7 +378,7 @@ function CreateCampaignModal({
               onChange={(e) => updateField("description", e.target.value)}
               placeholder="Describe your fundraising goals..."
               rows={3}
-              className="w-full px-4 py-2.5 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text placeholder:text-brand-muted text-sm outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/10 transition-all resize-none"
+              className="w-full px-4 py-3 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text placeholder:text-brand-muted text-sm outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/10 transition-all resize-none"
             />
           </div>
 
@@ -382,7 +395,7 @@ function CreateCampaignModal({
                 value={form.funding_goal}
                 onChange={(e) => updateField("funding_goal", e.target.value)}
                 placeholder="100000"
-                className="w-full px-4 py-2.5 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text placeholder:text-brand-muted text-sm outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/10 transition-all"
+                className="w-full px-4 py-3 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text placeholder:text-brand-muted text-sm outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/10 transition-all"
               />
             </div>
             <div>
@@ -398,7 +411,7 @@ function CreateCampaignModal({
                 value={form.equity_offered}
                 onChange={(e) => updateField("equity_offered", e.target.value)}
                 placeholder="10"
-                className="w-full px-4 py-2.5 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text placeholder:text-brand-muted text-sm outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/10 transition-all"
+                className="w-full px-4 py-3 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text placeholder:text-brand-muted text-sm outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/10 transition-all"
               />
             </div>
           </div>
@@ -412,7 +425,7 @@ function CreateCampaignModal({
               required
               value={form.deadline}
               onChange={(e) => updateField("deadline", e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text text-sm outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/10 transition-all"
+              className="w-full px-4 py-3 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text text-sm outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/10 transition-all"
             />
           </div>
 
