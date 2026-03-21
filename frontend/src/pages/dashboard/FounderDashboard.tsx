@@ -239,7 +239,7 @@ export function FounderDashboard() {
                 <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} />
                 <XAxis dataKey="month" {...AXIS_STYLE} />
                 <YAxis {...AXIS_STYLE} />
-                <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                <Tooltip formatter={(value: any) => formatCurrency(Number(value))} />
                 <Area
                   type="monotone"
                   dataKey="amount"
@@ -257,7 +257,7 @@ export function FounderDashboard() {
                 <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} />
                 <XAxis dataKey="month" {...AXIS_STYLE} />
                 <YAxis {...AXIS_STYLE} />
-                <Tooltip formatter={(value: number) => `${value} investments`} />
+                <Tooltip formatter={(value: any) => `${value} investments`} />
                 <Bar dataKey="count" fill={CHART_COLORS.blue} radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -269,7 +269,7 @@ export function FounderDashboard() {
                 <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} />
                 <XAxis type="number" {...AXIS_STYLE} />
                 <YAxis dataKey="title" type="category" {...AXIS_STYLE} width={100} />
-                <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                <Tooltip formatter={(value: any) => formatCurrency(Number(value))} />
                 <Bar dataKey="goal" fill="#E5E5E0" radius={[0, 4, 4, 0]} />
                 <Bar dataKey="raised" fill={CHART_COLORS.accent} radius={[0, 4, 4, 0]} />
               </BarChart>
@@ -282,7 +282,7 @@ export function FounderDashboard() {
                 <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} />
                 <XAxis dataKey="month" {...AXIS_STYLE} />
                 <YAxis {...AXIS_STYLE} />
-                <Tooltip formatter={(value: number) => `${value} followers`} />
+                <Tooltip formatter={(value: any) => `${value} followers`} />
                 <Line
                   type="monotone"
                   dataKey="count"

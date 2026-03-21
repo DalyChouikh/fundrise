@@ -5,12 +5,26 @@ import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
 import { Card } from "@/components/ui/Card";
 import type { DashboardStatsInvestor, Campaign, Investment } from "@/types";
+import {
+  BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+} from "recharts";
+import { ChartCard } from "@/components/ui/ChartCard";
+import {
+  CHART_COLORS, CHART_COLORS_ARRAY, AXIS_STYLE, GRID_STROKE, formatCurrency,
+} from "@/lib/chartUtils";
+import type { InvestorAnalytics } from "@/types";
 
 export function InvestorDashboard() {
   const { profile } = useAuth();
   const [stats, setStats] = useState<DashboardStatsInvestor | null>(null);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [investments, setInvestments] = useState<Investment[]>([]);
+  const [analytics, setAnalytics] = useState<InvestorAnalytics | null>(null);
+
+  useEffect(() => {
+    api.get<InvestorAnalytics>("/dashboard/analytics/").then(setAnalytics).catch(() => {});
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -203,6 +217,63 @@ export function InvestorDashboard() {
           )}
         </Card>
       </div>
+
+      {/* Analytics Charts */}
+      {analytics && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <ChartCard title="Portfolio Allocation">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={analytics.portfolio_allocation}
+                  dataKey="amount"
+                  nameKey="startup_name"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={90}
+                  label={({ startup_name }) => startup_name}
+                >
+                  {analytics.portfolio_allocation.map((_, i) => (
+                    <Cell key={i} fill={CHART_COLORS_ARRAY[i % CHART_COLORS_ARRAY.length]} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value: any) => formatCurrency(Number(value))} />
+              </PieChart>
+            </ResponsiveContainer>
+          </ChartCard>
+
+          <ChartCard title="Investment History">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={analytics.investment_history}>
+                <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} />
+                <XAxis dataKey="month" {...AXIS_STYLE} />
+                <YAxis {...AXIS_STYLE} />
+                <Tooltip formatter={(value: any) => formatCurrency(Number(value))} />
+                <Line
+                  type="monotone"
+                  dataKey="amount"
+                  stroke={CHART_COLORS.emerald}
+                  dot={{ fill: CHART_COLORS.emerald, r: 4 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </ChartCard>
+
+          <ChartCard title="Portfolio Performance">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={analytics.portfolio_performance}>
+                <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} />
+                <XAxis dataKey="campaign_title" {...AXIS_STYLE} />
+                <YAxis {...AXIS_STYLE} />
+                <Tooltip formatter={(value: any) => formatCurrency(Number(value))} />
+                <Bar dataKey="invested" fill={CHART_COLORS.blue} radius={[4, 4, 0, 0]} />
+                <Bar dataKey="current_value" fill={CHART_COLORS.emerald} radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartCard>
+        </div>
+      )}
     </div>
   );
 }
