@@ -164,6 +164,27 @@ export interface DashboardStatsAdmin {
   pending_users: number;
 }
 
+// Analytics types
+export interface FounderAnalytics {
+  funding_over_time: { month: string; amount: number }[];
+  investments_per_period: { month: string; count: number }[];
+  campaign_comparison: { title: string; raised: number; goal: number }[];
+  follower_growth: { month: string; count: number }[];
+}
+
+export interface InvestorAnalytics {
+  portfolio_allocation: { startup_name: string; amount: number }[];
+  investment_history: { month: string; amount: number }[];
+  portfolio_performance: { campaign_title: string; invested: number; current_value: number }[];
+}
+
+export interface AdminAnalytics {
+  user_registrations: { month: string; count: number }[];
+  platform_growth: { month: string; users: number; startups: number; campaigns: number }[];
+  approval_funnel: { status: string; count: number }[];
+  investment_volume: { month: string; amount: number }[];
+}
+
 export type NotificationType =
   | "investment_received"
   | "investment_confirmed"
