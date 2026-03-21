@@ -110,10 +110,10 @@ export function StartupsPage() {
   if (loading) return <LoadingSpinner fullscreen />;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-brand-text">Startups</h1>
+          <h1 className="text-3xl font-bold text-brand-text">Startups</h1>
           <p className="text-brand-muted mt-1 text-sm">
             {profile?.role === "founder"
               ? "Manage your startups or browse others."
@@ -137,8 +137,8 @@ export function StartupsPage() {
       </div>
 
       {/* Search */}
-      <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-brand-border/50 text-brand-muted text-sm w-full max-w-sm shadow-card focus-within:border-brand-blue/50 transition-colors">
-        <Search className="w-4 h-4 flex-shrink-0" />
+      <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-white border border-brand-border/50 text-brand-muted text-sm w-full max-w-md shadow-card focus-within:border-brand-blue/50 transition-colors">
+        <Search className="w-5 h-5 flex-shrink-0" />
         <input
           type="text"
           placeholder="Search by name or industry..."
@@ -152,8 +152,8 @@ export function StartupsPage() {
       {filtered.length === 0 ? (
         <Card>
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="w-16 h-16 rounded-2xl bg-brand-bg flex items-center justify-center mb-5">
-              <Building2 className="w-7 h-7 text-brand-muted" />
+            <div className="w-20 h-20 rounded-2xl bg-brand-bg flex items-center justify-center mb-5">
+              <Building2 className="w-9 h-9 text-brand-muted" />
             </div>
             <h2 className="text-lg font-semibold text-brand-text mb-2">
               {searchQuery ? "No matches found" : "No startups yet"}
@@ -179,18 +179,18 @@ export function StartupsPage() {
                         <img
                           src={startup.logo_url}
                           alt={startup.name}
-                          className="w-10 h-10 rounded-xl object-cover"
+                          className="w-12 h-12 rounded-xl object-cover"
                         />
                       ) : (
-                        <div className="w-10 h-10 rounded-xl bg-brand-accent/10 flex items-center justify-center">
-                          <Building2 className="w-5 h-5 text-brand-accent" />
+                        <div className="w-12 h-12 rounded-xl bg-brand-accent/10 flex items-center justify-center">
+                          <Building2 className="w-6 h-6 text-brand-accent" />
                         </div>
                       )}
                       <div>
-                        <h3 className="font-semibold text-brand-text text-sm">
+                        <h3 className="font-semibold text-brand-text text-base">
                           {startup.name}
                         </h3>
-                        <p className="text-xs text-brand-muted">
+                        <p className="text-sm text-brand-muted">
                           {startup.industry}
                         </p>
                       </div>
@@ -198,22 +198,22 @@ export function StartupsPage() {
                     <Badge status={startup.status} />
                   </div>
 
-                  <p className="text-sm text-brand-muted line-clamp-2 mb-4 flex-1">
+                  <p className="text-sm text-brand-muted line-clamp-2 mb-5 flex-1">
                     {startup.description}
                   </p>
 
                   <div className="flex items-center justify-between pt-3 border-t border-brand-border/20">
                     <div className="flex items-center gap-4 text-xs text-brand-muted">
                       <span className="flex items-center gap-1">
-                        <MapPin className="w-3.5 h-3.5" />
+                        <MapPin className="w-4 h-4" />
                         {startup.location}
                       </span>
                       <span className="flex items-center gap-1">
-                        <Users className="w-3.5 h-3.5" />
+                        <Users className="w-4 h-4" />
                         {startup.members_count}
                       </span>
                       <span className="flex items-center gap-1">
-                        <Heart className="w-3.5 h-3.5" />
+                        <Heart className="w-4 h-4" />
                         {startup.followers_count}
                       </span>
                     </div>
@@ -336,9 +336,9 @@ function CreateStartupModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+      <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-xl mx-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-brand-border/20">
-          <h2 className="text-lg font-bold text-brand-text">
+          <h2 className="text-xl font-bold text-brand-text">
             Create Startup
           </h2>
           <button
@@ -371,7 +371,7 @@ function CreateStartupModal({
               value={form.name}
               onChange={(e) => updateField("name", e.target.value)}
               placeholder="My Awesome Startup"
-              className="w-full px-4 py-2.5 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text placeholder:text-brand-muted text-sm outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/10 transition-all"
+              className="w-full px-4 py-3 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text placeholder:text-brand-muted text-sm outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/10 transition-all"
             />
           </div>
 
@@ -385,7 +385,7 @@ function CreateStartupModal({
               onChange={(e) => updateField("description", e.target.value)}
               placeholder="Describe what your startup does..."
               rows={3}
-              className="w-full px-4 py-2.5 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text placeholder:text-brand-muted text-sm outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/10 transition-all resize-none"
+              className="w-full px-4 py-3 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text placeholder:text-brand-muted text-sm outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/10 transition-all resize-none"
             />
           </div>
 
@@ -400,7 +400,7 @@ function CreateStartupModal({
                 value={form.industry}
                 onChange={(e) => updateField("industry", e.target.value)}
                 placeholder="e.g. FinTech"
-                className="w-full px-4 py-2.5 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text placeholder:text-brand-muted text-sm outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/10 transition-all"
+                className="w-full px-4 py-3 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text placeholder:text-brand-muted text-sm outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/10 transition-all"
               />
             </div>
             <div>
@@ -413,7 +413,7 @@ function CreateStartupModal({
                 value={form.location}
                 onChange={(e) => updateField("location", e.target.value)}
                 placeholder="e.g. Tunisia"
-                className="w-full px-4 py-2.5 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text placeholder:text-brand-muted text-sm outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/10 transition-all"
+                className="w-full px-4 py-3 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text placeholder:text-brand-muted text-sm outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/10 transition-all"
               />
             </div>
           </div>
@@ -428,7 +428,7 @@ function CreateStartupModal({
                 required
                 value={form.founding_date}
                 onChange={(e) => updateField("founding_date", e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text text-sm outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/10 transition-all"
+                className="w-full px-4 py-3 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text text-sm outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/10 transition-all"
               />
             </div>
             <div>
@@ -440,7 +440,7 @@ function CreateStartupModal({
                 value={form.website}
                 onChange={(e) => updateField("website", e.target.value)}
                 placeholder="https://..."
-                className="w-full px-4 py-2.5 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text placeholder:text-brand-muted text-sm outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/10 transition-all"
+                className="w-full px-4 py-3 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text placeholder:text-brand-muted text-sm outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/10 transition-all"
               />
             </div>
           </div>
