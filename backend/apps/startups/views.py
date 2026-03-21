@@ -79,7 +79,8 @@ class StartupViewSet(viewsets.ModelViewSet):
         ).distinct()
 
     def create(self, request, *args, **kwargs):
-        if request.user.approval_status != "approved":
+        is_onboarding = not request.user.onboarding_completed
+        if not is_onboarding and request.user.approval_status != "approved":
             return Response(
                 {"detail": "Your account must be approved to create a startup."},
                 status=status.HTTP_403_FORBIDDEN,

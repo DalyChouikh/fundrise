@@ -108,6 +108,7 @@ CORS_ALLOW_CREDENTIALS = True
 # Supabase
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
 SUPABASE_JWT_SECRET = os.environ.get("SUPABASE_JWT_SECRET", "")
+SUPABASE_SERVICE_ROLE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
 
 # AI Copilot
 GITHUB_MODELS_TOKEN = os.environ.get("GITHUB_MODELS_TOKEN", "")

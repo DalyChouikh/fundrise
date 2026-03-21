@@ -1,8 +1,14 @@
+import logging
+
+import requests
+from django.conf import settings
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+logger = logging.getLogger(__name__)
 
 from apps.notifications.utils import create_notification
 from apps.users.email import send_approval_email, send_rejection_email
@@ -106,7 +112,25 @@ class DeleteAccountView(APIView):
 
     def post(self, request):
         user = request.user
+        supabase_uid = str(user.id)
+
+        # Delete Django profile (cascades to all related data)
         user.delete()
+
+        # Delete Supabase Auth user
+        if settings.SUPABASE_URL and settings.SUPABASE_SERVICE_ROLE_KEY:
+            try:
+                requests.delete(
+                    f"{settings.SUPABASE_URL}/auth/v1/admin/users/{supabase_uid}",
+                    headers={
+                        "apikey": settings.SUPABASE_SERVICE_ROLE_KEY,
+                        "Authorization": f"Bearer {settings.SUPABASE_SERVICE_ROLE_KEY}",
+                    },
+                    timeout=10,
+                )
+            except Exception:
+                logger.warning("Failed to delete Supabase auth user %s", supabase_uid)
+
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
