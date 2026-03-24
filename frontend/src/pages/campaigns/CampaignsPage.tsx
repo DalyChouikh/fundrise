@@ -81,10 +81,10 @@ export function CampaignsPage() {
   if (loading) return <LoadingSpinner fullscreen />;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-brand-text">Campaigns</h1>
+          <h1 className="text-2xl font-bold text-brand-text">Campaigns</h1>
           <p className="text-brand-muted mt-1 text-sm">
             {profile?.role === "investor"
               ? "Explore active fundraising campaigns."
@@ -101,31 +101,31 @@ export function CampaignsPage() {
                 : undefined
             }
           >
-            <Plus className="w-4 h-4 mr-1.5" />
+            <Plus className="w-4 h-4" />
             New Campaign
           </Button>
         )}
       </div>
 
       {/* Search */}
-      <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-white border border-brand-border/50 text-brand-muted text-sm w-full max-w-md shadow-card focus-within:border-brand-blue/50 transition-colors">
-        <Search className="w-5 h-5 flex-shrink-0" />
+      <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-brand-border/30 text-brand-muted text-sm w-full max-w-sm shadow-sm focus-within:border-brand-blue/40 focus-within:ring-2 focus-within:ring-brand-blue/10 transition-all">
+        <Search className="w-4 h-4 flex-shrink-0" />
         <input
           type="text"
           placeholder="Search by title or startup..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="bg-transparent outline-none w-full text-brand-text placeholder:text-brand-muted"
+          className="bg-transparent outline-none w-full text-brand-text placeholder:text-brand-muted/60"
         />
       </div>
 
       {filtered.length === 0 ? (
         <Card>
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="w-20 h-20 rounded-2xl bg-brand-bg flex items-center justify-center mb-5">
-              <Target className="w-9 h-9 text-brand-muted" />
+            <div className="w-16 h-16 rounded-2xl bg-brand-bg flex items-center justify-center mb-4">
+              <Target className="w-7 h-7 text-brand-muted" />
             </div>
-            <h2 className="text-lg font-semibold text-brand-text mb-2">
+            <h2 className="text-base font-semibold text-brand-text mb-1">
               {searchQuery ? "No matches found" : "No campaigns yet"}
             </h2>
             <p className="text-sm text-brand-muted max-w-md">
@@ -139,9 +139,9 @@ export function CampaignsPage() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {filtered.map((campaign) => (
+          {filtered.map((campaign, i) => (
             <Link key={campaign.id} to={`/campaigns/${campaign.id}`}>
-              <Card hover className="h-full">
+              <Card hover className="h-full" style={{ animationDelay: `${i * 50}ms`, animationFillMode: "backwards" }}>
                 <div className="flex flex-col h-full">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
@@ -152,15 +152,15 @@ export function CampaignsPage() {
                           className="w-10 h-10 rounded-xl object-cover"
                         />
                       ) : (
-                        <div className="w-10 h-10 rounded-xl bg-brand-accent/10 flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-xl bg-brand-accent/[0.08] flex items-center justify-center">
                           <Building2 className="w-5 h-5 text-brand-accent" />
                         </div>
                       )}
                       <div>
-                        <h3 className="font-semibold text-brand-text text-base">
+                        <h3 className="font-semibold text-brand-text text-sm">
                           {campaign.title}
                         </h3>
-                        <p className="text-sm text-brand-muted mt-0.5">
+                        <p className="text-xs text-brand-muted mt-0.5">
                           {campaign.startup_name}
                         </p>
                       </div>
@@ -168,39 +168,39 @@ export function CampaignsPage() {
                     <Badge status={campaign.status} />
                   </div>
 
-                  <p className="text-sm text-brand-muted line-clamp-2 mb-4 flex-1">
+                  <p className="text-sm text-brand-muted line-clamp-2 mb-4 flex-1 leading-relaxed">
                     {campaign.description}
                   </p>
 
                   {/* Funding progress */}
                   <div className="mb-3">
-                    <div className="flex items-center justify-between text-xs text-brand-muted mb-1.5">
-                      <span className="font-medium text-brand-text">
+                    <div className="flex items-center justify-between text-[11px] text-brand-muted mb-1.5 tabular-nums">
+                      <span className="font-semibold text-brand-text">
                         ${Number(campaign.current_funding).toLocaleString()}
                       </span>
                       <span>
                         of ${Number(campaign.funding_goal).toLocaleString()}
                       </span>
                     </div>
-                    <div className="w-full h-2.5 rounded-full bg-brand-bg overflow-hidden">
+                    <div className="w-full h-2 rounded-full bg-brand-bg overflow-hidden">
                       <div
-                        className="h-full rounded-full bg-brand-accent transition-all"
+                        className="h-full rounded-full bg-gradient-to-r from-brand-accent to-brand-accent/70 transition-all"
                         style={{
                           width: `${Math.min(campaign.funding_percentage, 100)}%`,
                         }}
                       />
                     </div>
                     <div className="flex items-center justify-between mt-1.5">
-                      <span className="text-xs font-medium text-brand-accent">
+                      <span className="text-[11px] font-semibold text-brand-accent tabular-nums">
                         {campaign.funding_percentage}% funded
                       </span>
-                      <span className="text-xs text-brand-muted">
+                      <span className="text-[11px] text-brand-muted tabular-nums">
                         {campaign.equity_offered}% equity
                       </span>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-1.5 text-xs text-brand-muted pt-3 border-t border-brand-border/20">
+                  <div className="flex items-center gap-1.5 text-[11px] text-brand-muted pt-3 border-t border-brand-border/[0.08] tabular-nums">
                     <Calendar className="w-3.5 h-3.5" />
                     Deadline:{" "}
                     {new Date(campaign.deadline).toLocaleDateString()}
@@ -208,13 +208,13 @@ export function CampaignsPage() {
 
                   {profile?.role === "admin" &&
                     campaign.status === "pending_approval" && (
-                      <div className="flex items-center gap-2 mt-3 pt-3 border-t border-brand-border/20">
+                      <div className="flex items-center gap-2 mt-3 pt-3 border-t border-brand-border/[0.08]">
                         <button
                           onClick={(e) => {
                             e.preventDefault();
                             handleApprove(campaign.id);
                           }}
-                          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors"
+                          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors cursor-pointer"
                         >
                           <CheckCircle2 className="w-3.5 h-3.5" />
                           Approve
@@ -224,7 +224,7 @@ export function CampaignsPage() {
                             e.preventDefault();
                             handleReject(campaign.id);
                           }}
-                          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 transition-colors"
+                          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 transition-colors cursor-pointer"
                         >
                           <XCircle className="w-3.5 h-3.5" />
                           Reject
@@ -307,33 +307,33 @@ function CreateCampaignModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-xl mx-4 max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b border-brand-border/20">
-          <h2 className="text-xl font-bold text-brand-text">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-white rounded-2xl shadow-modal w-full max-w-xl mx-4 max-h-[90vh] overflow-y-auto animate-fade-in-scale">
+        <div className="flex items-center justify-between p-5 border-b border-brand-border/[0.1]">
+          <h2 className="text-base font-bold text-brand-text">
             Create Campaign
           </h2>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl hover:bg-brand-bg text-brand-muted transition-colors"
+            className="p-1.5 rounded-xl hover:bg-brand-bg text-brand-muted transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-5 space-y-4">
           {error && (
-            <div className="px-4 py-3 rounded-xl bg-red-50 text-red-700 text-sm">
+            <div className="px-4 py-3 rounded-xl bg-red-50 border border-red-100 text-red-700 text-sm">
               {error}
             </div>
           )}
 
           <div>
-            <label className="block text-sm font-medium text-brand-text mb-1.5">
+            <label className="block text-[13px] font-medium text-brand-text mb-1.5">
               Startup *
             </label>
             {startups.length === 0 ? (
-              <p className="text-sm text-brand-muted px-4 py-3 rounded-xl bg-brand-bg border border-brand-border/60">
+              <p className="text-sm text-brand-muted px-4 py-3 rounded-xl bg-brand-bg/60 border border-brand-border/[0.12]">
                 No active startups available. Create and get a startup approved
                 first.
               </p>
@@ -342,7 +342,7 @@ function CreateCampaignModal({
                 required
                 value={form.startup}
                 onChange={(e) => updateField("startup", e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text text-sm outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/10 transition-all"
+                className="w-full px-4 py-2.5 rounded-xl bg-white border border-brand-border/30 text-brand-text text-sm outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all shadow-sm cursor-pointer"
               >
                 <option value="">Select a startup</option>
                 {startups.map((s) => (
@@ -355,7 +355,7 @@ function CreateCampaignModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-brand-text mb-1.5">
+            <label className="block text-[13px] font-medium text-brand-text mb-1.5">
               Campaign Title *
             </label>
             <input
@@ -364,12 +364,12 @@ function CreateCampaignModal({
               value={form.title}
               onChange={(e) => updateField("title", e.target.value)}
               placeholder="e.g. Series A Round"
-              className="w-full px-4 py-3 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text placeholder:text-brand-muted text-sm outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/10 transition-all"
+              className="w-full px-4 py-2.5 rounded-xl bg-white border border-brand-border/30 text-brand-text placeholder:text-brand-muted/60 text-sm outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all shadow-sm"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-brand-text mb-1.5">
+            <label className="block text-[13px] font-medium text-brand-text mb-1.5">
               Description *
             </label>
             <textarea
@@ -378,13 +378,13 @@ function CreateCampaignModal({
               onChange={(e) => updateField("description", e.target.value)}
               placeholder="Describe your fundraising goals..."
               rows={3}
-              className="w-full px-4 py-3 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text placeholder:text-brand-muted text-sm outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/10 transition-all resize-none"
+              className="w-full px-4 py-2.5 rounded-xl bg-white border border-brand-border/30 text-brand-text placeholder:text-brand-muted/60 text-sm outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all resize-none shadow-sm"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-brand-text mb-1.5">
+              <label className="block text-[13px] font-medium text-brand-text mb-1.5">
                 Funding Goal ($) *
               </label>
               <input
@@ -395,11 +395,11 @@ function CreateCampaignModal({
                 value={form.funding_goal}
                 onChange={(e) => updateField("funding_goal", e.target.value)}
                 placeholder="100000"
-                className="w-full px-4 py-3 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text placeholder:text-brand-muted text-sm outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/10 transition-all"
+                className="w-full px-4 py-2.5 rounded-xl bg-white border border-brand-border/30 text-brand-text placeholder:text-brand-muted/60 text-sm outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all shadow-sm"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-brand-text mb-1.5">
+              <label className="block text-[13px] font-medium text-brand-text mb-1.5">
                 Equity Offered (%) *
               </label>
               <input
@@ -411,13 +411,13 @@ function CreateCampaignModal({
                 value={form.equity_offered}
                 onChange={(e) => updateField("equity_offered", e.target.value)}
                 placeholder="10"
-                className="w-full px-4 py-3 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text placeholder:text-brand-muted text-sm outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/10 transition-all"
+                className="w-full px-4 py-2.5 rounded-xl bg-white border border-brand-border/30 text-brand-text placeholder:text-brand-muted/60 text-sm outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all shadow-sm"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-brand-text mb-1.5">
+            <label className="block text-[13px] font-medium text-brand-text mb-1.5">
               Deadline *
             </label>
             <input
@@ -425,7 +425,7 @@ function CreateCampaignModal({
               required
               value={form.deadline}
               onChange={(e) => updateField("deadline", e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text text-sm outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/10 transition-all"
+              className="w-full px-4 py-2.5 rounded-xl bg-white border border-brand-border/30 text-brand-text text-sm outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all shadow-sm"
             />
           </div>
 

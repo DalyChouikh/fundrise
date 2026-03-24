@@ -89,68 +89,48 @@ export function InvestmentsPage() {
   if (loading) return <LoadingSpinner fullscreen />;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-brand-text">Investments</h1>
-        <p className="text-brand-muted mt-1">
+        <p className="text-brand-muted mt-1 text-sm">
           Track your investment portfolio and returns.
         </p>
       </div>
 
       {/* Summary cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card hover>
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm text-brand-muted">Total Invested</p>
-              <p className="text-2xl font-bold text-brand-text mt-1">
-                ${totalInvested.toLocaleString()}
-              </p>
+        {[
+          { label: "Total Invested", value: `$${totalInvested.toLocaleString()}`, icon: DollarSign, color: "text-emerald-600", bg: "bg-emerald-50" },
+          { label: "Active", value: String(investments.filter((i) => i.status === "confirmed").length), icon: TrendingUp, color: "text-brand-blue", bg: "bg-blue-50" },
+          { label: "Pending", value: String(investments.filter((i) => i.status === "pending").length), icon: Clock, color: "text-amber-600", bg: "bg-amber-50" },
+        ].map((stat) => (
+          <Card key={stat.label}>
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-[13px] text-brand-muted font-medium">{stat.label}</p>
+                <p className="text-2xl font-bold text-brand-text mt-1.5 tabular-nums">
+                  {stat.value}
+                </p>
+              </div>
+              <div className={`p-2.5 rounded-xl ${stat.bg}`}>
+                <stat.icon className={`w-5 h-5 ${stat.color}`} />
+              </div>
             </div>
-            <div className="p-2.5 rounded-xl bg-brand-bg">
-              <DollarSign className="w-5 h-5 text-emerald-600" />
-            </div>
-          </div>
-        </Card>
-        <Card hover>
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm text-brand-muted">Active</p>
-              <p className="text-2xl font-bold text-brand-text mt-1">
-                {investments.filter((i) => i.status === "confirmed").length}
-              </p>
-            </div>
-            <div className="p-2.5 rounded-xl bg-brand-bg">
-              <TrendingUp className="w-5 h-5 text-brand-blue" />
-            </div>
-          </div>
-        </Card>
-        <Card hover>
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm text-brand-muted">Pending</p>
-              <p className="text-2xl font-bold text-brand-text mt-1">
-                {investments.filter((i) => i.status === "pending").length}
-              </p>
-            </div>
-            <div className="p-2.5 rounded-xl bg-brand-bg">
-              <Clock className="w-5 h-5 text-amber-600" />
-            </div>
-          </div>
-        </Card>
+          </Card>
+        ))}
       </div>
 
       {/* Filter tabs */}
-      <div className="flex gap-1 p-1 bg-brand-bg rounded-xl w-fit">
+      <div className="flex gap-1 p-1 bg-white border border-brand-border/[0.12] rounded-xl w-fit shadow-sm">
         {tabs.map((tab) => (
           <button
             key={tab.value}
             onClick={() => setFilter(tab.value)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+            className={`px-4 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 cursor-pointer ${
               filter === tab.value
-                ? "bg-white text-brand-text shadow-sm"
-                : "text-brand-muted hover:text-brand-text"
+                ? "bg-brand-accent text-white shadow-sm"
+                : "text-brand-muted hover:text-brand-text hover:bg-brand-bg/60"
             }`}
           >
             {tab.label}
@@ -161,12 +141,12 @@ export function InvestmentsPage() {
       {/* Investment list */}
       {filtered.length === 0 ? (
         <Card>
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <div className="w-12 h-12 rounded-xl bg-brand-bg flex items-center justify-center mb-3">
-              <DollarSign className="w-5 h-5 text-brand-muted" />
+          <div className="flex flex-col items-center justify-center py-14 text-center">
+            <div className="w-14 h-14 rounded-2xl bg-brand-bg flex items-center justify-center mb-3">
+              <DollarSign className="w-6 h-6 text-brand-muted" />
             </div>
-            <p className="text-sm text-brand-muted">No investments found</p>
-            <p className="text-xs text-brand-muted/70 mt-1">
+            <p className="text-sm font-medium text-brand-muted">No investments found</p>
+            <p className="text-xs text-brand-muted/60 mt-1">
               {filter === "all"
                 ? "Invest in campaigns to build your portfolio"
                 : `No ${filter} investments`}
@@ -174,21 +154,21 @@ export function InvestmentsPage() {
           </div>
         </Card>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {filtered.map((inv) => {
             const config = statusConfig[inv.status];
             const StatusIcon = config.icon;
             return (
-              <Card key={inv.id} hover>
+              <Card key={inv.id} className="hover:shadow-card-hover transition-shadow">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4 min-w-0">
-                    <div className={`p-2.5 rounded-xl ${config.bg}`}>
-                      <StatusIcon className={`w-5 h-5 ${config.color}`} />
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <div className={`p-2 rounded-xl ${config.bg}`}>
+                      <StatusIcon className={`w-4 h-4 ${config.color}`} />
                     </div>
                     <div className="min-w-0">
                       <Link
                         to={`/campaigns/${inv.campaign_detail.id}`}
-                        className="text-sm font-semibold text-brand-text hover:text-brand-blue transition-colors"
+                        className="text-sm font-semibold text-brand-text hover:text-brand-accent transition-colors"
                       >
                         {inv.campaign_detail.title}
                       </Link>
@@ -200,21 +180,19 @@ export function InvestmentsPage() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4 flex-shrink-0">
+                  <div className="flex items-center gap-3 flex-shrink-0">
                     {canManageInvestments && inv.status === "pending" && (
                       <div className="flex items-center gap-1.5">
                         <button
                           onClick={() => handleConfirm(inv.id)}
-                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors"
-                          title="Confirm investment"
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors cursor-pointer"
                         >
                           <CheckCircle2 className="w-3.5 h-3.5" />
                           Confirm
                         </button>
                         <button
                           onClick={() => handleCancel(inv.id)}
-                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 transition-colors"
-                          title="Cancel investment"
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 transition-colors cursor-pointer"
                         >
                           <XCircle className="w-3.5 h-3.5" />
                           Cancel
@@ -224,18 +202,17 @@ export function InvestmentsPage() {
                     {profile?.role === "investor" && inv.status === "pending" && (
                       <button
                         onClick={() => handleCancel(inv.id)}
-                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 transition-colors"
-                        title="Cancel investment"
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 transition-colors cursor-pointer"
                       >
                         <XCircle className="w-3.5 h-3.5" />
                         Cancel
                       </button>
                     )}
                     <div className="text-right">
-                      <p className="text-sm font-bold text-brand-text">
+                      <p className="text-sm font-bold text-brand-text tabular-nums">
                         ${Number(inv.amount).toLocaleString()}
                       </p>
-                      <p className="text-xs text-brand-muted mt-0.5">
+                      <p className="text-[11px] text-brand-muted mt-0.5 tabular-nums">
                         {new Date(inv.created_at).toLocaleDateString()}
                       </p>
                     </div>

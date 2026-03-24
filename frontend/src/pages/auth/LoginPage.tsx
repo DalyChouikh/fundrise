@@ -2,7 +2,6 @@ import { useState, type FormEvent } from "react";
 import { Navigate, Link, useLocation, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
 import { Logo } from "@/components/ui/Logo";
 
 export function LoginPage() {
@@ -46,32 +45,52 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-brand-bg flex items-center justify-center px-4">
-      <div className="w-full max-w-[420px]">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-3">
-            <Logo size="lg" />
-          </div>
-          <p className="text-brand-muted mt-2 text-sm">
-            Welcome back. Sign in to continue.
+    <div className="min-h-screen bg-brand-bg flex">
+      {/* Left decorative panel */}
+      <div className="hidden lg:flex lg:w-[45%] xl:w-[40%] bg-brand-dark relative overflow-hidden">
+        <div className="absolute inset-0 opacity-[0.03]" style={{backgroundImage: "radial-gradient(circle at 1px 1px, white 1px, transparent 0)", backgroundSize: "32px 32px"}} />
+        <div className="absolute top-1/4 -right-24 w-96 h-96 rounded-full bg-brand-accent/40 blur-3xl" />
+        <div className="absolute bottom-1/4 -left-24 w-80 h-80 rounded-full bg-brand-blue/40 blur-3xl" />
+        <div className="relative z-10 flex flex-col justify-center px-12 xl:px-16">
+          <Logo size="sm" className="mb-10 brightness-0 invert opacity-90" />
+          <h2 className="text-3xl xl:text-4xl font-bold text-white leading-tight">
+            Invest in the<br />
+            <span className="text-brand-accent">future of innovation</span>
+          </h2>
+          <p className="text-white/50 mt-4 text-[15px] leading-relaxed max-w-md">
+            Join a community of founders and investors building the next generation of startups.
           </p>
         </div>
+      </div>
 
-        <Card padding="lg">
+      {/* Right form */}
+      <div className="flex-1 flex items-center justify-center px-4 sm:px-8 py-12">
+        <div className="w-full max-w-[400px] animate-fade-in">
+          <div className="lg:hidden text-center mb-10">
+            <div className="flex justify-center mb-3">
+              <Logo size="lg" />
+            </div>
+          </div>
+
+          <div className="mb-8">
+            <h1 className="text-2xl font-bold text-brand-text">Welcome back</h1>
+            <p className="text-brand-muted mt-1.5 text-sm">
+              Sign in to your account to continue.
+            </p>
+          </div>
+
           <div className="space-y-5">
             {error && (
-              <div className="px-4 py-3 rounded-xl bg-red-50 text-red-700 text-sm">
+              <div className="px-4 py-3 rounded-xl bg-red-50 border border-red-100 text-red-700 text-sm animate-fade-in">
                 {error}
               </div>
             )}
 
-            {/* Google Sign In */}
             <button
               type="button"
               onClick={handleGoogleSignIn}
               disabled={googleLoading}
-              className="flex items-center justify-center gap-3 w-full px-4 py-2.5 rounded-xl border border-brand-border/60 bg-white text-sm font-medium text-brand-text hover:bg-brand-bg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center justify-center gap-3 w-full px-4 py-3 rounded-xl border border-brand-border/40 bg-white text-sm font-medium text-brand-text hover:bg-brand-bg hover:border-brand-border/60 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm cursor-pointer"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
@@ -84,16 +103,16 @@ export function LoginPage() {
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-brand-border/40" />
+                <div className="w-full border-t border-brand-border/30" />
               </div>
               <div className="relative flex justify-center text-xs">
-                <span className="bg-white px-3 text-brand-muted">or</span>
+                <span className="bg-brand-bg lg:bg-brand-bg px-4 text-brand-muted font-medium">or</span>
               </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-brand-text mb-1.5">
+                <label className="block text-[13px] font-medium text-brand-text mb-1.5">
                   Email
                 </label>
                 <input
@@ -102,12 +121,12 @@ export function LoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
                   required
-                  className="w-full px-4 py-2.5 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text placeholder:text-brand-muted text-sm outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/10 transition-all"
+                  className="w-full px-4 py-2.5 rounded-xl bg-white border border-brand-border/40 text-brand-text placeholder:text-brand-muted/60 text-sm outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all shadow-sm"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-brand-text mb-1.5">
+                <label className="block text-[13px] font-medium text-brand-text mb-1.5">
                   Password
                 </label>
                 <input
@@ -116,7 +135,7 @@ export function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
                   required
-                  className="w-full px-4 py-2.5 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text placeholder:text-brand-muted text-sm outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/10 transition-all"
+                  className="w-full px-4 py-2.5 rounded-xl bg-white border border-brand-border/40 text-brand-text placeholder:text-brand-muted/60 text-sm outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all shadow-sm"
                 />
               </div>
 
@@ -125,17 +144,17 @@ export function LoginPage() {
               </Button>
             </form>
           </div>
-        </Card>
 
-        <p className="text-center text-sm text-brand-muted mt-6">
-          Don&apos;t have an account?{" "}
-          <Link
-            to="/signup"
-            className="text-brand-accent font-medium hover:underline"
-          >
-            Create one
-          </Link>
-        </p>
+          <p className="text-center text-sm text-brand-muted mt-8">
+            Don&apos;t have an account?{" "}
+            <Link
+              to="/signup"
+              className="text-brand-accent font-semibold hover:text-brand-accent/80 transition-colors"
+            >
+              Create one
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

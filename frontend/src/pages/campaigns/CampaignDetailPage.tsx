@@ -161,13 +161,13 @@ export function CampaignDetailPage() {
     profile?.approval_status === "approved";
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       {/* Back */}
       <Link
         to="/campaigns"
-        className="inline-flex items-center gap-1.5 text-sm text-brand-muted hover:text-brand-text transition-colors"
+        className="inline-flex items-center gap-1.5 text-sm text-brand-muted hover:text-brand-text transition-colors group"
       >
-        <ArrowLeft className="w-4 h-4" />
+        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
         Back to Campaigns
       </Link>
 
@@ -193,7 +193,7 @@ export function CampaignDetailPage() {
           <div className="flex items-center gap-2 flex-shrink-0">
             {canInvest && (
               <Button size="sm" onClick={() => setShowInvestModal(true)}>
-                <DollarSign className="w-4 h-4 mr-1" />
+                <DollarSign className="w-4 h-4" />
                 Invest Now
               </Button>
             )}
@@ -209,79 +209,47 @@ export function CampaignDetailPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm text-brand-muted">Raised</p>
-              <p className="text-2xl font-bold text-brand-text mt-1">
-                ${Number(campaign.current_funding).toLocaleString()}
-              </p>
+        {[
+          { label: "Raised", value: `$${Number(campaign.current_funding).toLocaleString()}`, icon: DollarSign, iconColor: "text-emerald-600", iconBg: "bg-emerald-50" },
+          { label: "Goal", value: `$${Number(campaign.funding_goal).toLocaleString()}`, icon: Target, iconColor: "text-brand-accent", iconBg: "bg-brand-accent/[0.08]" },
+          { label: "Equity Offered", value: `${campaign.equity_offered}%`, icon: FileText, iconColor: "text-brand-blue", iconBg: "bg-blue-50" },
+          { label: "Days Left", value: `${daysLeft}`, icon: Calendar, iconColor: "text-violet-600", iconBg: "bg-violet-50" },
+        ].map(({ label, value, icon: Icon, iconColor, iconBg }, i) => (
+          <Card key={label} style={{ animationDelay: `${i * 60}ms`, animationFillMode: "backwards" }} className="animate-fade-in">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-xs text-brand-muted font-medium">{label}</p>
+                <p className="text-xl font-bold text-brand-text mt-1 tabular-nums">
+                  {value}
+                </p>
+              </div>
+              <div className={`p-2.5 rounded-xl ${iconBg}`}>
+                <Icon className={`w-5 h-5 ${iconColor}`} />
+              </div>
             </div>
-            <div className="p-2.5 rounded-xl bg-brand-bg">
-              <DollarSign className="w-5 h-5 text-emerald-600" />
-            </div>
-          </div>
-        </Card>
-        <Card>
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm text-brand-muted">Goal</p>
-              <p className="text-2xl font-bold text-brand-text mt-1">
-                ${Number(campaign.funding_goal).toLocaleString()}
-              </p>
-            </div>
-            <div className="p-2.5 rounded-xl bg-brand-bg">
-              <Target className="w-5 h-5 text-brand-accent" />
-            </div>
-          </div>
-        </Card>
-        <Card>
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm text-brand-muted">Equity Offered</p>
-              <p className="text-2xl font-bold text-brand-text mt-1">
-                {campaign.equity_offered}%
-              </p>
-            </div>
-            <div className="p-2.5 rounded-xl bg-brand-bg">
-              <FileText className="w-5 h-5 text-brand-blue" />
-            </div>
-          </div>
-        </Card>
-        <Card>
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm text-brand-muted">Days Left</p>
-              <p className="text-2xl font-bold text-brand-text mt-1">
-                {daysLeft}
-              </p>
-            </div>
-            <div className="p-2.5 rounded-xl bg-brand-bg">
-              <Calendar className="w-5 h-5 text-violet-600" />
-            </div>
-          </div>
-        </Card>
+          </Card>
+        ))}
       </div>
 
       {/* Progress bar */}
       <Card>
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-base font-semibold text-brand-text">
+          <h3 className="text-sm font-bold text-brand-text">
             Funding Progress
           </h3>
-          <span className="text-sm font-semibold text-brand-accent">
+          <span className="text-sm font-bold text-brand-accent tabular-nums">
             {campaign.funding_percentage}%
           </span>
         </div>
         <div className="w-full h-3 rounded-full bg-brand-bg overflow-hidden">
           <div
-            className="h-full rounded-full bg-brand-accent transition-all duration-500"
+            className="h-full rounded-full bg-gradient-to-r from-brand-accent to-brand-accent/70 transition-all duration-500"
             style={{
               width: `${Math.min(campaign.funding_percentage, 100)}%`,
             }}
           />
         </div>
-        <div className="flex justify-between mt-2 text-xs text-brand-muted">
+        <div className="flex justify-between mt-2 text-[11px] text-brand-muted tabular-nums">
           <span>${Number(campaign.current_funding).toLocaleString()} raised</span>
           <span>${Number(campaign.funding_goal).toLocaleString()} goal</span>
         </div>
@@ -292,7 +260,7 @@ export function CampaignDetailPage() {
         <div className="lg:col-span-2 space-y-6">
           {/* Description */}
           <Card>
-            <h3 className="text-base font-semibold text-brand-text mb-3">
+            <h3 className="text-sm font-bold text-brand-text mb-3">
               About this Campaign
             </h3>
             <p className="text-sm text-brand-muted leading-relaxed whitespace-pre-line">
@@ -320,16 +288,16 @@ export function CampaignDetailPage() {
         <div className="space-y-6">
           {/* Invest CTA for investors */}
           {canInvest && (
-            <Card className="border-2 border-brand-accent/20">
+            <Card className="!border-2 !border-brand-accent/20">
               <div className="text-center">
-                <h3 className="text-base font-semibold text-brand-text mb-2">
+                <h3 className="text-sm font-bold text-brand-text mb-1.5">
                   Invest in this Campaign
                 </h3>
                 <p className="text-xs text-brand-muted mb-4">
                   Join {investments.length} investor{investments.length !== 1 ? "s" : ""} backing this startup
                 </p>
                 <Button className="w-full" onClick={() => setShowInvestModal(true)}>
-                  <DollarSign className="w-4 h-4 mr-1" />
+                  <DollarSign className="w-4 h-4" />
                   Invest Now
                 </Button>
               </div>
@@ -339,48 +307,49 @@ export function CampaignDetailPage() {
           {/* Recent Investors */}
           {investments.length > 0 && (
             <Card>
-              <h3 className="text-base font-semibold text-brand-text mb-3">
+              <h3 className="text-sm font-bold text-brand-text mb-3">
                 Recent Investors ({investments.length})
               </h3>
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 {investments.slice(0, 5).map((inv) => (
                   <div
                     key={inv.id}
-                    className="p-3 rounded-xl border border-brand-border/30"
+                    className="p-3 rounded-xl border border-brand-border/[0.1]"
                   >
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <div className="w-8 h-8 rounded-full bg-brand-bg flex items-center justify-center text-xs font-medium text-brand-muted">
-                          {inv.investor_name?.charAt(0)?.toUpperCase() || "?"}
-                        </div>
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <Avatar
+                          name={inv.investor_name || "?"}
+                          size="sm"
+                        />
                         <div className="min-w-0">
                           <p className="text-sm font-medium text-brand-text truncate">
                             {inv.investor_name}
                           </p>
-                          <p className="text-xs text-brand-muted">
+                          <p className="text-[11px] text-brand-muted tabular-nums">
                             {new Date(inv.created_at).toLocaleDateString()}
                           </p>
                         </div>
                       </div>
                       <div className="text-right flex-shrink-0">
-                        <p className="text-sm font-semibold text-brand-text">
+                        <p className="text-sm font-bold text-brand-text tabular-nums">
                           ${Number(inv.amount).toLocaleString()}
                         </p>
                         <Badge status={inv.status} />
                       </div>
                     </div>
                     {canManageInvestments && inv.status === "pending" && (
-                      <div className="flex items-center gap-2 mt-2 pt-2 border-t border-brand-border/20">
+                      <div className="flex items-center gap-2 mt-2 pt-2 border-t border-brand-border/[0.08]">
                         <button
                           onClick={() => handleConfirmInvestment(inv.id)}
-                          className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors"
+                          className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-xl text-xs font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors cursor-pointer"
                         >
                           <CheckCircle2 className="w-3.5 h-3.5" />
                           Confirm
                         </button>
                         <button
                           onClick={() => handleCancelInvestment(inv.id)}
-                          className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 transition-colors"
+                          className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-xl text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 transition-colors cursor-pointer"
                         >
                           <XCircle className="w-3.5 h-3.5" />
                           Cancel
@@ -395,7 +364,7 @@ export function CampaignDetailPage() {
 
           {/* Details */}
           <Card>
-            <h3 className="text-base font-semibold text-brand-text mb-3">
+            <h3 className="text-sm font-bold text-brand-text mb-3">
               Details
             </h3>
             <div className="space-y-3 text-sm">
@@ -405,19 +374,19 @@ export function CampaignDetailPage() {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-brand-muted">Deadline</span>
-                <span className="text-brand-text font-medium">
+                <span className="text-brand-text font-medium tabular-nums">
                   {new Date(campaign.deadline).toLocaleDateString()}
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-brand-muted">Equity</span>
-                <span className="text-brand-text font-medium">
+                <span className="text-brand-text font-medium tabular-nums">
                   {campaign.equity_offered}%
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-brand-muted">Updates</span>
-                <span className="text-brand-text font-medium">
+                <span className="text-brand-text font-medium tabular-nums">
                   {campaign.updates_count}
                 </span>
               </div>
@@ -437,28 +406,28 @@ export function CampaignDetailPage() {
       {/* Invest Modal */}
       {showInvestModal && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-bold text-brand-text">
+          <div className="bg-white rounded-2xl shadow-modal max-w-md w-full p-6 animate-fade-in-scale">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-base font-bold text-brand-text">
                 Invest in {campaign.title}
               </h2>
               <button
                 onClick={() => setShowInvestModal(false)}
-                className="p-1 rounded-lg hover:bg-brand-bg transition-colors"
+                className="p-1.5 rounded-xl hover:bg-brand-bg transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5 text-brand-muted" />
               </button>
             </div>
 
             <div className="space-y-4">
-              <div className="p-4 rounded-xl bg-brand-bg/50">
-                <div className="flex justify-between text-sm mb-1">
+              <div className="p-4 rounded-xl bg-brand-bg/40 border border-brand-border/[0.08]">
+                <div className="flex justify-between text-sm mb-1.5">
                   <span className="text-brand-muted">Campaign</span>
                   <span className="font-medium text-brand-text">
                     {campaign.title}
                   </span>
                 </div>
-                <div className="flex justify-between text-sm mb-1">
+                <div className="flex justify-between text-sm mb-1.5">
                   <span className="text-brand-muted">Startup</span>
                   <span className="font-medium text-brand-text">
                     {campaign.startup_name}
@@ -466,14 +435,14 @@ export function CampaignDetailPage() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-brand-muted">Equity Offered</span>
-                  <span className="font-medium text-brand-text">
+                  <span className="font-medium text-brand-text tabular-nums">
                     {campaign.equity_offered}%
                   </span>
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-brand-text mb-1.5">
+                <label className="block text-[13px] font-medium text-brand-text mb-1.5">
                   Investment Amount ($)
                 </label>
                 <input
@@ -482,7 +451,7 @@ export function CampaignDetailPage() {
                   value={investAmount}
                   onChange={(e) => setInvestAmount(e.target.value)}
                   placeholder="Enter amount"
-                  className="w-full px-4 py-2.5 rounded-xl border border-brand-border/50 bg-white text-brand-text placeholder:text-brand-muted/50 focus:outline-none focus:ring-2 focus:ring-brand-accent/30 focus:border-brand-accent/50 transition-all"
+                  className="w-full px-4 py-2.5 rounded-xl border border-brand-border/30 bg-white text-brand-text placeholder:text-brand-muted/60 outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all shadow-sm"
                 />
               </div>
 
@@ -547,13 +516,13 @@ function UpdatesSection({
   return (
     <Card>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-base font-semibold text-brand-text">
+        <h3 className="text-sm font-bold text-brand-text">
           Updates ({updates.length})
         </h3>
         {isStartupMember && !showForm && (
           <button
             onClick={() => setShowForm(true)}
-            className="flex items-center gap-1 text-xs font-medium text-brand-accent hover:text-brand-accent/80 transition-colors"
+            className="flex items-center gap-1 text-xs font-medium text-brand-accent hover:text-brand-accent/80 transition-colors cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             Post Update
@@ -562,19 +531,19 @@ function UpdatesSection({
       </div>
 
       {showForm && (
-        <div className="mb-4 p-4 rounded-xl border border-brand-accent/20 bg-brand-accent/[0.03]">
+        <div className="mb-4 p-4 rounded-xl border border-brand-accent/20 bg-brand-accent/[0.02]">
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Update title"
-            className="w-full bg-white border border-brand-border/50 rounded-lg px-3 py-2 text-sm text-brand-text placeholder:text-brand-muted/50 focus:outline-none focus:ring-2 focus:ring-brand-accent/30 focus:border-brand-accent/50 mb-2"
+            className="w-full bg-white border border-brand-border/30 rounded-xl px-4 py-2.5 text-sm text-brand-text placeholder:text-brand-muted/60 outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all shadow-sm mb-2"
           />
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="Share what's new with your campaign..."
             rows={3}
-            className="w-full bg-white border border-brand-border/50 rounded-lg px-3 py-2 text-sm text-brand-text placeholder:text-brand-muted/50 focus:outline-none focus:ring-2 focus:ring-brand-accent/30 focus:border-brand-accent/50 resize-none"
+            className="w-full bg-white border border-brand-border/30 rounded-xl px-4 py-2.5 text-sm text-brand-text placeholder:text-brand-muted/60 outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all resize-none shadow-sm"
           />
           <div className="flex justify-end gap-2 mt-2">
             <Button
@@ -601,23 +570,23 @@ function UpdatesSection({
 
       {updates.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-8 text-center">
-          <div className="w-12 h-12 rounded-xl bg-brand-bg flex items-center justify-center mb-3">
-            <FileText className="w-5 h-5 text-brand-muted" />
+          <div className="w-10 h-10 rounded-xl bg-brand-bg flex items-center justify-center mb-2.5">
+            <FileText className="w-4 h-4 text-brand-muted" />
           </div>
           <p className="text-sm text-brand-muted">No updates yet</p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {updates.map((update) => (
             <div
               key={update.id}
-              className="p-4 rounded-xl border border-brand-border/30 bg-brand-bg/30"
+              className="p-4 rounded-xl border border-brand-border/[0.1] bg-brand-bg/20"
             >
               <div className="flex items-center justify-between mb-2">
                 <h4 className="text-sm font-semibold text-brand-text">
                   {update.title}
                 </h4>
-                <span className="text-xs text-brand-muted">
+                <span className="text-[11px] text-brand-muted tabular-nums">
                   {new Date(update.created_at).toLocaleDateString()}
                 </span>
               </div>
@@ -630,7 +599,7 @@ function UpdatesSection({
                   name={update.created_by.full_name}
                   size="sm"
                 />
-                <span className="text-xs text-brand-muted">
+                <span className="text-[11px] text-brand-muted">
                   {update.created_by.full_name}
                 </span>
               </div>
@@ -699,13 +668,13 @@ function MilestonesSection({
   return (
     <Card>
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-base font-semibold text-brand-text">
+        <h3 className="text-sm font-bold text-brand-text">
           Milestones ({milestones.length})
         </h3>
         {isStartupMember && !showForm && (
           <button
             onClick={() => setShowForm(true)}
-            className="flex items-center gap-1 text-xs font-medium text-brand-accent hover:text-brand-accent/80 transition-colors"
+            className="flex items-center gap-1 text-xs font-medium text-brand-accent hover:text-brand-accent/80 transition-colors cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             Add
@@ -714,24 +683,24 @@ function MilestonesSection({
       </div>
 
       {showForm && (
-        <div className="mb-3 p-3 rounded-xl border border-brand-accent/20 bg-brand-accent/[0.03]">
+        <div className="mb-3 p-4 rounded-xl border border-brand-accent/20 bg-brand-accent/[0.02]">
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Milestone title"
-            className="w-full bg-white border border-brand-border/50 rounded-lg px-3 py-2 text-sm text-brand-text placeholder:text-brand-muted/50 focus:outline-none focus:ring-2 focus:ring-brand-accent/30 mb-2"
+            className="w-full bg-white border border-brand-border/30 rounded-xl px-4 py-2.5 text-sm text-brand-text placeholder:text-brand-muted/60 outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all shadow-sm mb-2"
           />
           <input
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Description (optional)"
-            className="w-full bg-white border border-brand-border/50 rounded-lg px-3 py-2 text-sm text-brand-text placeholder:text-brand-muted/50 focus:outline-none focus:ring-2 focus:ring-brand-accent/30 mb-2"
+            className="w-full bg-white border border-brand-border/30 rounded-xl px-4 py-2.5 text-sm text-brand-text placeholder:text-brand-muted/60 outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all shadow-sm mb-2"
           />
           <input
             type="date"
             value={targetDate}
             onChange={(e) => setTargetDate(e.target.value)}
-            className="w-full bg-white border border-brand-border/50 rounded-lg px-3 py-2 text-sm text-brand-text focus:outline-none focus:ring-2 focus:ring-brand-accent/30"
+            className="w-full bg-white border border-brand-border/30 rounded-xl px-4 py-2.5 text-sm text-brand-text outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all shadow-sm"
           />
           <div className="flex justify-end gap-2 mt-2">
             <Button
@@ -765,16 +734,16 @@ function MilestonesSection({
           <p className="text-xs text-brand-muted">No milestones set</p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           {milestones.map((milestone) => (
             <div
               key={milestone.id}
-              className="flex items-start gap-3 p-3 rounded-xl border border-brand-border/30"
+              className="flex items-start gap-3 p-3 rounded-xl border border-brand-border/[0.1]"
             >
               {isStartupMember ? (
                 <button
                   onClick={() => toggleCompletion(milestone)}
-                  className={`p-1 rounded-lg mt-0.5 transition-colors ${
+                  className={`p-1 rounded-lg mt-0.5 transition-colors cursor-pointer ${
                     milestone.is_completed
                       ? "bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
                       : "bg-brand-bg text-brand-muted hover:bg-brand-border/30"
@@ -816,7 +785,7 @@ function MilestonesSection({
                 >
                   {milestone.title}
                 </p>
-                <p className="text-xs text-brand-muted mt-0.5">
+                <p className="text-[11px] text-brand-muted mt-0.5 tabular-nums">
                   Target: {milestone.target_date}
                 </p>
               </div>
@@ -871,8 +840,10 @@ function DiscussionSection({
   return (
     <Card>
       <div className="flex items-center gap-2 mb-4">
-        <MessageCircle className="w-5 h-5 text-brand-accent" />
-        <h3 className="text-base font-semibold text-brand-text">
+        <div className="p-1.5 rounded-lg bg-brand-accent/[0.08]">
+          <MessageCircle className="w-4 h-4 text-brand-accent" />
+        </div>
+        <h3 className="text-sm font-bold text-brand-text">
           Discussion ({comments.length})
         </h3>
       </div>
@@ -892,7 +863,7 @@ function DiscussionSection({
               onChange={(e) => setNewComment(e.target.value)}
               placeholder="Ask a question or share your thoughts..."
               rows={2}
-              className="w-full bg-brand-bg border border-brand-border/50 rounded-xl px-4 py-2.5 text-sm text-brand-text placeholder:text-brand-muted/50 focus:outline-none focus:ring-2 focus:ring-brand-accent/30 focus:border-brand-accent/50 transition-all resize-none"
+              className="w-full bg-white border border-brand-border/30 rounded-xl px-4 py-2.5 text-sm text-brand-text placeholder:text-brand-muted/60 outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all resize-none shadow-sm"
             />
             <div className="flex justify-end mt-2">
               <Button
@@ -900,7 +871,7 @@ function DiscussionSection({
                 onClick={handlePost}
                 disabled={!newComment.trim() || posting}
               >
-                <Send className="w-3.5 h-3.5 mr-1.5" />
+                <Send className="w-3.5 h-3.5" />
                 {posting ? "Posting..." : "Post"}
               </Button>
             </div>
@@ -911,15 +882,15 @@ function DiscussionSection({
       {/* Comment list */}
       {comments.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-8 text-center">
-          <div className="w-12 h-12 rounded-xl bg-brand-bg flex items-center justify-center mb-3">
-            <MessageCircle className="w-5 h-5 text-brand-muted" />
+          <div className="w-10 h-10 rounded-xl bg-brand-bg flex items-center justify-center mb-2.5">
+            <MessageCircle className="w-4 h-4 text-brand-muted" />
           </div>
           <p className="text-sm text-brand-muted">
             No comments yet. Be the first to start a discussion!
           </p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {comments.map((comment) => (
             <CommentThread
               key={comment.id}
@@ -974,7 +945,7 @@ function CommentThread({
   };
 
   return (
-    <div className="p-4 rounded-xl border border-brand-border/30 bg-brand-bg/20">
+    <div className="p-4 rounded-xl border border-brand-border/[0.1] bg-brand-bg/10">
       {/* Main comment */}
       <div className="flex gap-3">
         <Avatar
@@ -984,24 +955,24 @@ function CommentThread({
           className="flex-shrink-0 mt-0.5"
         />
         <div className="flex-1 min-w-0">
-          <div className="flex items-baseline gap-2">
-            <span className="text-sm font-medium text-brand-text">
+          <div className="flex items-baseline gap-2 flex-wrap">
+            <span className="text-[13px] font-semibold text-brand-text">
               {comment.author_detail.full_name}
             </span>
-            <span className="text-xs text-brand-muted capitalize">
+            <span className="text-[11px] text-brand-muted capitalize">
               {comment.author_detail.role.replace("_", " ")}
             </span>
-            <span className="text-[10px] text-brand-muted">
+            <span className="text-[10px] text-brand-muted tabular-nums">
               {formatTimeAgo(comment.created_at)}
             </span>
           </div>
-          <p className="text-sm text-brand-text mt-1 leading-relaxed whitespace-pre-line">
+          <p className="text-sm text-brand-text/90 mt-1 leading-relaxed whitespace-pre-line">
             {comment.content}
           </p>
           {profile && (
             <button
               onClick={() => setShowReply(!showReply)}
-              className="flex items-center gap-1 mt-2 text-xs text-brand-muted hover:text-brand-accent transition-colors"
+              className="flex items-center gap-1 mt-2 text-xs text-brand-muted hover:text-brand-accent transition-colors cursor-pointer"
             >
               <Reply className="w-3.5 h-3.5" />
               Reply
@@ -1013,7 +984,7 @@ function CommentThread({
 
       {/* Replies */}
       {comment.replies.length > 0 && (
-        <div className="ml-11 mt-3 space-y-3 border-l-2 border-brand-border/20 pl-4">
+        <div className="ml-11 mt-3 space-y-3 border-l-2 border-brand-accent/20 pl-4">
           {comment.replies.map((reply) => (
             <div key={reply.id} className="flex gap-3">
               <Avatar
@@ -1023,18 +994,18 @@ function CommentThread({
                 className="flex-shrink-0 mt-0.5"
               />
               <div className="flex-1 min-w-0">
-                <div className="flex items-baseline gap-2">
-                  <span className="text-sm font-medium text-brand-text">
+                <div className="flex items-baseline gap-2 flex-wrap">
+                  <span className="text-[13px] font-semibold text-brand-text">
                     {reply.author_detail.full_name}
                   </span>
-                  <span className="text-xs text-brand-muted capitalize">
+                  <span className="text-[11px] text-brand-muted capitalize">
                     {reply.author_detail.role.replace("_", " ")}
                   </span>
-                  <span className="text-[10px] text-brand-muted">
+                  <span className="text-[10px] text-brand-muted tabular-nums">
                     {formatTimeAgo(reply.created_at)}
                   </span>
                 </div>
-                <p className="text-sm text-brand-text mt-1 leading-relaxed whitespace-pre-line">
+                <p className="text-sm text-brand-text/90 mt-1 leading-relaxed whitespace-pre-line">
                   {reply.content}
                 </p>
               </div>
@@ -1052,7 +1023,7 @@ function CommentThread({
             onChange={(e) => setReplyText(e.target.value)}
             placeholder="Write a reply..."
             rows={1}
-            className="flex-1 bg-white border border-brand-border/50 rounded-lg px-3 py-2 text-sm text-brand-text placeholder:text-brand-muted/50 focus:outline-none focus:ring-2 focus:ring-brand-accent/30 focus:border-brand-accent/50 transition-all resize-none"
+            className="flex-1 bg-white border border-brand-border/30 rounded-xl px-4 py-2.5 text-sm text-brand-text placeholder:text-brand-muted/60 outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all resize-none shadow-sm"
           />
           <Button
             size="sm"

@@ -87,78 +87,89 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       {/* Mobile backdrop */}
       {open && (
         <div
-          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden"
+          className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40 lg:hidden transition-opacity"
           onClick={onClose}
         />
       )}
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 z-50 h-full w-[var(--sidebar-width)] bg-white border-r border-brand-border/50 flex flex-col transition-transform duration-300 lg:translate-x-0 ${
+        className={`fixed top-0 left-0 z-50 h-full w-[var(--sidebar-width)] bg-white border-r border-brand-border/[0.15] flex flex-col transition-transform duration-300 ease-out lg:translate-x-0 ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         {/* Header */}
-        <div className="h-[var(--topbar-height)] flex items-center justify-between px-6 border-b border-brand-border/30">
+        <div className="h-[var(--topbar-height)] flex items-center justify-between px-6 border-b border-brand-border/[0.12]">
           <Logo size="sm" />
           <button
             onClick={onClose}
-            className="lg:hidden p-1 rounded-lg hover:bg-brand-bg text-brand-muted transition-colors"
+            className="lg:hidden p-1.5 rounded-lg hover:bg-brand-bg text-brand-muted transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto py-4 px-3">
-          <ul className="space-y-1">
-            {filteredItems.map((item) => (
-              <li key={item.label}>
-                <NavLink
-                  to={item.path}
-                  onClick={onClose}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
-                    isActive(item.path)
-                      ? "bg-brand-accent/[0.06] text-brand-text border-l-[3px] border-brand-accent -ml-px"
-                      : "text-brand-muted hover:text-brand-text hover:bg-black/[0.02]"
-                  }`}
-                >
-                  <DynamicIcon
-                    name={item.icon}
-                    className={`w-[18px] h-[18px] flex-shrink-0 ${
-                      isActive(item.path)
-                        ? "text-brand-accent"
-                        : "text-brand-muted"
+        <nav className="flex-1 overflow-y-auto py-3 px-3">
+          <ul className="space-y-0.5">
+            {filteredItems.map((item) => {
+              const active = isActive(item.path);
+              return (
+                <li key={item.label}>
+                  <NavLink
+                    to={item.path}
+                    onClick={onClose}
+                    className={`group flex items-center gap-3 px-3 py-2 rounded-xl text-[13px] font-medium transition-all duration-200 ${
+                      active
+                        ? "bg-brand-accent/[0.08] text-brand-accent"
+                        : "text-brand-muted hover:text-brand-text hover:bg-black/[0.02]"
                     }`}
-                  />
-                  {item.label}
-                </NavLink>
-              </li>
-            ))}
+                  >
+                    <div
+                      className={`flex items-center justify-center w-8 h-8 rounded-lg transition-colors ${
+                        active
+                          ? "bg-brand-accent/[0.12]"
+                          : "bg-transparent group-hover:bg-brand-bg"
+                      }`}
+                    >
+                      <DynamicIcon
+                        name={item.icon}
+                        className={`w-[18px] h-[18px] flex-shrink-0 transition-colors ${
+                          active
+                            ? "text-brand-accent"
+                            : "text-brand-muted group-hover:text-brand-text"
+                        }`}
+                      />
+                    </div>
+                    {item.label}
+                  </NavLink>
+                </li>
+              );
+            })}
           </ul>
         </nav>
 
         {/* User section */}
         {profile && (
-          <div className="border-t border-brand-border/30 p-4">
-            <div className="flex items-center gap-3 mb-3">
+          <div className="border-t border-brand-border/[0.12] p-3">
+            <div className="flex items-center gap-3 p-2 rounded-xl hover:bg-brand-bg/60 transition-colors mb-1">
               <Avatar
                 src={profile.avatar_url || undefined}
                 name={profile.full_name}
                 size="sm"
               />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-brand-text truncate">
+                <p className="text-[13px] font-semibold text-brand-text truncate">
                   {profile.full_name}
                 </p>
-                <p className="text-xs text-brand-muted truncate">
+                <p className="text-[11px] text-brand-muted truncate">
                   {profile.email}
                 </p>
               </div>
             </div>
             <button
               onClick={signOut}
-              className="flex items-center gap-2 w-full px-3 py-2 rounded-xl text-sm text-brand-muted hover:text-brand-text hover:bg-black/[0.02] transition-all duration-200"
+              className="flex items-center gap-2.5 w-full px-3 py-2 rounded-xl text-[13px] text-brand-muted hover:text-red-600 hover:bg-red-50/50 transition-all duration-200 cursor-pointer"
             >
               <LogOut className="w-4 h-4" />
               Sign out

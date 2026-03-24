@@ -94,14 +94,14 @@ export function ChatPage() {
   const selectedRoom = rooms.find((r) => r.id === selectedRoomId) || null;
 
   return (
-    <div className="-m-6 lg:-m-8 flex h-[calc(100vh-64px)]">
+    <div className="-m-4 sm:-m-6 lg:-m-8 xl:-m-10 flex h-[calc(100vh-64px)] animate-fade-in">
       {/* Room list */}
-      <div className="w-80 border-r border-brand-border/30 bg-white flex flex-col">
-        <div className="p-4 border-b border-brand-border/20 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-brand-text">Messages</h2>
+      <div className="w-80 border-r border-brand-border/[0.12] bg-white flex flex-col">
+        <div className="p-4 border-b border-brand-border/[0.1] flex items-center justify-between">
+          <h2 className="text-base font-bold text-brand-text">Messages</h2>
           <button
             onClick={() => setShowNewChat(true)}
-            className="p-2 rounded-lg hover:bg-brand-bg text-brand-muted hover:text-brand-text transition-colors"
+            className="p-2 rounded-xl hover:bg-brand-bg text-brand-muted hover:text-brand-text transition-colors cursor-pointer"
           >
             <Plus className="w-5 h-5" />
           </button>
@@ -112,12 +112,14 @@ export function ChatPage() {
               <LoadingSpinner />
             </div>
           ) : rooms.length === 0 ? (
-            <div className="p-6 text-center text-brand-muted">
-              <MessageSquare className="w-10 h-10 mx-auto mb-3 opacity-40" />
-              <p className="text-sm">No conversations yet</p>
+            <div className="p-8 text-center">
+              <div className="w-12 h-12 rounded-2xl bg-brand-bg flex items-center justify-center mx-auto mb-3">
+                <MessageSquare className="w-5 h-5 text-brand-muted" />
+              </div>
+              <p className="text-sm font-medium text-brand-text mb-1">No conversations yet</p>
               <button
                 onClick={() => setShowNewChat(true)}
-                className="mt-2 text-sm text-brand-accent hover:underline"
+                className="text-sm text-brand-accent hover:underline cursor-pointer"
               >
                 Start a new chat
               </button>
@@ -137,7 +139,7 @@ export function ChatPage() {
       </div>
 
       {/* Chat thread */}
-      <div className="flex-1 flex flex-col bg-brand-bg/30">
+      <div className="flex-1 flex flex-col bg-brand-bg/20">
         {selectedRoom ? (
           <ChatThread
             room={selectedRoom}
@@ -149,12 +151,14 @@ export function ChatPage() {
           />
         ) : (
           <div className="flex-1 flex items-center justify-center">
-            <div className="text-center text-brand-muted">
-              <MessageSquare className="w-16 h-16 mx-auto mb-4 opacity-20" />
-              <p className="text-lg font-medium">
+            <div className="text-center">
+              <div className="w-16 h-16 rounded-2xl bg-white border border-brand-border/[0.12] shadow-sm flex items-center justify-center mx-auto mb-4">
+                <MessageSquare className="w-7 h-7 text-brand-muted" />
+              </div>
+              <p className="text-base font-semibold text-brand-text mb-1">
                 Select a conversation
               </p>
-              <p className="text-sm mt-1">
+              <p className="text-sm text-brand-muted">
                 or start a new one
               </p>
             </div>
@@ -192,10 +196,10 @@ function RoomItem({
   return (
     <button
       onClick={onClick}
-      className={`w-full text-left p-4 border-b border-brand-border/10 hover:bg-brand-bg/60 transition-colors ${
+      className={`w-full text-left px-4 py-3.5 border-b border-brand-border/[0.06] hover:bg-brand-bg/60 transition-all cursor-pointer ${
         isSelected
           ? "bg-brand-accent/[0.06] border-l-[3px] border-l-brand-accent"
-          : ""
+          : "border-l-[3px] border-l-transparent"
       }`}
     >
       <div className="flex items-center gap-3">
@@ -206,14 +210,21 @@ function RoomItem({
             size="sm"
           />
         ) : (
-          <div className="w-8 h-8 rounded-full bg-brand-accent/10 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-xl bg-brand-accent/10 flex items-center justify-center">
             <Users className="w-4 h-4 text-brand-accent" />
           </div>
         )}
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-brand-text truncate">
-            {roomName}
-          </p>
+          <div className="flex items-center justify-between gap-2">
+            <p className={`text-sm truncate ${isSelected ? "font-semibold text-brand-accent" : "font-medium text-brand-text"}`}>
+              {roomName}
+            </p>
+            {room.last_message && (
+              <span className="text-[10px] text-brand-muted whitespace-nowrap tabular-nums flex-shrink-0">
+                {formatTime(room.last_message.created_at)}
+              </span>
+            )}
+          </div>
           {room.last_message && (
             <p className="text-xs text-brand-muted truncate mt-0.5">
               {room.last_message.sender_detail.full_name}:{" "}
@@ -221,11 +232,6 @@ function RoomItem({
             </p>
           )}
         </div>
-        {room.last_message && (
-          <span className="text-[10px] text-brand-muted whitespace-nowrap">
-            {formatTime(room.last_message.created_at)}
-          </span>
-        )}
       </div>
     </button>
   );
@@ -272,16 +278,16 @@ function ChatThread({
   return (
     <>
       {/* Header */}
-      <div className="p-4 border-b border-brand-border/20 bg-white flex items-center gap-3">
-        <div className="flex-1">
-          <h3 className="font-semibold text-brand-text">{roomName}</h3>
+      <div className="px-5 py-3.5 border-b border-brand-border/[0.1] bg-white flex items-center gap-3">
+        <div className="flex-1 min-w-0">
+          <h3 className="text-sm font-bold text-brand-text">{roomName}</h3>
           <div className="flex items-center gap-1.5 mt-0.5">
             <div
-              className={`w-2 h-2 rounded-full ${
-                connected ? "bg-green-500" : "bg-gray-300"
+              className={`w-1.5 h-1.5 rounded-full ${
+                connected ? "bg-emerald-500" : "bg-gray-300"
               }`}
             />
-            <span className="text-xs text-brand-muted">
+            <span className="text-[11px] text-brand-muted">
               {connected ? "Connected" : "Disconnected"}
             </span>
           </div>
@@ -307,16 +313,21 @@ function ChatThread({
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <LoadingSpinner />
           </div>
         ) : messages.length === 0 ? (
           <div className="flex items-center justify-center py-12">
-            <p className="text-sm text-brand-muted">
-              No messages yet. Say hello!
-            </p>
+            <div className="text-center">
+              <div className="w-10 h-10 rounded-xl bg-white border border-brand-border/[0.12] flex items-center justify-center mx-auto mb-2">
+                <MessageSquare className="w-4 h-4 text-brand-muted" />
+              </div>
+              <p className="text-sm text-brand-muted">
+                No messages yet. Say hello!
+              </p>
+            </div>
           </div>
         ) : (
           messages.map((msg) => {
@@ -324,30 +335,30 @@ function ChatThread({
             return (
               <div
                 key={msg.id}
-                className={`flex gap-3 ${isOwn ? "flex-row-reverse" : ""}`}
+                className={`flex gap-2.5 ${isOwn ? "flex-row-reverse" : ""}`}
               >
                 <Avatar
                   src={msg.sender_detail.avatar_url}
                   name={msg.sender_detail.full_name || "?"}
                   size="sm"
-                  className="flex-shrink-0"
+                  className="flex-shrink-0 mt-0.5"
                 />
                 <div
                   className={`max-w-[70%] ${isOwn ? "items-end" : "items-start"}`}
                 >
                   <div className={`flex items-baseline gap-2 mb-1 ${isOwn ? "flex-row-reverse" : ""}`}>
-                    <span className="text-xs font-medium text-brand-text">
+                    <span className="text-[11px] font-semibold text-brand-text">
                       {msg.sender_detail.full_name}
                     </span>
-                    <span className="text-[10px] text-brand-muted">
+                    <span className="text-[10px] text-brand-muted tabular-nums">
                       {formatTime(msg.created_at)}
                     </span>
                   </div>
                   <div
-                    className={`rounded-xl px-3.5 py-2.5 text-sm ${
+                    className={`rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
                       isOwn
-                        ? "bg-brand-accent/10 text-brand-text"
-                        : "bg-white text-brand-text shadow-sm"
+                        ? "bg-brand-accent text-white rounded-tr-md"
+                        : "bg-white text-brand-text border border-brand-border/[0.1] shadow-sm rounded-tl-md"
                     }`}
                   >
                     {msg.content}
@@ -361,19 +372,19 @@ function ChatThread({
       </div>
 
       {/* Input */}
-      <div className="p-4 border-t border-brand-border/20 bg-white">
-        <div className="flex items-center gap-2">
+      <div className="px-5 py-3.5 border-t border-brand-border/[0.1] bg-white">
+        <div className="flex items-center gap-2.5">
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Type a message..."
-            className="flex-1 bg-brand-bg border border-brand-border/60 rounded-xl px-4 py-2.5 text-sm text-brand-text placeholder:text-brand-muted focus:outline-none focus:ring-2 focus:ring-brand-accent/30 focus:border-brand-accent/50"
+            className="flex-1 bg-white border border-brand-border/30 rounded-xl px-4 py-2.5 text-sm text-brand-text placeholder:text-brand-muted/60 outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all shadow-sm"
           />
           <button
             onClick={handleSubmit}
             disabled={!input.trim() || !connected}
-            className="p-2.5 bg-brand-accent text-white rounded-xl hover:bg-brand-accent/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="p-2.5 bg-brand-accent text-white rounded-xl hover:bg-brand-accent/90 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer shadow-sm"
           >
             <Send className="w-4 h-4" />
           </button>
@@ -432,30 +443,34 @@ function NewChatModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4">
-        <div className="p-4 border-b border-brand-border/20 flex items-center justify-between">
-          <h3 className="font-semibold text-brand-text">New Message</h3>
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      <div className="relative bg-white rounded-2xl shadow-modal w-full max-w-md mx-4 animate-fade-in-scale">
+        <div className="flex items-center justify-between p-5 border-b border-brand-border/[0.1]">
+          <h3 className="text-base font-bold text-brand-text">New Message</h3>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg hover:bg-brand-bg text-brand-muted"
+            className="p-1.5 rounded-xl hover:bg-brand-bg text-brand-muted transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
-        <div className="p-4">
+        <div className="p-5">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-muted" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-muted" />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search users..."
               autoFocus
-              className="w-full bg-brand-bg border border-brand-border/60 rounded-xl pl-10 pr-4 py-2.5 text-sm text-brand-text placeholder:text-brand-muted focus:outline-none focus:ring-2 focus:ring-brand-accent/30 focus:border-brand-accent/50"
+              className="w-full bg-white border border-brand-border/30 rounded-xl pl-10 pr-4 py-2.5 text-sm text-brand-text placeholder:text-brand-muted/60 outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all shadow-sm"
             />
           </div>
         </div>
-        <div className="max-h-64 overflow-y-auto px-2 pb-4">
+        <div className="max-h-64 overflow-y-auto px-3 pb-4">
           {searching ? (
             <div className="flex items-center justify-center py-6">
               <LoadingSpinner />
@@ -470,7 +485,7 @@ function NewChatModal({
                 key={user.id}
                 onClick={() => handleSelect(user)}
                 disabled={creating}
-                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-brand-bg transition-colors disabled:opacity-50"
+                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-brand-bg/60 transition-colors disabled:opacity-50 cursor-pointer"
               >
                 <Avatar
                   src={user.avatar_url}

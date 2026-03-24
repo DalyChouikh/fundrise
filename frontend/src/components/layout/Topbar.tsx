@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Menu, Bell, LogOut, Settings, User } from "lucide-react";
+import { Menu, Bell, LogOut, Settings, User, ChevronDown } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
 import { Avatar } from "@/components/ui/Avatar";
@@ -65,28 +65,30 @@ export function Topbar({ onMenuClick }: TopbarProps) {
   };
 
   return (
-    <header className="h-[var(--topbar-height)] bg-white/80 backdrop-blur-sm border-b border-brand-border/30 flex items-center justify-between px-6 sticky top-0 z-30">
+    <header className="h-[var(--topbar-height)] bg-white/80 backdrop-blur-md border-b border-brand-border/[0.12] flex items-center justify-between px-4 sm:px-6 sticky top-0 z-30">
       {/* Left section */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
         <button
           onClick={onMenuClick}
-          className="lg:hidden p-2 rounded-xl hover:bg-brand-bg text-brand-muted transition-colors"
+          className="lg:hidden p-2 rounded-xl hover:bg-brand-bg text-brand-muted transition-colors cursor-pointer"
         >
           <Menu className="w-5 h-5" />
         </button>
-        <h2 className="text-lg font-semibold text-brand-text">{pageTitle}</h2>
+        <div>
+          <h2 className="text-base font-semibold text-brand-text leading-tight">{pageTitle}</h2>
+        </div>
       </div>
 
       {/* Right section */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1">
         {/* Notifications */}
         <button
           onClick={() => navigate("/notifications")}
-          className="relative p-2.5 rounded-xl hover:bg-brand-bg text-brand-muted hover:text-brand-text transition-colors"
+          className="relative p-2.5 rounded-xl hover:bg-brand-bg text-brand-muted hover:text-brand-text transition-colors cursor-pointer"
         >
           <Bell className="w-[18px] h-[18px]" />
           {unreadCount > 0 && (
-            <span className="absolute top-1.5 right-1.5 min-w-[16px] h-4 flex items-center justify-center px-1 bg-brand-accent text-white text-[10px] font-bold rounded-full">
+            <span className="absolute top-1 right-1 min-w-[18px] h-[18px] flex items-center justify-center px-1 bg-brand-accent text-white text-[10px] font-bold rounded-full ring-2 ring-white">
               {unreadCount > 99 ? "99+" : unreadCount}
             </span>
           )}
@@ -97,39 +99,42 @@ export function Topbar({ onMenuClick }: TopbarProps) {
           <div className="relative ml-1" ref={dropdownRef}>
             <button
               onClick={() => setDropdownOpen(!dropdownOpen)}
-              className="rounded-xl hover:ring-2 hover:ring-brand-border/50 transition-all"
+              className="flex items-center gap-2 p-1.5 pr-2 rounded-xl hover:bg-brand-bg transition-all cursor-pointer"
             >
               <Avatar
                 src={profile.avatar_url || undefined}
                 name={profile.full_name}
                 size="sm"
               />
+              <ChevronDown className={`w-3.5 h-3.5 text-brand-muted transition-transform duration-200 hidden sm:block ${dropdownOpen ? "rotate-180" : ""}`} />
             </button>
 
             {dropdownOpen && (
-              <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-card-hover border border-brand-border/30 py-1.5 z-50">
-                <div className="px-4 py-2.5 border-b border-brand-border/20">
+              <div className="absolute right-0 mt-2 w-60 bg-white rounded-2xl shadow-modal border border-brand-border/[0.12] py-1 z-50 animate-fade-in-scale">
+                <div className="px-4 py-3 border-b border-brand-border/[0.08]">
                   <p className="text-sm font-semibold text-brand-text truncate">{profile.full_name}</p>
-                  <p className="text-xs text-brand-muted truncate">{profile.email}</p>
+                  <p className="text-xs text-brand-muted truncate mt-0.5">{profile.email}</p>
                 </div>
-                <button
-                  onClick={() => { setDropdownOpen(false); navigate("/settings"); }}
-                  className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-brand-muted hover:text-brand-text hover:bg-brand-bg transition-colors"
-                >
-                  <Settings className="w-4 h-4" />
-                  Settings
-                </button>
-                <button
-                  onClick={() => { setDropdownOpen(false); navigate("/settings"); }}
-                  className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-brand-muted hover:text-brand-text hover:bg-brand-bg transition-colors"
-                >
-                  <User className="w-4 h-4" />
-                  Profile
-                </button>
-                <div className="border-t border-brand-border/20 mt-1 pt-1">
+                <div className="py-1">
+                  <button
+                    onClick={() => { setDropdownOpen(false); navigate("/settings"); }}
+                    className="flex items-center gap-2.5 w-full px-4 py-2 text-[13px] text-brand-muted hover:text-brand-text hover:bg-brand-bg transition-colors cursor-pointer"
+                  >
+                    <User className="w-4 h-4" />
+                    Profile
+                  </button>
+                  <button
+                    onClick={() => { setDropdownOpen(false); navigate("/settings"); }}
+                    className="flex items-center gap-2.5 w-full px-4 py-2 text-[13px] text-brand-muted hover:text-brand-text hover:bg-brand-bg transition-colors cursor-pointer"
+                  >
+                    <Settings className="w-4 h-4" />
+                    Settings
+                  </button>
+                </div>
+                <div className="border-t border-brand-border/[0.08] pt-1">
                   <button
                     onClick={handleSignOut}
-                    className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-red-500 hover:text-red-600 hover:bg-red-50/50 transition-colors"
+                    className="flex items-center gap-2.5 w-full px-4 py-2 text-[13px] text-red-500 hover:text-red-600 hover:bg-red-50/50 transition-colors cursor-pointer"
                   >
                     <LogOut className="w-4 h-4" />
                     Sign out

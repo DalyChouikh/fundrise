@@ -104,7 +104,7 @@ export function UsersPage() {
   if (loading) return <LoadingSpinner fullscreen />;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       <div>
         <h1 className="text-2xl font-bold text-brand-text">User Management</h1>
         <p className="text-brand-muted mt-1 text-sm">
@@ -114,20 +114,20 @@ export function UsersPage() {
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
-        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-brand-border/50 text-brand-muted text-sm flex-1 max-w-sm shadow-card focus-within:border-brand-blue/50 transition-colors">
+        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-brand-border/30 text-brand-muted text-sm flex-1 max-w-sm shadow-sm focus-within:border-brand-blue/40 focus-within:ring-2 focus-within:ring-brand-blue/10 transition-all">
           <Search className="w-4 h-4 flex-shrink-0" />
           <input
             type="text"
             placeholder="Search by name or email..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="bg-transparent outline-none w-full text-brand-text placeholder:text-brand-muted"
+            className="bg-transparent outline-none w-full text-brand-text placeholder:text-brand-muted/60"
           />
         </div>
         <select
           value={roleFilter}
           onChange={(e) => setRoleFilter(e.target.value)}
-          className="px-4 py-2.5 rounded-xl bg-white border border-brand-border/50 text-brand-text text-sm shadow-card outline-none focus:border-brand-blue/50 transition-colors"
+          className="px-4 py-2.5 rounded-xl bg-white border border-brand-border/30 text-brand-text text-sm shadow-sm outline-none focus:border-brand-blue/40 transition-colors cursor-pointer"
         >
           <option value="">All Roles</option>
           {ROLE_OPTIONS.map((role) => (
@@ -139,7 +139,7 @@ export function UsersPage() {
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-2.5 rounded-xl bg-white border border-brand-border/50 text-brand-text text-sm shadow-card outline-none focus:border-brand-blue/50 transition-colors"
+          className="px-4 py-2.5 rounded-xl bg-white border border-brand-border/30 text-brand-text text-sm shadow-sm outline-none focus:border-brand-blue/40 transition-colors cursor-pointer"
         >
           <option value="">All Status</option>
           <option value="pending_approval">Pending</option>
@@ -152,10 +152,10 @@ export function UsersPage() {
       {users.length === 0 ? (
         <Card>
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="w-16 h-16 rounded-2xl bg-brand-bg flex items-center justify-center mb-5">
+            <div className="w-16 h-16 rounded-2xl bg-brand-bg flex items-center justify-center mb-4">
               <Users className="w-7 h-7 text-brand-muted" />
             </div>
-            <h2 className="text-lg font-semibold text-brand-text mb-2">
+            <h2 className="text-base font-semibold text-brand-text mb-1">
               No users found
             </h2>
             <p className="text-sm text-brand-muted max-w-md">
@@ -168,31 +168,31 @@ export function UsersPage() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-brand-border/20">
-                  <th className="text-left text-xs font-medium text-brand-muted uppercase tracking-wider px-6 py-3">
+                <tr className="border-b border-brand-border/[0.1]">
+                  <th className="text-left text-[11px] font-semibold text-brand-muted uppercase tracking-wider px-6 py-3.5">
                     User
                   </th>
-                  <th className="text-left text-xs font-medium text-brand-muted uppercase tracking-wider px-6 py-3">
+                  <th className="text-left text-[11px] font-semibold text-brand-muted uppercase tracking-wider px-6 py-3.5">
                     Role
                   </th>
-                  <th className="text-left text-xs font-medium text-brand-muted uppercase tracking-wider px-6 py-3">
+                  <th className="text-left text-[11px] font-semibold text-brand-muted uppercase tracking-wider px-6 py-3.5">
                     Status
                   </th>
-                  <th className="text-left text-xs font-medium text-brand-muted uppercase tracking-wider px-6 py-3">
+                  <th className="text-left text-[11px] font-semibold text-brand-muted uppercase tracking-wider px-6 py-3.5">
                     Joined
                   </th>
-                  <th className="text-right text-xs font-medium text-brand-muted uppercase tracking-wider px-6 py-3">
+                  <th className="text-right text-[11px] font-semibold text-brand-muted uppercase tracking-wider px-6 py-3.5">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-brand-border/10">
+              <tbody className="divide-y divide-brand-border/[0.06]">
                 {users.map((user) => (
                   <tr
                     key={user.id}
-                    className="hover:bg-brand-bg/50 transition-colors"
+                    className="hover:bg-brand-bg/40 transition-colors"
                   >
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-3.5">
                       <div className="flex items-center gap-3">
                         <Avatar
                           src={user.avatar_url || undefined}
@@ -203,44 +203,30 @@ export function UsersPage() {
                           <p className="text-sm font-medium text-brand-text">
                             {user.full_name}
                           </p>
-                          <p className="text-xs text-brand-muted">
+                          <p className="text-[11px] text-brand-muted">
                             {user.email}
                           </p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-3.5">
                       <Badge status={user.role} />
                     </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          user.approval_status === "approved"
-                            ? "bg-emerald-50 text-emerald-700"
-                            : user.approval_status === "rejected"
-                              ? "bg-red-50 text-red-700"
-                              : "bg-amber-50 text-amber-700"
-                        }`}
-                      >
-                        {user.approval_status === "approved"
-                          ? "Approved"
-                          : user.approval_status === "rejected"
-                            ? "Rejected"
-                            : "Pending"}
-                      </span>
+                    <td className="px-6 py-3.5">
+                      <Badge status={user.approval_status} />
                     </td>
-                    <td className="px-6 py-4 text-sm text-brand-muted">
+                    <td className="px-6 py-3.5 text-sm text-brand-muted tabular-nums">
                       {new Date(user.created_at).toLocaleDateString()}
                     </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
+                    <td className="px-6 py-3.5 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
                         {user.approval_status === "pending_approval" && (
                           <>
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => handleApproveUser(user.id)}
-                              className="text-emerald-600 hover:text-emerald-700"
+                              className="!text-emerald-600 hover:!bg-emerald-50"
                             >
                               Approve
                             </Button>
@@ -248,7 +234,7 @@ export function UsersPage() {
                               variant="ghost"
                               size="sm"
                               onClick={() => setRejectingUser(user)}
-                              className="text-red-500 hover:text-red-600"
+                              className="!text-red-500 hover:!bg-red-50"
                             >
                               Reject
                             </Button>
@@ -259,7 +245,7 @@ export function UsersPage() {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleApproveUser(user.id)}
-                            className="text-emerald-600 hover:text-emerald-700"
+                            className="!text-emerald-600 hover:!bg-emerald-50"
                           >
                             Re-Approve
                           </Button>
@@ -285,29 +271,29 @@ export function UsersPage() {
       {editingUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div
-            className="absolute inset-0 bg-black/40"
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
             onClick={() => setEditingUser(null)}
           />
-          <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4">
-            <div className="flex items-center justify-between p-6 border-b border-brand-border/20">
-              <h2 className="text-lg font-bold text-brand-text">Edit Role</h2>
+          <div className="relative bg-white rounded-2xl shadow-modal w-full max-w-sm mx-4 animate-fade-in-scale">
+            <div className="flex items-center justify-between p-5 border-b border-brand-border/[0.1]">
+              <h2 className="text-base font-bold text-brand-text">Edit Role</h2>
               <button
                 onClick={() => setEditingUser(null)}
-                className="p-1.5 rounded-xl hover:bg-brand-bg text-brand-muted transition-colors"
+                className="p-1.5 rounded-xl hover:bg-brand-bg text-brand-muted transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="p-6">
-              <div className="flex items-center gap-3 mb-6">
+            <div className="p-5">
+              <div className="flex items-center gap-3 mb-5">
                 <Avatar
                   src={editingUser.avatar_url || undefined}
                   name={editingUser.full_name}
                   size="md"
                 />
                 <div>
-                  <p className="text-sm font-medium text-brand-text">
+                  <p className="text-sm font-semibold text-brand-text">
                     {editingUser.full_name}
                   </p>
                   <p className="text-xs text-brand-muted">
@@ -316,22 +302,22 @@ export function UsersPage() {
                 </div>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 {ROLE_OPTIONS.map((role) => (
                   <button
                     key={role.value}
                     onClick={() =>
                       handleRoleUpdate(editingUser.id, role.value)
                     }
-                    className={`w-full text-left px-4 py-3 rounded-xl border transition-all ${
+                    className={`w-full text-left px-4 py-3 rounded-xl border transition-all cursor-pointer ${
                       editingUser.role === role.value
-                        ? "border-brand-accent bg-brand-accent/5 text-brand-accent"
-                        : "border-brand-border/40 hover:border-brand-border hover:bg-brand-bg/50 text-brand-text"
+                        ? "border-brand-accent bg-brand-accent/[0.04] text-brand-accent"
+                        : "border-brand-border/20 hover:border-brand-border/40 hover:bg-brand-bg/40 text-brand-text"
                     }`}
                   >
                     <span className="text-sm font-medium">{role.label}</span>
                     {editingUser.role === role.value && (
-                      <span className="text-xs ml-2 text-brand-accent">
+                      <span className="text-xs ml-2 text-brand-accent font-medium">
                         (current)
                       </span>
                     )}
@@ -347,27 +333,27 @@ export function UsersPage() {
       {rejectingUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div
-            className="absolute inset-0 bg-black/40"
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
             onClick={() => {
               setRejectingUser(null);
               setRejectReason("");
             }}
           />
-          <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4">
-            <div className="flex items-center justify-between p-6 border-b border-brand-border/20">
-              <h2 className="text-lg font-bold text-brand-text">Reject User</h2>
+          <div className="relative bg-white rounded-2xl shadow-modal w-full max-w-sm mx-4 animate-fade-in-scale">
+            <div className="flex items-center justify-between p-5 border-b border-brand-border/[0.1]">
+              <h2 className="text-base font-bold text-brand-text">Reject User</h2>
               <button
                 onClick={() => {
                   setRejectingUser(null);
                   setRejectReason("");
                 }}
-                className="p-1.5 rounded-xl hover:bg-brand-bg text-brand-muted transition-colors"
+                className="p-1.5 rounded-xl hover:bg-brand-bg text-brand-muted transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="p-6">
+            <div className="p-5">
               <div className="flex items-center gap-3 mb-4">
                 <Avatar
                   src={rejectingUser.avatar_url || undefined}
@@ -375,7 +361,7 @@ export function UsersPage() {
                   size="md"
                 />
                 <div>
-                  <p className="text-sm font-medium text-brand-text">
+                  <p className="text-sm font-semibold text-brand-text">
                     {rejectingUser.full_name}
                   </p>
                   <p className="text-xs text-brand-muted">
@@ -385,7 +371,7 @@ export function UsersPage() {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-brand-text mb-1.5">
+                <label className="block text-[13px] font-medium text-brand-text mb-1.5">
                   Reason for rejection
                 </label>
                 <textarea
@@ -393,14 +379,15 @@ export function UsersPage() {
                   onChange={(e) => setRejectReason(e.target.value)}
                   placeholder="Provide a reason..."
                   rows={3}
-                  className="w-full px-4 py-2.5 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text placeholder:text-brand-muted text-sm outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/10 transition-all resize-none"
+                  className="w-full px-4 py-2.5 rounded-xl bg-white border border-brand-border/40 text-brand-text placeholder:text-brand-muted/60 text-sm outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all resize-none shadow-sm"
                 />
               </div>
 
               <Button
                 onClick={handleRejectUser}
                 disabled={!rejectReason.trim()}
-                className="w-full bg-red-500 hover:bg-red-600"
+                variant="danger"
+                className="w-full"
               >
                 Reject User
               </Button>

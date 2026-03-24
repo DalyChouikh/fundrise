@@ -152,13 +152,13 @@ export function StartupDetailPage() {
   const founder = startup.members.find((m) => m.role === "founder");
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       {/* Back button */}
       <Link
         to="/startups"
-        className="inline-flex items-center gap-1.5 text-sm text-brand-muted hover:text-brand-text transition-colors"
+        className="inline-flex items-center gap-1.5 text-sm text-brand-muted hover:text-brand-text transition-colors group"
       >
-        <ArrowLeft className="w-4 h-4" />
+        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
         Back to Startups
       </Link>
 
@@ -173,7 +173,7 @@ export function StartupDetailPage() {
                 className="w-14 h-14 rounded-xl object-cover"
               />
             ) : (
-              <div className="w-14 h-14 rounded-xl bg-brand-accent/10 flex items-center justify-center flex-shrink-0">
+              <div className="w-14 h-14 rounded-xl bg-brand-accent/[0.08] flex items-center justify-center flex-shrink-0">
                 <Building2 className="w-7 h-7 text-brand-accent" />
               </div>
             )}
@@ -187,7 +187,7 @@ export function StartupDetailPage() {
               <p className="text-sm text-brand-muted mt-1">
                 {startup.industry}
               </p>
-              <div className="flex items-center gap-4 mt-2 text-xs text-brand-muted">
+              <div className="flex flex-wrap items-center gap-3.5 mt-2.5 text-xs text-brand-muted">
                 <span className="flex items-center gap-1">
                   <MapPin className="w-3.5 h-3.5" />
                   {startup.location}
@@ -219,7 +219,7 @@ export function StartupDetailPage() {
               onClick={handleFollow}
             >
               <Heart
-                className="w-4 h-4 mr-1.5"
+                className="w-4 h-4"
                 fill={startup.is_following ? "currentColor" : "none"}
               />
               {startup.is_following ? "Following" : "Follow"}
@@ -227,7 +227,7 @@ export function StartupDetailPage() {
             {startup.is_member && startup.status === "active" && (
               <Link to={`/campaigns?startup=${startup.id}`}>
                 <Button size="sm">
-                  <Plus className="w-4 h-4 mr-1.5" />
+                  <Plus className="w-4 h-4" />
                   New Campaign
                 </Button>
               </Link>
@@ -241,7 +241,7 @@ export function StartupDetailPage() {
         <div className="lg:col-span-2 space-y-6">
           {/* About */}
           <Card>
-            <h3 className="text-base font-semibold text-brand-text mb-3">
+            <h3 className="text-sm font-bold text-brand-text mb-3">
               About
             </h3>
             <p className="text-sm text-brand-muted leading-relaxed whitespace-pre-line">
@@ -252,17 +252,17 @@ export function StartupDetailPage() {
           {/* Campaigns */}
           <Card>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base font-semibold text-brand-text">
+              <h3 className="text-sm font-bold text-brand-text">
                 Campaigns
               </h3>
-              <span className="text-xs text-brand-muted">
+              <span className="text-[11px] text-brand-muted tabular-nums">
                 {campaigns.length} total
               </span>
             </div>
             {campaigns.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 text-center">
-                <div className="w-12 h-12 rounded-xl bg-brand-bg flex items-center justify-center mb-3">
-                  <Target className="w-5 h-5 text-brand-muted" />
+                <div className="w-10 h-10 rounded-xl bg-brand-bg flex items-center justify-center mb-2.5">
+                  <Target className="w-4 h-4 text-brand-muted" />
                 </div>
                 <p className="text-sm text-brand-muted">No campaigns yet</p>
               </div>
@@ -272,16 +272,16 @@ export function StartupDetailPage() {
                   <Link
                     key={campaign.id}
                     to={`/campaigns/${campaign.id}`}
-                    className="block p-4 rounded-xl border border-brand-border/40 hover:border-brand-border hover:bg-brand-bg/30 transition-all"
+                    className="block p-4 rounded-xl border border-brand-border/[0.1] hover:border-brand-border/30 hover:bg-brand-bg/20 transition-all group"
                   >
                     <div className="flex items-start justify-between mb-2">
-                      <h4 className="text-sm font-semibold text-brand-text">
+                      <h4 className="text-sm font-semibold text-brand-text group-hover:text-brand-accent transition-colors">
                         {campaign.title}
                       </h4>
                       <Badge status={campaign.status} />
                     </div>
                     <div className="mt-3">
-                      <div className="flex items-center justify-between text-xs text-brand-muted mb-1.5">
+                      <div className="flex items-center justify-between text-[11px] text-brand-muted mb-1.5 tabular-nums">
                         <span>
                           ${Number(campaign.current_funding).toLocaleString()} raised
                         </span>
@@ -291,7 +291,7 @@ export function StartupDetailPage() {
                       </div>
                       <div className="w-full h-1.5 rounded-full bg-brand-bg overflow-hidden">
                         <div
-                          className="h-full rounded-full bg-brand-accent transition-all"
+                          className="h-full rounded-full bg-gradient-to-r from-brand-accent to-brand-accent/70 transition-all"
                           style={{
                             width: `${Math.min(campaign.funding_percentage, 100)}%`,
                           }}
@@ -309,61 +309,51 @@ export function StartupDetailPage() {
         <div className="space-y-6">
           {/* Stats */}
           <Card>
-            <h3 className="text-base font-semibold text-brand-text mb-3">
+            <h3 className="text-sm font-bold text-brand-text mb-3">
               Stats
             </h3>
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-2 text-sm text-brand-muted">
-                  <Users className="w-4 h-4" />
-                  Members
-                </span>
-                <span className="text-sm font-semibold text-brand-text">
-                  {startup.members_count}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-2 text-sm text-brand-muted">
-                  <Heart className="w-4 h-4" />
-                  Followers
-                </span>
-                <span className="text-sm font-semibold text-brand-text">
-                  {startup.followers_count}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-2 text-sm text-brand-muted">
-                  <Target className="w-4 h-4" />
-                  Campaigns
-                </span>
-                <span className="text-sm font-semibold text-brand-text">
-                  {campaigns.length}
-                </span>
-              </div>
+              {[
+                { icon: Users, label: "Members", value: startup.members_count },
+                { icon: Heart, label: "Followers", value: startup.followers_count },
+                { icon: Target, label: "Campaigns", value: campaigns.length },
+              ].map(({ icon: Icon, label, value }) => (
+                <div key={label} className="flex items-center justify-between">
+                  <span className="flex items-center gap-2 text-sm text-brand-muted">
+                    <div className="w-7 h-7 rounded-lg bg-brand-bg flex items-center justify-center">
+                      <Icon className="w-3.5 h-3.5" />
+                    </div>
+                    {label}
+                  </span>
+                  <span className="text-sm font-bold text-brand-text tabular-nums">
+                    {value}
+                  </span>
+                </div>
+              ))}
             </div>
           </Card>
 
           {/* Team */}
           <Card>
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-base font-semibold text-brand-text">
+              <h3 className="text-sm font-bold text-brand-text">
                 Team
               </h3>
               {isFounder && (
                 <button
                   onClick={() => setShowInviteModal(true)}
-                  className="flex items-center gap-1.5 text-xs font-medium text-brand-accent hover:text-brand-accent/80 transition-colors"
+                  className="flex items-center gap-1.5 text-xs font-medium text-brand-accent hover:text-brand-accent/80 transition-colors cursor-pointer"
                 >
                   <UserPlus className="w-3.5 h-3.5" />
                   Invite
                 </button>
               )}
             </div>
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {startup.members.map((member) => (
                 <div
                   key={member.id}
-                  className="flex items-center gap-3"
+                  className="flex items-center gap-3 p-2 -mx-2 rounded-xl hover:bg-brand-bg/40 transition-colors"
                 >
                   <Avatar
                     src={member.user.avatar_url || undefined}
@@ -374,7 +364,7 @@ export function StartupDetailPage() {
                     <p className="text-sm font-medium text-brand-text truncate">
                       {member.user.full_name}
                     </p>
-                    <p className="text-xs text-brand-muted capitalize">
+                    <p className="text-[11px] text-brand-muted capitalize">
                       {member.role.replace("_", " ")}
                     </p>
                   </div>
@@ -384,8 +374,8 @@ export function StartupDetailPage() {
 
             {/* Pending Invitations */}
             {isFounder && pendingInvites.length > 0 && (
-              <div className="mt-4 pt-4 border-t border-brand-border/40">
-                <p className="text-xs font-medium text-brand-muted mb-2.5 flex items-center gap-1.5">
+              <div className="mt-4 pt-4 border-t border-brand-border/[0.1]">
+                <p className="text-[11px] font-semibold text-brand-muted mb-2.5 flex items-center gap-1.5 uppercase tracking-wider">
                   <Clock className="w-3.5 h-3.5" />
                   Pending Invitations
                 </p>
@@ -393,7 +383,7 @@ export function StartupDetailPage() {
                   {pendingInvites.map((inv) => (
                     <div
                       key={inv.id}
-                      className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-brand-bg/50"
+                      className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-brand-bg/40"
                     >
                       <div className="flex items-center gap-2 min-w-0">
                         <Mail className="w-3.5 h-3.5 text-brand-muted flex-shrink-0" />
@@ -403,7 +393,7 @@ export function StartupDetailPage() {
                       </div>
                       <button
                         onClick={() => handleCancelInvite(inv.id)}
-                        className="text-brand-muted hover:text-red-500 transition-colors flex-shrink-0"
+                        className="text-brand-muted hover:text-red-500 transition-colors flex-shrink-0 cursor-pointer"
                         title="Cancel invitation"
                       >
                         <X className="w-3.5 h-3.5" />
@@ -418,7 +408,7 @@ export function StartupDetailPage() {
           {/* Founder */}
           {founder && (
             <Card>
-              <h3 className="text-base font-semibold text-brand-text mb-3">
+              <h3 className="text-sm font-bold text-brand-text mb-3">
                 Founded by
               </h3>
               <div className="flex items-center gap-3">
@@ -431,7 +421,7 @@ export function StartupDetailPage() {
                   <p className="text-sm font-semibold text-brand-text">
                     {founder.user.full_name}
                   </p>
-                  <p className="text-xs text-brand-muted">Founder</p>
+                  <p className="text-[11px] text-brand-muted">Founder</p>
                 </div>
               </div>
             </Card>
@@ -443,17 +433,17 @@ export function StartupDetailPage() {
       {showInviteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
           <div
-            className="absolute inset-0 bg-brand-text/40 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
             onClick={resetInviteModal}
           />
-          <div className="relative w-full max-w-[420px] bg-white rounded-2xl shadow-modal p-6">
+          <div className="relative w-full max-w-[420px] bg-white rounded-2xl shadow-modal p-6 animate-fade-in-scale">
             <div className="flex items-center justify-between mb-5">
-              <h3 className="text-lg font-bold text-brand-text">
+              <h3 className="text-base font-bold text-brand-text">
                 Invite Team Member
               </h3>
               <button
                 onClick={resetInviteModal}
-                className="text-brand-muted hover:text-brand-text transition-colors"
+                className="p-1.5 rounded-xl text-brand-muted hover:bg-brand-bg hover:text-brand-text transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -461,7 +451,7 @@ export function StartupDetailPage() {
 
             {inviteResult ? (
               <div className="space-y-4">
-                <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-emerald-50 text-emerald-700 text-sm">
+                <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-700 text-sm">
                   <Check className="w-4 h-4 flex-shrink-0" />
                   <span>
                     Invitation sent to <strong>{inviteResult.email}</strong>
@@ -472,7 +462,7 @@ export function StartupDetailPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-brand-muted mb-1.5">
+                  <label className="block text-[11px] font-semibold text-brand-muted mb-1.5 uppercase tracking-wider">
                     Invite link
                   </label>
                   <div className="flex gap-2">
@@ -480,11 +470,11 @@ export function StartupDetailPage() {
                       type="text"
                       readOnly
                       value={inviteResult.invite_url}
-                      className="flex-1 px-3 py-2 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text text-sm outline-none"
+                      className="flex-1 px-3 py-2 rounded-xl bg-brand-bg/60 border border-brand-border/[0.12] text-brand-text text-sm outline-none"
                     />
                     <button
                       onClick={() => handleCopyLink(inviteResult.invite_url)}
-                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-brand-border/60 text-sm font-medium text-brand-text hover:bg-brand-bg transition-colors"
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-brand-border/30 text-sm font-medium text-brand-text hover:bg-brand-bg transition-colors cursor-pointer"
                     >
                       {copied ? (
                         <>
@@ -515,7 +505,7 @@ export function StartupDetailPage() {
             ) : (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-brand-text mb-1.5">
+                  <label className="block text-[13px] font-medium text-brand-text mb-1.5">
                     Email address
                   </label>
                   <input
@@ -523,13 +513,13 @@ export function StartupDetailPage() {
                     value={inviteEmail}
                     onChange={(e) => setInviteEmail(e.target.value)}
                     placeholder="colleague@example.com"
-                    className="w-full px-4 py-2.5 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text placeholder:text-brand-muted text-sm outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/10 transition-all"
+                    className="w-full px-4 py-2.5 rounded-xl bg-white border border-brand-border/30 text-brand-text placeholder:text-brand-muted/60 text-sm outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all shadow-sm"
                     onKeyDown={(e) => e.key === "Enter" && handleInvite()}
                   />
                 </div>
 
                 {inviteError && (
-                  <div className="px-4 py-3 rounded-xl bg-red-50 text-red-700 text-sm">
+                  <div className="px-4 py-3 rounded-xl bg-red-50 border border-red-100 text-red-700 text-sm">
                     {inviteError}
                   </div>
                 )}
@@ -545,7 +535,7 @@ export function StartupDetailPage() {
                   className="w-full"
                   size="lg"
                 >
-                  <Mail className="w-4 h-4 mr-2" />
+                  <Mail className="w-4 h-4" />
                   Send Invitation
                 </Button>
               </div>

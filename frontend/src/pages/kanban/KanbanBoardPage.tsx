@@ -234,7 +234,7 @@ export function KanbanBoardPage() {
   if (loading) return <LoadingSpinner fullscreen />;
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col animate-fade-in">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-brand-text">Kanban Board</h1>
@@ -267,7 +267,7 @@ export function KanbanBoardPage() {
             {addingColumn ? (
               <form
                 onSubmit={handleAddColumn}
-                className="bg-white rounded-xl shadow-card p-3"
+                className="bg-white rounded-2xl border border-brand-border/[0.12] shadow-card p-3"
               >
                 <input
                   type="text"
@@ -275,7 +275,7 @@ export function KanbanBoardPage() {
                   value={newColumnName}
                   onChange={(e) => setNewColumnName(e.target.value)}
                   placeholder="Column name..."
-                  className="w-full px-3 py-2 rounded-lg bg-brand-bg border border-brand-border/60 text-brand-text text-sm outline-none focus:border-brand-blue/50 mb-2"
+                  className="w-full px-3 py-2 rounded-xl bg-white border border-brand-border/30 text-brand-text text-sm outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all shadow-sm mb-2"
                 />
                 <div className="flex items-center gap-2">
                   <Button size="sm" type="submit">
@@ -287,7 +287,7 @@ export function KanbanBoardPage() {
                       setAddingColumn(false);
                       setNewColumnName("");
                     }}
-                    className="p-1 text-brand-muted hover:text-brand-text"
+                    className="p-1 text-brand-muted hover:text-brand-text cursor-pointer"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -296,7 +296,7 @@ export function KanbanBoardPage() {
             ) : (
               <button
                 onClick={() => setAddingColumn(true)}
-                className="w-full flex items-center gap-2 px-4 py-3 rounded-xl border-2 border-dashed border-brand-border/40 text-brand-muted hover:border-brand-border hover:text-brand-text text-sm font-medium transition-colors"
+                className="w-full flex items-center gap-2 px-4 py-3 rounded-2xl border-2 border-dashed border-brand-border/30 text-brand-muted hover:border-brand-accent/40 hover:text-brand-accent text-sm font-medium transition-all cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
                 Add Column
@@ -357,17 +357,17 @@ function BoardColumn({
     <div className="flex-shrink-0 w-72 flex flex-col max-h-full">
       <div className="flex items-center justify-between mb-3 px-1">
         <div className="flex items-center gap-2">
-          <h3 className="text-sm font-semibold text-brand-text">
+          <h3 className="text-[13px] font-bold text-brand-text">
             {column.name}
           </h3>
-          <span className="text-xs text-brand-muted bg-brand-bg px-2 py-0.5 rounded-full">
+          <span className="text-[11px] text-brand-muted bg-brand-bg/80 px-2 py-0.5 rounded-lg font-medium tabular-nums">
             {column.tasks.length}
           </span>
         </div>
         <div className="relative">
           <button
             onClick={() => setShowMenu(!showMenu)}
-            className="p-1 rounded-lg text-brand-muted hover:text-brand-text hover:bg-brand-bg transition-colors"
+            className="p-1 rounded-lg text-brand-muted hover:text-brand-text hover:bg-brand-bg transition-colors cursor-pointer"
           >
             <MoreHorizontal className="w-4 h-4" />
           </button>
@@ -377,13 +377,13 @@ function BoardColumn({
                 className="fixed inset-0 z-10"
                 onClick={() => setShowMenu(false)}
               />
-              <div className="absolute right-0 top-7 z-20 bg-white rounded-xl shadow-lg border border-brand-border/30 py-1 w-36">
+              <div className="absolute right-0 top-7 z-20 bg-white rounded-xl shadow-lg border border-brand-border/[0.12] py-1 w-36 animate-fade-in-scale">
                 <button
                   onClick={() => {
                     onDeleteColumn(column.id);
                     setShowMenu(false);
                   }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                   Delete column
@@ -400,7 +400,7 @@ function BoardColumn({
         id={`column-${column.id}`}
       >
         <div
-          className="flex-1 space-y-2 min-h-[60px] rounded-xl bg-brand-bg/50 p-2 overflow-y-auto"
+          className="flex-1 space-y-2 min-h-[60px] rounded-2xl bg-brand-bg/40 p-2.5 overflow-y-auto"
           data-column-id={column.id}
         >
           {column.tasks.map((task) => (
@@ -422,14 +422,14 @@ function BoardColumn({
       {/* Add task */}
       <div className="mt-2">
         {addingTask ? (
-          <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-card p-3">
+          <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-brand-border/[0.12] shadow-card p-3">
             <input
               type="text"
               autoFocus
               value={newTaskTitle}
               onChange={(e) => setNewTaskTitle(e.target.value)}
               placeholder="Task title..."
-              className="w-full px-3 py-2 rounded-lg bg-brand-bg border border-brand-border/60 text-brand-text text-sm outline-none focus:border-brand-blue/50 mb-2"
+              className="w-full px-3 py-2 rounded-xl bg-white border border-brand-border/30 text-brand-text text-sm outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all shadow-sm mb-2"
             />
             <div className="flex items-center gap-2">
               <Button size="sm" type="submit">
@@ -441,7 +441,7 @@ function BoardColumn({
                   setAddingTask(false);
                   setNewTaskTitle("");
                 }}
-                className="p-1 text-brand-muted hover:text-brand-text"
+                className="p-1 text-brand-muted hover:text-brand-text cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -450,7 +450,7 @@ function BoardColumn({
         ) : (
           <button
             onClick={() => setAddingTask(true)}
-            className="w-full flex items-center gap-1.5 px-3 py-2 rounded-xl text-brand-muted hover:text-brand-text hover:bg-white/80 text-sm transition-colors"
+            className="w-full flex items-center gap-1.5 px-3 py-2 rounded-xl text-brand-muted hover:text-brand-accent hover:bg-white/80 text-sm font-medium transition-all cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             Add task
@@ -536,27 +536,27 @@ function TaskCard({
 }) {
   return (
     <div
-      className={`bg-white rounded-xl shadow-card p-3 cursor-pointer hover:shadow-card-hover transition-shadow ${
-        isDragging ? "shadow-lg ring-2 ring-brand-blue/30" : ""
+      className={`group bg-white rounded-xl border border-brand-border/[0.1] shadow-sm p-3 cursor-pointer hover:shadow-card-hover hover:-translate-y-0.5 transition-all ${
+        isDragging ? "shadow-lg ring-2 ring-brand-blue/30 rotate-[2deg]" : ""
       }`}
       onClick={() => onOpen?.(task)}
     >
       <div className="flex items-start gap-2">
         <div
           {...dragHandleProps}
-          className="mt-0.5 text-brand-muted/50 hover:text-brand-muted cursor-grab active:cursor-grabbing flex-shrink-0"
+          className="mt-0.5 text-brand-muted/30 hover:text-brand-muted cursor-grab active:cursor-grabbing flex-shrink-0"
           onClick={(e) => e.stopPropagation()}
         >
           <GripVertical className="w-4 h-4" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-brand-text">{task.title}</p>
+          <p className="text-[13px] font-medium text-brand-text leading-snug">{task.title}</p>
           {task.description && (
-            <p className="text-xs text-brand-muted mt-1 line-clamp-2">
+            <p className="text-xs text-brand-muted mt-1 line-clamp-2 leading-relaxed">
               {task.description}
             </p>
           )}
-          <div className="flex items-center justify-between mt-2">
+          <div className="flex items-center justify-between mt-2.5">
             <div className="flex items-center gap-2">
               {task.assignee_detail && (
                 <Avatar
@@ -567,7 +567,7 @@ function TaskCard({
                 />
               )}
               {task.comments_count > 0 && (
-                <span className="flex items-center gap-0.5 text-xs text-brand-muted">
+                <span className="flex items-center gap-0.5 text-[11px] text-brand-muted tabular-nums">
                   <MessageSquare className="w-3 h-3" />
                   {task.comments_count}
                 </span>
@@ -579,7 +579,7 @@ function TaskCard({
                   e.stopPropagation();
                   onDelete(task.id);
                 }}
-                className="p-1 rounded text-brand-muted/50 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                className="p-1 rounded-lg text-brand-muted/40 hover:text-red-500 hover:bg-red-50 transition-all opacity-0 group-hover:opacity-100 cursor-pointer"
               >
                 <Trash2 className="w-3 h-3" />
               </button>
@@ -659,47 +659,47 @@ function TaskDetailSidebar({
   return (
     <>
       <div
-        className="fixed inset-0 bg-black/30 z-40"
+        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
         onClick={onClose}
       />
-      <div className="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-xl z-50 overflow-y-auto">
-        <div className="flex items-center justify-between p-4 border-b border-brand-border/20">
-          <h2 className="text-base font-semibold text-brand-text">
+      <div className="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-xl z-50 overflow-y-auto animate-slide-in-right">
+        <div className="flex items-center justify-between p-5 border-b border-brand-border/[0.1]">
+          <h2 className="text-base font-bold text-brand-text">
             Task Detail
           </h2>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <button
               onClick={() => {
                 onDelete(task.id);
                 onClose();
               }}
-              className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
+              className="p-1.5 rounded-xl text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
               title="Delete task"
             >
               <Trash2 className="w-4 h-4" />
             </button>
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg text-brand-muted hover:bg-brand-bg transition-colors"
+              className="p-1.5 rounded-xl text-brand-muted hover:bg-brand-bg transition-colors cursor-pointer"
             >
-              <X className="w-4 h-4" />
+              <X className="w-5 h-5" />
             </button>
           </div>
         </div>
 
-        <div className="p-4 space-y-5">
+        <div className="p-5 space-y-5">
           {/* Title */}
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             onBlur={handleBlurTitle}
-            className="w-full text-lg font-semibold text-brand-text bg-transparent outline-none border-b border-transparent focus:border-brand-blue/30 pb-1 transition-colors"
+            className="w-full text-lg font-bold text-brand-text bg-transparent outline-none border-b-2 border-transparent focus:border-brand-blue/30 pb-1 transition-colors"
           />
 
           {/* Description */}
           <div>
-            <label className="text-xs font-medium text-brand-muted uppercase tracking-wider">
+            <label className="text-[11px] font-semibold text-brand-muted uppercase tracking-wider">
               Description
             </label>
             <textarea
@@ -708,13 +708,13 @@ function TaskDetailSidebar({
               onBlur={handleBlurDescription}
               placeholder="Add a description..."
               rows={3}
-              className="w-full mt-1.5 px-3 py-2 rounded-lg bg-brand-bg border border-brand-border/60 text-brand-text text-sm outline-none focus:border-brand-blue/50 resize-none"
+              className="w-full mt-1.5 px-4 py-2.5 rounded-xl bg-white border border-brand-border/30 text-brand-text placeholder:text-brand-muted/60 text-sm outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all resize-none shadow-sm"
             />
           </div>
 
           {/* Assignee */}
           <div>
-            <label className="text-xs font-medium text-brand-muted uppercase tracking-wider">
+            <label className="text-[11px] font-semibold text-brand-muted uppercase tracking-wider">
               Assignee
             </label>
             <select
@@ -722,7 +722,7 @@ function TaskDetailSidebar({
               onChange={(e) =>
                 handleAssign(e.target.value || null)
               }
-              className="w-full mt-1.5 px-3 py-2 rounded-lg bg-brand-bg border border-brand-border/60 text-brand-text text-sm outline-none focus:border-brand-blue/50"
+              className="w-full mt-1.5 px-4 py-2.5 rounded-xl bg-white border border-brand-border/30 text-brand-text text-sm outline-none focus:border-brand-blue/40 transition-colors shadow-sm cursor-pointer"
             >
               <option value="">Unassigned</option>
               {members.map((m) => (
@@ -735,28 +735,28 @@ function TaskDetailSidebar({
 
           {/* Comments */}
           <div>
-            <label className="text-xs font-medium text-brand-muted uppercase tracking-wider">
+            <label className="text-[11px] font-semibold text-brand-muted uppercase tracking-wider">
               Comments ({comments.length})
             </label>
-            <div className="mt-2 space-y-3">
+            <div className="mt-3 space-y-3">
               {comments.map((comment) => (
-                <div key={comment.id} className="flex gap-2">
+                <div key={comment.id} className="flex gap-2.5">
                   <Avatar
                     src={comment.author_avatar || undefined}
                     name={comment.author_name}
                     size="sm"
                     className="!w-6 !h-6 !text-[10px] mt-0.5 flex-shrink-0"
                   />
-                  <div className="flex-1 min-w-0">
+                  <div className="flex-1 min-w-0 bg-brand-bg/60 rounded-xl px-3 py-2">
                     <div className="flex items-baseline gap-2">
-                      <span className="text-xs font-medium text-brand-text">
+                      <span className="text-[11px] font-semibold text-brand-text">
                         {comment.author_name}
                       </span>
-                      <span className="text-[10px] text-brand-muted">
+                      <span className="text-[10px] text-brand-muted tabular-nums">
                         {new Date(comment.created_at).toLocaleDateString()}
                       </span>
                     </div>
-                    <p className="text-sm text-brand-muted mt-0.5">
+                    <p className="text-sm text-brand-text/80 mt-0.5 leading-relaxed">
                       {comment.content}
                     </p>
                   </div>
@@ -770,7 +770,7 @@ function TaskDetailSidebar({
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
                 placeholder="Write a comment..."
-                className="flex-1 px-3 py-2 rounded-lg bg-brand-bg border border-brand-border/60 text-brand-text text-sm outline-none focus:border-brand-blue/50"
+                className="flex-1 px-4 py-2.5 rounded-xl bg-white border border-brand-border/30 text-brand-text placeholder:text-brand-muted/60 text-sm outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all shadow-sm"
               />
               <Button size="sm" type="submit" disabled={!newComment.trim()}>
                 Send

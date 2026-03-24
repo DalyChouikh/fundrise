@@ -110,10 +110,10 @@ export function StartupsPage() {
   if (loading) return <LoadingSpinner fullscreen />;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-brand-text">Startups</h1>
+          <h1 className="text-2xl font-bold text-brand-text">Startups</h1>
           <p className="text-brand-muted mt-1 text-sm">
             {profile?.role === "founder"
               ? "Manage your startups or browse others."
@@ -130,21 +130,21 @@ export function StartupsPage() {
                 : undefined
             }
           >
-            <Plus className="w-4 h-4 mr-1.5" />
+            <Plus className="w-4 h-4" />
             New Startup
           </Button>
         )}
       </div>
 
       {/* Search */}
-      <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-white border border-brand-border/50 text-brand-muted text-sm w-full max-w-md shadow-card focus-within:border-brand-blue/50 transition-colors">
-        <Search className="w-5 h-5 flex-shrink-0" />
+      <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-brand-border/30 text-brand-muted text-sm w-full max-w-sm shadow-sm focus-within:border-brand-blue/40 focus-within:ring-2 focus-within:ring-brand-blue/10 transition-all">
+        <Search className="w-4 h-4 flex-shrink-0" />
         <input
           type="text"
           placeholder="Search by name or industry..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="bg-transparent outline-none w-full text-brand-text placeholder:text-brand-muted"
+          className="bg-transparent outline-none w-full text-brand-text placeholder:text-brand-muted/60"
         />
       </div>
 
@@ -152,10 +152,10 @@ export function StartupsPage() {
       {filtered.length === 0 ? (
         <Card>
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="w-20 h-20 rounded-2xl bg-brand-bg flex items-center justify-center mb-5">
-              <Building2 className="w-9 h-9 text-brand-muted" />
+            <div className="w-16 h-16 rounded-2xl bg-brand-bg flex items-center justify-center mb-4">
+              <Building2 className="w-7 h-7 text-brand-muted" />
             </div>
-            <h2 className="text-lg font-semibold text-brand-text mb-2">
+            <h2 className="text-base font-semibold text-brand-text mb-1">
               {searchQuery ? "No matches found" : "No startups yet"}
             </h2>
             <p className="text-sm text-brand-muted max-w-md">
@@ -169,9 +169,9 @@ export function StartupsPage() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {filtered.map((startup) => (
+          {filtered.map((startup, i) => (
             <Link key={startup.id} to={`/startups/${startup.id}`}>
-              <Card hover className="h-full">
+              <Card hover className="h-full" style={{ animationDelay: `${i * 50}ms`, animationFillMode: "backwards" }}>
                 <div className="flex flex-col h-full">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
@@ -179,18 +179,18 @@ export function StartupsPage() {
                         <img
                           src={startup.logo_url}
                           alt={startup.name}
-                          className="w-12 h-12 rounded-xl object-cover"
+                          className="w-11 h-11 rounded-xl object-cover"
                         />
                       ) : (
-                        <div className="w-12 h-12 rounded-xl bg-brand-accent/10 flex items-center justify-center">
-                          <Building2 className="w-6 h-6 text-brand-accent" />
+                        <div className="w-11 h-11 rounded-xl bg-brand-accent/[0.08] flex items-center justify-center">
+                          <Building2 className="w-5 h-5 text-brand-accent" />
                         </div>
                       )}
                       <div>
-                        <h3 className="font-semibold text-brand-text text-base">
+                        <h3 className="font-semibold text-brand-text text-sm">
                           {startup.name}
                         </h3>
-                        <p className="text-sm text-brand-muted">
+                        <p className="text-xs text-brand-muted">
                           {startup.industry}
                         </p>
                       </div>
@@ -198,22 +198,22 @@ export function StartupsPage() {
                     <Badge status={startup.status} />
                   </div>
 
-                  <p className="text-sm text-brand-muted line-clamp-2 mb-5 flex-1">
+                  <p className="text-sm text-brand-muted line-clamp-2 mb-4 flex-1 leading-relaxed">
                     {startup.description}
                   </p>
 
-                  <div className="flex items-center justify-between pt-3 border-t border-brand-border/20">
-                    <div className="flex items-center gap-4 text-xs text-brand-muted">
+                  <div className="flex items-center justify-between pt-3 border-t border-brand-border/[0.08]">
+                    <div className="flex items-center gap-3.5 text-[11px] text-brand-muted">
                       <span className="flex items-center gap-1">
-                        <MapPin className="w-4 h-4" />
+                        <MapPin className="w-3.5 h-3.5" />
                         {startup.location}
                       </span>
-                      <span className="flex items-center gap-1">
-                        <Users className="w-4 h-4" />
+                      <span className="flex items-center gap-1 tabular-nums">
+                        <Users className="w-3.5 h-3.5" />
                         {startup.members_count}
                       </span>
-                      <span className="flex items-center gap-1">
-                        <Heart className="w-4 h-4" />
+                      <span className="flex items-center gap-1 tabular-nums">
+                        <Heart className="w-3.5 h-3.5" />
                         {startup.followers_count}
                       </span>
                     </div>
@@ -222,7 +222,7 @@ export function StartupsPage() {
                         e.preventDefault();
                         handleFollow(startup.id);
                       }}
-                      className={`p-1.5 rounded-lg transition-colors ${
+                      className={`p-1.5 rounded-lg transition-all cursor-pointer ${
                         startup.is_following
                           ? "text-rose-500 bg-rose-50 hover:bg-rose-100"
                           : "text-brand-muted hover:text-rose-500 hover:bg-rose-50"
@@ -241,20 +241,20 @@ export function StartupsPage() {
                       name={startup.created_by.full_name}
                       size="sm"
                     />
-                    <span className="text-xs text-brand-muted">
+                    <span className="text-[11px] text-brand-muted">
                       {startup.created_by.full_name}
                     </span>
                   </div>
 
                   {profile?.role === "admin" &&
                     startup.status === "pending_approval" && (
-                      <div className="flex items-center gap-2 mt-3 pt-3 border-t border-brand-border/20">
+                      <div className="flex items-center gap-2 mt-3 pt-3 border-t border-brand-border/[0.08]">
                         <button
                           onClick={(e) => {
                             e.preventDefault();
                             handleApprove(startup.id);
                           }}
-                          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors"
+                          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors cursor-pointer"
                         >
                           <CheckCircle2 className="w-3.5 h-3.5" />
                           Approve
@@ -264,7 +264,7 @@ export function StartupsPage() {
                             e.preventDefault();
                             handleReject(startup.id);
                           }}
-                          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 transition-colors"
+                          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 transition-colors cursor-pointer"
                         >
                           <XCircle className="w-3.5 h-3.5" />
                           Reject
@@ -335,23 +335,23 @@ function CreateStartupModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-xl mx-4 max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b border-brand-border/20">
-          <h2 className="text-xl font-bold text-brand-text">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-white rounded-2xl shadow-modal w-full max-w-xl mx-4 max-h-[90vh] overflow-y-auto animate-fade-in-scale">
+        <div className="flex items-center justify-between p-5 border-b border-brand-border/[0.1]">
+          <h2 className="text-base font-bold text-brand-text">
             Create Startup
           </h2>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl hover:bg-brand-bg text-brand-muted transition-colors"
+            className="p-1.5 rounded-xl hover:bg-brand-bg text-brand-muted transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-5 space-y-4">
           {error && (
-            <div className="px-4 py-3 rounded-xl bg-red-50 text-red-700 text-sm">
+            <div className="px-4 py-3 rounded-xl bg-red-50 border border-red-100 text-red-700 text-sm">
               {error}
             </div>
           )}
@@ -362,7 +362,7 @@ function CreateStartupModal({
           />
 
           <div>
-            <label className="block text-sm font-medium text-brand-text mb-1.5">
+            <label className="block text-[13px] font-medium text-brand-text mb-1.5">
               Startup Name *
             </label>
             <input
@@ -371,12 +371,12 @@ function CreateStartupModal({
               value={form.name}
               onChange={(e) => updateField("name", e.target.value)}
               placeholder="My Awesome Startup"
-              className="w-full px-4 py-3 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text placeholder:text-brand-muted text-sm outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/10 transition-all"
+              className="w-full px-4 py-2.5 rounded-xl bg-white border border-brand-border/30 text-brand-text placeholder:text-brand-muted/60 text-sm outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all shadow-sm"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-brand-text mb-1.5">
+            <label className="block text-[13px] font-medium text-brand-text mb-1.5">
               Description *
             </label>
             <textarea
@@ -385,13 +385,13 @@ function CreateStartupModal({
               onChange={(e) => updateField("description", e.target.value)}
               placeholder="Describe what your startup does..."
               rows={3}
-              className="w-full px-4 py-3 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text placeholder:text-brand-muted text-sm outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/10 transition-all resize-none"
+              className="w-full px-4 py-2.5 rounded-xl bg-white border border-brand-border/30 text-brand-text placeholder:text-brand-muted/60 text-sm outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all resize-none shadow-sm"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-brand-text mb-1.5">
+              <label className="block text-[13px] font-medium text-brand-text mb-1.5">
                 Industry *
               </label>
               <input
@@ -400,11 +400,11 @@ function CreateStartupModal({
                 value={form.industry}
                 onChange={(e) => updateField("industry", e.target.value)}
                 placeholder="e.g. FinTech"
-                className="w-full px-4 py-3 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text placeholder:text-brand-muted text-sm outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/10 transition-all"
+                className="w-full px-4 py-2.5 rounded-xl bg-white border border-brand-border/30 text-brand-text placeholder:text-brand-muted/60 text-sm outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all shadow-sm"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-brand-text mb-1.5">
+              <label className="block text-[13px] font-medium text-brand-text mb-1.5">
                 Location *
               </label>
               <input
@@ -413,14 +413,14 @@ function CreateStartupModal({
                 value={form.location}
                 onChange={(e) => updateField("location", e.target.value)}
                 placeholder="e.g. Tunisia"
-                className="w-full px-4 py-3 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text placeholder:text-brand-muted text-sm outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/10 transition-all"
+                className="w-full px-4 py-2.5 rounded-xl bg-white border border-brand-border/30 text-brand-text placeholder:text-brand-muted/60 text-sm outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all shadow-sm"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-brand-text mb-1.5">
+              <label className="block text-[13px] font-medium text-brand-text mb-1.5">
                 Founding Date *
               </label>
               <input
@@ -428,11 +428,11 @@ function CreateStartupModal({
                 required
                 value={form.founding_date}
                 onChange={(e) => updateField("founding_date", e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text text-sm outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/10 transition-all"
+                className="w-full px-4 py-2.5 rounded-xl bg-white border border-brand-border/30 text-brand-text text-sm outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all shadow-sm"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-brand-text mb-1.5">
+              <label className="block text-[13px] font-medium text-brand-text mb-1.5">
                 Website
               </label>
               <input
@@ -440,7 +440,7 @@ function CreateStartupModal({
                 value={form.website}
                 onChange={(e) => updateField("website", e.target.value)}
                 placeholder="https://..."
-                className="w-full px-4 py-3 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text placeholder:text-brand-muted text-sm outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/10 transition-all"
+                className="w-full px-4 py-2.5 rounded-xl bg-white border border-brand-border/30 text-brand-text placeholder:text-brand-muted/60 text-sm outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all shadow-sm"
               />
             </div>
           </div>

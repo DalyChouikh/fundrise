@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, Mail, Shield, Save, Trash2 } from "lucide-react";
+import { User, Mail, Shield, Save, Trash2, Calendar } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
 import { Card } from "@/components/ui/Card";
@@ -37,7 +37,7 @@ export function SettingsPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-2xl">
+    <div className="space-y-6 max-w-2xl animate-fade-in">
       <div>
         <h1 className="text-2xl font-bold text-brand-text">Settings</h1>
         <p className="text-brand-muted mt-1 text-sm">
@@ -47,7 +47,7 @@ export function SettingsPage() {
 
       {/* Profile Card */}
       <Card>
-        <div className="flex items-center gap-4 mb-6 pb-6 border-b border-brand-border/20">
+        <div className="flex items-center gap-4 mb-6 pb-6 border-b border-brand-border/[0.1]">
           <AvatarUpload
             currentUrl={form.avatar_url || undefined}
             name={form.full_name || "User"}
@@ -67,14 +67,14 @@ export function SettingsPage() {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           {success && (
-            <div className="px-4 py-3 rounded-xl bg-emerald-50 text-emerald-700 text-sm">
+            <div className="px-4 py-3 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-700 text-sm animate-fade-in">
               Profile updated successfully.
             </div>
           )}
 
           <div>
-            <label className="flex items-center gap-1.5 text-sm font-medium text-brand-text mb-1.5">
-              <User className="w-4 h-4" />
+            <label className="flex items-center gap-1.5 text-[13px] font-medium text-brand-text mb-1.5">
+              <User className="w-4 h-4 text-brand-muted" />
               Full Name
             </label>
             <input
@@ -83,12 +83,12 @@ export function SettingsPage() {
               onChange={(e) =>
                 setForm((f) => ({ ...f, full_name: e.target.value }))
               }
-              className="w-full px-4 py-2.5 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text text-sm outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/10 transition-all"
+              className="w-full px-4 py-2.5 rounded-xl bg-white border border-brand-border/40 text-brand-text text-sm outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all shadow-sm"
             />
           </div>
 
           <div>
-            <label className="text-sm font-medium text-brand-text mb-1.5 block">
+            <label className="text-[13px] font-medium text-brand-text mb-1.5 block">
               Bio
             </label>
             <textarea
@@ -98,13 +98,13 @@ export function SettingsPage() {
               }
               placeholder="Tell us about yourself..."
               rows={3}
-              className="w-full px-4 py-2.5 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text placeholder:text-brand-muted text-sm outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/10 transition-all resize-none"
+              className="w-full px-4 py-2.5 rounded-xl bg-white border border-brand-border/40 text-brand-text placeholder:text-brand-muted/60 text-sm outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all resize-none shadow-sm"
             />
           </div>
 
           <div className="flex justify-end pt-2">
             <Button type="submit" loading={saving}>
-              <Save className="w-4 h-4 mr-1.5" />
+              <Save className="w-4 h-4" />
               Save Changes
             </Button>
           </div>
@@ -114,21 +114,27 @@ export function SettingsPage() {
       {/* Account Info */}
       <Card>
         <h3 className="text-base font-semibold text-brand-text mb-4 flex items-center gap-2">
-          <Shield className="w-4 h-4" />
+          <Shield className="w-4 h-4 text-brand-muted" />
           Account Info
         </h3>
-        <div className="space-y-3">
-          <div className="flex items-center justify-between py-2">
-            <span className="text-sm text-brand-muted">Email</span>
-            <span className="text-sm text-brand-text">{profile?.email}</span>
+        <div className="space-y-1">
+          <div className="flex items-center justify-between py-3 border-b border-brand-border/[0.08]">
+            <div className="flex items-center gap-2">
+              <Mail className="w-4 h-4 text-brand-muted" />
+              <span className="text-sm text-brand-muted">Email</span>
+            </div>
+            <span className="text-sm font-medium text-brand-text">{profile?.email}</span>
           </div>
-          <div className="flex items-center justify-between py-2">
+          <div className="flex items-center justify-between py-3 border-b border-brand-border/[0.08]">
             <span className="text-sm text-brand-muted">Account Type</span>
             <Badge status={profile?.role || ""} />
           </div>
-          <div className="flex items-center justify-between py-2">
-            <span className="text-sm text-brand-muted">Member Since</span>
-            <span className="text-sm text-brand-text">
+          <div className="flex items-center justify-between py-3">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-brand-muted" />
+              <span className="text-sm text-brand-muted">Member Since</span>
+            </div>
+            <span className="text-sm font-medium text-brand-text tabular-nums">
               {profile?.created_at
                 ? new Date(profile.created_at).toLocaleDateString()
                 : "—"}
@@ -138,16 +144,16 @@ export function SettingsPage() {
       </Card>
 
       {/* Danger Zone */}
-      <Card>
-        <h3 className="text-base font-semibold text-red-500 mb-2 flex items-center gap-2">
+      <Card className="!border-red-200/40">
+        <h3 className="text-base font-semibold text-red-600 mb-2 flex items-center gap-2">
           <Trash2 className="w-4 h-4" />
           Danger Zone
         </h3>
-        <p className="text-sm text-brand-muted mb-4">
+        <p className="text-sm text-brand-muted mb-4 leading-relaxed">
           Permanently delete your account and all associated data. This action cannot be undone.
         </p>
         <Button
-          variant="secondary"
+          variant="danger"
           size="sm"
           loading={deleting}
           onClick={async () => {
@@ -164,9 +170,8 @@ export function SettingsPage() {
               setDeleting(false);
             }
           }}
-          className="!text-red-500 !border-red-200 hover:!bg-red-50"
         >
-          <Trash2 className="w-4 h-4 mr-1.5" />
+          <Trash2 className="w-4 h-4" />
           Delete Account
         </Button>
       </Card>

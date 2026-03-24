@@ -1,9 +1,8 @@
 import { useState, type FormEvent } from "react";
 import { Navigate, Link, useSearchParams } from "react-router-dom";
-import { Building2, TrendingUp } from "lucide-react";
+import { Building2, TrendingUp, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
 import { Logo } from "@/components/ui/Logo";
 
 type SelectableRole = "founder" | "investor";
@@ -50,7 +49,6 @@ export function SignupPage() {
   const handleGoogleSignIn = async () => {
     setError("");
     setGoogleLoading(true);
-    // Persist invite token for OAuth redirect flow
     if (inviteToken) {
       localStorage.setItem("pendingInviteToken", inviteToken);
     }
@@ -64,18 +62,16 @@ export function SignupPage() {
   if (success) {
     return (
       <div className="min-h-screen bg-brand-bg flex items-center justify-center px-4">
-        <div className="w-full max-w-[420px] text-center">
-          <div className="w-16 h-16 rounded-2xl bg-emerald-50 flex items-center justify-center mx-auto mb-6">
-            <svg className="w-8 h-8 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
+        <div className="w-full max-w-[420px] text-center animate-fade-in">
+          <div className="w-16 h-16 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center mx-auto mb-6">
+            <CheckCircle2 className="w-8 h-8 text-emerald-600" />
           </div>
           <h2 className="text-xl font-bold text-brand-text mb-2">
             Check your email
           </h2>
-          <p className="text-sm text-brand-muted mb-6">
-            We sent a confirmation link to <strong>{email}</strong>. Click it to
-            activate your account.
+          <p className="text-sm text-brand-muted leading-relaxed mb-6">
+            We sent a confirmation link to <strong className="text-brand-text">{email}</strong>.
+            Click it to activate your account.
             {inviteToken && (
               <span className="block mt-2">
                 After confirming, sign in to accept the team invitation.
@@ -84,7 +80,7 @@ export function SignupPage() {
           </p>
           <Link
             to={inviteToken ? `/login?redirect=/invite/${inviteToken}` : "/login"}
-            className="text-brand-accent font-medium text-sm hover:underline"
+            className="text-brand-accent font-semibold text-sm hover:text-brand-accent/80 transition-colors"
           >
             Back to sign in
           </Link>
@@ -94,32 +90,52 @@ export function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-brand-bg flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-[420px]">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-3">
-            <Logo size="lg" />
-          </div>
-          <p className="text-brand-muted mt-2 text-sm">
-            Create your account to get started.
+    <div className="min-h-screen bg-brand-bg flex">
+      {/* Left decorative panel */}
+      <div className="hidden lg:flex lg:w-[45%] xl:w-[40%] bg-brand-dark relative overflow-hidden">
+        <div className="absolute inset-0 opacity-[0.03]" style={{backgroundImage: "radial-gradient(circle at 1px 1px, white 1px, transparent 0)", backgroundSize: "32px 32px"}} />
+        <div className="absolute top-1/3 -right-24 w-96 h-96 rounded-full bg-brand-accent/50 blur-3xl" />
+        <div className="absolute bottom-1/3 -left-24 w-80 h-80 rounded-full bg-brand-blue/50 blur-3xl" />
+        <div className="relative z-10 flex flex-col justify-center px-12 xl:px-16">
+          <Logo size="sm" className="mb-10 brightness-0 invert opacity-90" />
+          <h2 className="text-3xl xl:text-4xl font-bold text-white leading-tight">
+            Start building<br />
+            <span className="text-brand-accent">something great</span>
+          </h2>
+          <p className="text-white/50 mt-4 text-[15px] leading-relaxed max-w-md">
+            Whether you're launching a startup or investing in the next big thing, Funderise is your platform.
           </p>
         </div>
+      </div>
 
-        <Card padding="lg">
+      {/* Right form */}
+      <div className="flex-1 flex items-center justify-center px-4 sm:px-8 py-12">
+        <div className="w-full max-w-[400px] animate-fade-in">
+          <div className="lg:hidden text-center mb-10">
+            <div className="flex justify-center mb-3">
+              <Logo size="lg" />
+            </div>
+          </div>
+
+          <div className="mb-8">
+            <h1 className="text-2xl font-bold text-brand-text">Create your account</h1>
+            <p className="text-brand-muted mt-1.5 text-sm">
+              Get started in just a few steps.
+            </p>
+          </div>
+
           <div className="space-y-5">
             {error && (
-              <div className="px-4 py-3 rounded-xl bg-red-50 text-red-700 text-sm">
+              <div className="px-4 py-3 rounded-xl bg-red-50 border border-red-100 text-red-700 text-sm animate-fade-in">
                 {error}
               </div>
             )}
 
-            {/* Google Sign Up */}
             <button
               type="button"
               onClick={handleGoogleSignIn}
               disabled={googleLoading}
-              className="flex items-center justify-center gap-3 w-full px-4 py-2.5 rounded-xl border border-brand-border/60 bg-white text-sm font-medium text-brand-text hover:bg-brand-bg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center justify-center gap-3 w-full px-4 py-3 rounded-xl border border-brand-border/40 bg-white text-sm font-medium text-brand-text hover:bg-brand-bg hover:border-brand-border/60 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm cursor-pointer"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
@@ -132,16 +148,16 @@ export function SignupPage() {
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-brand-border/40" />
+                <div className="w-full border-t border-brand-border/30" />
               </div>
               <div className="relative flex justify-center text-xs">
-                <span className="bg-white px-3 text-brand-muted">or</span>
+                <span className="bg-brand-bg px-4 text-brand-muted font-medium">or</span>
               </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-brand-text mb-1.5">
+                <label className="block text-[13px] font-medium text-brand-text mb-1.5">
                   Full name
                 </label>
                 <input
@@ -150,131 +166,99 @@ export function SignupPage() {
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="John Doe"
                   required
-                  className="w-full px-4 py-2.5 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text placeholder:text-brand-muted text-sm outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/10 transition-all"
+                  className="w-full px-4 py-2.5 rounded-xl bg-white border border-brand-border/40 text-brand-text placeholder:text-brand-muted/60 text-sm outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all shadow-sm"
                 />
               </div>
 
-            <div>
-              <label className="block text-sm font-medium text-brand-text mb-1.5">
-                Email
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                required
-                className="w-full px-4 py-2.5 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text placeholder:text-brand-muted text-sm outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/10 transition-all"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-brand-text mb-1.5">
-                Password
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Min. 6 characters"
-                required
-                minLength={6}
-                className="w-full px-4 py-2.5 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text placeholder:text-brand-muted text-sm outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/10 transition-all"
-              />
-            </div>
-
-            {/* Role selector — hidden when signing up via invite */}
-            {!inviteToken && (
               <div>
-                <label className="block text-sm font-medium text-brand-text mb-2.5">
-                  I want to
+                <label className="block text-[13px] font-medium text-brand-text mb-1.5">
+                  Email
                 </label>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setRole("founder")}
-                    className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all duration-200 ${
-                      role === "founder"
-                        ? "border-brand-accent bg-brand-accent/[0.04]"
-                        : "border-brand-border/50 hover:border-brand-border bg-white"
-                    }`}
-                  >
-                    <Building2
-                      className={`w-6 h-6 ${
-                        role === "founder"
-                          ? "text-brand-accent"
-                          : "text-brand-muted"
-                      }`}
-                    />
-                    <span
-                      className={`text-sm font-semibold ${
-                        role === "founder"
-                          ? "text-brand-text"
-                          : "text-brand-muted"
-                      }`}
-                    >
-                      Launch
-                    </span>
-                    <span className="text-xs text-brand-muted text-center leading-tight">
-                      Fund my startup
-                    </span>
-                  </button>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  required
+                  className="w-full px-4 py-2.5 rounded-xl bg-white border border-brand-border/40 text-brand-text placeholder:text-brand-muted/60 text-sm outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all shadow-sm"
+                />
+              </div>
 
-                  <button
-                    type="button"
-                    onClick={() => setRole("investor")}
-                    className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all duration-200 ${
-                      role === "investor"
-                        ? "border-brand-accent bg-brand-accent/[0.04]"
-                        : "border-brand-border/50 hover:border-brand-border bg-white"
-                    }`}
-                  >
-                    <TrendingUp
-                      className={`w-6 h-6 ${
-                        role === "investor"
-                          ? "text-brand-accent"
-                          : "text-brand-muted"
-                      }`}
-                    />
-                    <span
-                      className={`text-sm font-semibold ${
-                        role === "investor"
-                          ? "text-brand-text"
-                          : "text-brand-muted"
-                      }`}
-                    >
-                      Invest
-                    </span>
-                    <span className="text-xs text-brand-muted text-center leading-tight">
-                      Discover startups
-                    </span>
-                  </button>
+              <div>
+                <label className="block text-[13px] font-medium text-brand-text mb-1.5">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Min. 6 characters"
+                  required
+                  minLength={6}
+                  className="w-full px-4 py-2.5 rounded-xl bg-white border border-brand-border/40 text-brand-text placeholder:text-brand-muted/60 text-sm outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all shadow-sm"
+                />
+              </div>
+
+              {/* Role selector */}
+              {!inviteToken && (
+                <div>
+                  <label className="block text-[13px] font-medium text-brand-text mb-2.5">
+                    I want to
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {([
+                      { key: "founder" as const, icon: Building2, title: "Launch", desc: "Fund my startup" },
+                      { key: "investor" as const, icon: TrendingUp, title: "Invest", desc: "Discover startups" },
+                    ]).map((opt) => (
+                      <button
+                        key={opt.key}
+                        type="button"
+                        onClick={() => setRole(opt.key)}
+                        className={`relative flex flex-col items-center gap-2.5 p-4 rounded-xl border-2 transition-all duration-200 cursor-pointer ${
+                          role === opt.key
+                            ? "border-brand-accent bg-brand-accent/[0.04] shadow-sm"
+                            : "border-brand-border/30 hover:border-brand-border/50 bg-white"
+                        }`}
+                      >
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${
+                          role === opt.key ? "bg-brand-accent/10" : "bg-brand-bg"
+                        }`}>
+                          <opt.icon className={`w-5 h-5 ${role === opt.key ? "text-brand-accent" : "text-brand-muted"}`} />
+                        </div>
+                        <div className="text-center">
+                          <span className={`block text-sm font-semibold ${role === opt.key ? "text-brand-text" : "text-brand-muted"}`}>
+                            {opt.title}
+                          </span>
+                          <span className="block text-[11px] text-brand-muted mt-0.5">{opt.desc}</span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {inviteToken && (
-              <div className="px-4 py-3 rounded-xl bg-brand-accent/[0.06] border border-brand-accent/20 text-sm text-brand-text">
-                You're signing up to join a startup as a <strong>team member</strong>.
-              </div>
-            )}
+              {inviteToken && (
+                <div className="px-4 py-3 rounded-xl bg-brand-accent/[0.06] border border-brand-accent/15 text-sm text-brand-text">
+                  You're signing up to join a startup as a <strong>team member</strong>.
+                </div>
+              )}
 
-            <Button type="submit" loading={loading} className="w-full" size="lg">
-              Create account
-            </Button>
+              <Button type="submit" loading={loading} className="w-full" size="lg">
+                Create account
+              </Button>
             </form>
           </div>
-        </Card>
 
-        <p className="text-center text-sm text-brand-muted mt-6">
-          Already have an account?{" "}
-          <Link
-            to={inviteToken ? `/login?redirect=/invite/${inviteToken}` : "/login"}
-            className="text-brand-accent font-medium hover:underline"
-          >
-            Sign in
-          </Link>
-        </p>
+          <p className="text-center text-sm text-brand-muted mt-8">
+            Already have an account?{" "}
+            <Link
+              to={inviteToken ? `/login?redirect=/invite/${inviteToken}` : "/login"}
+              className="text-brand-accent font-semibold hover:text-brand-accent/80 transition-colors"
+            >
+              Sign in
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

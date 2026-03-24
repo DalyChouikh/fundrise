@@ -13,27 +13,34 @@ function ApprovalBanner() {
 
   if (profile.approval_status === "pending_approval") {
     return (
-      <div className="mx-6 lg:mx-10 mt-6 px-4 py-3 rounded-xl bg-amber-50 border border-amber-200 flex items-center gap-3">
-        <Clock className="w-5 h-5 text-amber-600 flex-shrink-0" />
-        <p className="text-sm text-amber-800">
-          Your account is under review. Some features are limited until
-          approved.
-        </p>
+      <div className="mx-4 sm:mx-6 lg:mx-10 mt-5 px-4 py-3.5 rounded-2xl bg-amber-50/80 border border-amber-200/60 flex items-start gap-3 animate-fade-in">
+        <div className="p-1.5 rounded-lg bg-amber-100 mt-0.5">
+          <Clock className="w-4 h-4 text-amber-600" />
+        </div>
+        <div>
+          <p className="text-sm font-medium text-amber-900">Account under review</p>
+          <p className="text-[13px] text-amber-700/80 mt-0.5">
+            Some features are limited until your account is approved.
+          </p>
+        </div>
       </div>
     );
   }
 
   if (profile.approval_status === "rejected") {
     return (
-      <div className="mx-6 lg:mx-10 mt-6 px-4 py-3 rounded-xl bg-red-50 border border-red-200 flex items-center gap-3">
-        <XCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
-        <p className="text-sm text-red-700">
-          Your account was not approved
-          {profile.rejection_reason
-            ? `: ${profile.rejection_reason}`
-            : "."}
-          {" "}Contact support for assistance.
-        </p>
+      <div className="mx-4 sm:mx-6 lg:mx-10 mt-5 px-4 py-3.5 rounded-2xl bg-red-50/80 border border-red-200/60 flex items-start gap-3 animate-fade-in">
+        <div className="p-1.5 rounded-lg bg-red-100 mt-0.5">
+          <XCircle className="w-4 h-4 text-red-500" />
+        </div>
+        <div>
+          <p className="text-sm font-medium text-red-900">Account not approved</p>
+          <p className="text-[13px] text-red-700/80 mt-0.5">
+            {profile.rejection_reason
+              ? profile.rejection_reason
+              : "Contact support for assistance."}
+          </p>
+        </div>
       </div>
     );
   }
@@ -47,10 +54,10 @@ export function AppLayout() {
   return (
     <div className="min-h-screen bg-brand-bg">
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      <div className="lg:ml-[var(--sidebar-width)]">
+      <div className="lg:ml-[var(--sidebar-width)] min-h-screen flex flex-col">
         <Topbar onMenuClick={() => setSidebarOpen(true)} />
         <ApprovalBanner />
-        <main className="p-6 lg:p-10">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 xl:p-10">
           <Outlet />
         </main>
       </div>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Target, DollarSign, Users, Heart, Clock } from "lucide-react";
+import { Target, DollarSign, Users, Heart, Clock, ArrowRight, Sparkles } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
 import { Card } from "@/components/ui/Card";
@@ -50,24 +50,28 @@ export function FounderDashboard() {
       value: String(stats?.active_campaigns || 0),
       icon: Target,
       color: "text-brand-accent",
+      bg: "bg-brand-accent/[0.08]",
     },
     {
       label: "Total Raised",
       value: `$${Number(stats?.total_raised || 0).toLocaleString()}`,
       icon: DollarSign,
       color: "text-emerald-600",
+      bg: "bg-emerald-50",
     },
     {
       label: "Team Members",
       value: String(stats?.team_members || 0),
       icon: Users,
       color: "text-brand-blue",
+      bg: "bg-blue-50",
     },
     {
       label: "Followers",
       value: String(stats?.followers || 0),
       icon: Heart,
       color: "text-rose-500",
+      bg: "bg-rose-50",
     },
   ];
 
@@ -76,46 +80,49 @@ export function FounderDashboard() {
       label: "Create a startup",
       desc: "Set up your startup profile",
       onClick: () => navigate("/startups?action=create"),
+      icon: Sparkles,
     },
     {
       label: "Launch a campaign",
       desc: "Start raising funds",
       onClick: () => navigate("/campaigns?action=create"),
+      icon: Target,
     },
     {
       label: "Invite team members",
       desc: "Collaborate with your team",
       onClick: () => navigate("/startups"),
+      icon: Users,
     },
   ];
 
   const hasActivity = recentInvestments.length > 0 || recentCampaigns.length > 0;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-fade-in">
       {/* Welcome */}
       <div>
-        <h1 className="text-3xl font-bold text-brand-text">
+        <h1 className="text-2xl sm:text-3xl font-bold text-brand-text">
           Welcome back, {profile?.full_name?.split(" ")[0] || "Founder"}
         </h1>
-        <p className="text-base text-brand-muted mt-1">
+        <p className="text-sm text-brand-muted mt-1.5">
           Here&apos;s what&apos;s happening with your startups.
         </p>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        {statItems.map((stat) => (
-          <Card key={stat.label} hover>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {statItems.map((stat, i) => (
+          <Card key={stat.label} className={`animate-slide-up`} style={{ animationDelay: `${i * 60}ms`, animationFillMode: "backwards" }}>
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-brand-muted">{stat.label}</p>
-                <p className="text-3xl font-bold text-brand-text mt-1">
+                <p className="text-[13px] text-brand-muted font-medium">{stat.label}</p>
+                <p className="text-2xl sm:text-3xl font-bold text-brand-text mt-1.5 tabular-nums">
                   {stat.value}
                 </p>
               </div>
-              <div className="p-3 rounded-xl bg-brand-bg">
-                <stat.icon className={`w-6 h-6 ${stat.color}`} />
+              <div className={`p-2.5 rounded-xl ${stat.bg}`}>
+                <stat.icon className={`w-5 h-5 ${stat.color}`} />
               </div>
             </div>
           </Card>
@@ -126,30 +133,30 @@ export function FounderDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Activity */}
         <Card>
-          <h3 className="text-lg font-semibold text-brand-text mb-4">
+          <h3 className="text-base font-semibold text-brand-text mb-4">
             Recent Activity
           </h3>
 
           {!hasActivity ? (
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <div className="w-14 h-14 rounded-xl bg-brand-bg flex items-center justify-center mb-3">
+            <div className="flex flex-col items-center justify-center py-10 text-center">
+              <div className="w-14 h-14 rounded-2xl bg-brand-bg flex items-center justify-center mb-3">
                 <Target className="w-6 h-6 text-brand-muted" />
               </div>
-              <p className="text-sm text-brand-muted">No activity yet</p>
-              <p className="text-xs text-brand-muted/70 mt-1">
+              <p className="text-sm font-medium text-brand-muted">No activity yet</p>
+              <p className="text-xs text-brand-muted/60 mt-1">
                 Create your first startup to get started
               </p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {recentCampaigns.map((campaign) => (
                 <Link
                   key={`c-${campaign.id}`}
                   to={`/campaigns/${campaign.id}`}
-                  className="flex items-center justify-between p-3.5 rounded-xl border border-brand-border/30 hover:bg-brand-bg/50 transition-colors"
+                  className="flex items-center justify-between p-3 rounded-xl border border-brand-border/[0.12] hover:bg-brand-bg/50 hover:border-brand-border/25 transition-all"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="p-2 rounded-lg bg-brand-accent/10 flex-shrink-0">
+                    <div className="p-2 rounded-lg bg-brand-accent/[0.08] flex-shrink-0">
                       <Target className="w-4 h-4 text-brand-accent" />
                     </div>
                     <div className="min-w-0">
@@ -168,7 +175,7 @@ export function FounderDashboard() {
               {recentInvestments.map((inv) => (
                 <div
                   key={`i-${inv.id}`}
-                  className="flex items-center justify-between p-3.5 rounded-xl border border-brand-border/30"
+                  className="flex items-center justify-between p-3 rounded-xl border border-brand-border/[0.12]"
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="p-2 rounded-lg bg-emerald-50 flex-shrink-0">
@@ -193,7 +200,7 @@ export function FounderDashboard() {
 
         {/* Quick Actions */}
         <Card>
-          <h3 className="text-lg font-semibold text-brand-text mb-4">
+          <h3 className="text-base font-semibold text-brand-text mb-4">
             Quick Actions
           </h3>
           <div className="space-y-2">
@@ -201,29 +208,22 @@ export function FounderDashboard() {
               <button
                 key={action.label}
                 onClick={action.onClick}
-                className="w-full flex items-center justify-between p-3.5 rounded-xl border border-brand-border/40 hover:border-brand-border hover:bg-brand-bg/50 transition-all duration-200 text-left"
+                className="group w-full flex items-center justify-between p-3.5 rounded-xl border border-brand-border/[0.15] hover:border-brand-border/30 hover:bg-brand-bg/40 transition-all duration-200 text-left cursor-pointer"
               >
-                <div>
-                  <p className="text-sm font-medium text-brand-text">
-                    {action.label}
-                  </p>
-                  <p className="text-xs text-brand-muted mt-0.5">
-                    {action.desc}
-                  </p>
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-brand-bg group-hover:bg-white transition-colors">
+                    <action.icon className="w-4 h-4 text-brand-muted group-hover:text-brand-accent transition-colors" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-brand-text">
+                      {action.label}
+                    </p>
+                    <p className="text-xs text-brand-muted mt-0.5">
+                      {action.desc}
+                    </p>
+                  </div>
                 </div>
-                <svg
-                  className="w-4 h-4 text-brand-muted"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
+                <ArrowRight className="w-4 h-4 text-brand-muted group-hover:text-brand-text group-hover:translate-x-0.5 transition-all" />
               </button>
             ))}
           </div>
@@ -245,7 +245,7 @@ export function FounderDashboard() {
                   dataKey="amount"
                   stroke={CHART_COLORS.accent}
                   fill={CHART_COLORS.accent}
-                  fillOpacity={0.2}
+                  fillOpacity={0.15}
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -258,7 +258,7 @@ export function FounderDashboard() {
                 <XAxis dataKey="month" {...AXIS_STYLE} />
                 <YAxis {...AXIS_STYLE} />
                 <Tooltip formatter={(value: any) => `${value} investments`} />
-                <Bar dataKey="count" fill={CHART_COLORS.blue} radius={[4, 4, 0, 0]} />
+                <Bar dataKey="count" fill={CHART_COLORS.blue} radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </ChartCard>
@@ -287,6 +287,7 @@ export function FounderDashboard() {
                   type="monotone"
                   dataKey="count"
                   stroke={CHART_COLORS.rose}
+                  strokeWidth={2}
                   dot={{ fill: CHART_COLORS.rose, r: 4 }}
                 />
               </LineChart>

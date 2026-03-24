@@ -80,10 +80,10 @@ export function NotificationsPage() {
   if (loading) return <LoadingSpinner fullscreen />;
 
   return (
-    <div className="space-y-8 max-w-2xl">
+    <div className="space-y-6 max-w-2xl animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-brand-text">Notifications</h1>
+          <h1 className="text-2xl font-bold text-brand-text">Notifications</h1>
           <p className="text-brand-muted mt-1 text-sm">
             {unreadCount > 0
               ? `You have ${unreadCount} unread notification${unreadCount > 1 ? "s" : ""}.`
@@ -92,7 +92,7 @@ export function NotificationsPage() {
         </div>
         {unreadCount > 0 && (
           <Button variant="secondary" size="sm" onClick={handleMarkAllRead}>
-            <CheckCheck className="w-4 h-4 mr-1.5" />
+            <CheckCheck className="w-4 h-4" />
             Mark all read
           </Button>
         )}
@@ -101,13 +101,13 @@ export function NotificationsPage() {
       {notifications.length === 0 ? (
         <Card>
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="w-20 h-20 rounded-2xl bg-brand-bg flex items-center justify-center mb-5">
-              <Bell className="w-9 h-9 text-brand-muted" />
+            <div className="w-16 h-16 rounded-2xl bg-brand-bg flex items-center justify-center mb-4">
+              <Bell className="w-8 h-8 text-brand-muted" />
             </div>
-            <h2 className="text-lg font-semibold text-brand-text mb-2">
+            <h2 className="text-base font-semibold text-brand-text mb-1">
               No notifications yet
             </h2>
-            <p className="text-sm text-brand-muted max-w-md">
+            <p className="text-sm text-brand-muted max-w-sm">
               You'll receive notifications when there's activity related to your
               account.
             </p>
@@ -126,45 +126,47 @@ export function NotificationsPage() {
               <button
                 key={notif.id}
                 onClick={() => !notif.is_read && handleMarkRead(notif.id)}
-                className={`w-full text-left transition-colors rounded-xl ${
+                className={`w-full text-left transition-all rounded-2xl ${
                   notif.is_read ? "" : "cursor-pointer"
                 }`}
               >
-                <Card
-                  className={
-                    notif.is_read ? "opacity-60" : "border-l-4 border-l-brand-accent"
-                  }
+                <div
+                  className={`bg-white rounded-2xl border shadow-card p-4 transition-all ${
+                    notif.is_read
+                      ? "opacity-50 border-brand-border/[0.08]"
+                      : "border-l-[3px] border-l-brand-accent border-brand-border/[0.12] hover:shadow-card-hover"
+                  }`}
                 >
                   <div className="flex items-start gap-3">
                     <div
-                      className={`p-2.5 rounded-xl ${config.bg} flex-shrink-0 mt-0.5`}
+                      className={`p-2 rounded-xl ${config.bg} flex-shrink-0`}
                     >
-                      <Icon className={`w-5 h-5 ${config.color}`} />
+                      <Icon className={`w-4 h-4 ${config.color}`} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
                         <p
-                          className={`text-base ${
+                          className={`text-sm ${
                             notif.is_read
                               ? "text-brand-muted"
-                              : "font-medium text-brand-text"
+                              : "font-semibold text-brand-text"
                           }`}
                         >
                           {notif.title}
                         </p>
                         {!notif.is_read && (
-                          <div className="w-2.5 h-2.5 rounded-full bg-brand-accent flex-shrink-0 mt-1.5" />
+                          <div className="w-2 h-2 rounded-full bg-brand-accent flex-shrink-0 mt-1.5" />
                         )}
                       </div>
-                      <p className="text-xs text-brand-muted mt-0.5">
+                      <p className="text-xs text-brand-muted mt-0.5 leading-relaxed">
                         {notif.message}
                       </p>
-                      <p className="text-xs text-brand-muted/70 mt-1">
+                      <p className="text-[11px] text-brand-muted/60 mt-1.5 tabular-nums">
                         {new Date(notif.created_at).toLocaleString()}
                       </p>
                     </div>
                   </div>
-                </Card>
+                </div>
               </button>
             );
           })}

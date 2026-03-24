@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    --sidebar-width: 260px;
+    --sidebar-width: 272px;
     --topbar-height: 64px;
   }
 
@@ -20,5 +20,26 @@
 
   *:focus-visible {
     @apply outline-2 outline-offset-2 outline-brand-blue;
+  }
+
+  /* Better default scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-brand-border/40 rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-brand-border/60;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-brand-accent to-brand-blue;
   }
 }
