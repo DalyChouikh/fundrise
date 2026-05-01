@@ -114,6 +114,10 @@ Storage path: `copilot-media/<user_id>/<uuid>.<ext>`
 
 **Request:** multipart file (image or PDF) + query param `type=investor|startup`
 
+The endpoint both extracts fields **and** stores the file in Supabase Storage, returning the stored URL so the frontend can persist it to `UserProfile` for admin visibility.
+
+Storage path: `user-documents/<user_id>/identity.<ext>` (investor) or `user-documents/<user_id>/company.<ext>` (startup).
+
 **Extraction logic:**
 - **PDF** → extract text from all pages using `pdfplumber`, pass full text to `AI_MODEL` as a text prompt
 - **Image** → send directly to `AI_VISION_MODEL` as a vision request
@@ -133,7 +137,8 @@ Storage path: `copilot-media/<user_id>/<uuid>.<ext>`
     "id_number": "12345678",
     "nationality": "Tunisian"
   },
-  "confidence": "high | partial | low"
+  "confidence": "high | partial | low",
+  "document_url": "https://...supabase.co/storage/v1/object/..."
 }
 ```
 
@@ -158,8 +163,19 @@ Always returns whatever was found. Frontend handles partial results.
 |---|---|---|
 | `identity_document_url` | URLField, null | Investor CIN/passport scan |
 | `company_document_url` | URLField, null | Startup registration document |
+| `date_of_birth` | DateField, null | Extracted from investor identity document |
+| `id_number` | CharField(50), null | Extracted investor ID/CIN number |
 
 Storage path: `user-documents/<user_id>/identity.<ext>` and `user-documents/<user_id>/company.<ext>`
+
+### 3.3 `Startup` model additions
+
+| Field | Type | Description |
+|---|---|---|
+| `registration_id` | CharField(100), blank/null | Company registration ID extracted from document |
+| `legal_form` | CharField(50), blank/null | Legal form e.g. SARL, SA, SAS |
+
+`founding_date` already exists on `Startup` — maps directly to `formation_date` from extraction.
 
 ---
 
@@ -333,10 +349,10 @@ A new **step 0** inserted before the existing `ProfileStep`:
 On upload:
 1. File sent to `POST /auth/extract-document/?type=investor`
 2. Loading spinner shown
-3. Extracted fields pre-fill subsequent form steps: `full_name` → full name field, `date_of_birth` → new DOB field, `id_number` → new ID number field
-4. Document URL saved to `UserProfile.identity_document_url` via `PATCH /users/me/`
+3. Extracted fields pre-fill subsequent form steps: `full_name` → full name field, `date_of_birth` → new DOB field (`UserProfile.date_of_birth`), `id_number` → new ID number field (`UserProfile.id_number`)
+4. `document_url` from response saved to `UserProfile.identity_document_url` via `PATCH /users/me/`
 
-**New investor profile fields exposed in onboarding:** `date_of_birth`, `id_number` (in addition to existing background/preferences steps).
+**New investor profile fields exposed in onboarding:** `date_of_birth`, `id_number` added as editable fields in the background step (in addition to existing background/preferences steps).
 
 **Confidence banner:**
 - `high` / `partial` → green: *"We found X fields — review and edit below."*
@@ -354,8 +370,8 @@ A new **step** inserted before `FounderStartupStep`:
 
 On upload:
 1. File sent to `POST /auth/extract-document/?type=startup`
-2. Extracted fields pre-fill: `company_name` → startup name, `registration_id` → new registration ID field, `formation_date` → founding date field, `legal_form` → new legal form field
-3. Document URL saved to `UserProfile.company_document_url` via `PATCH /users/me/`
+2. Extracted fields pre-fill the startup form: `company_name` → startup name, `registration_id` → new `Startup.registration_id` field, `formation_date` → `Startup.founding_date` (already exists), `legal_form` → new `Startup.legal_form` field
+3. `document_url` from response saved to `UserProfile.company_document_url` via `PATCH /users/me/`
 
 **The step is required.** Next button disabled until upload and extraction complete.
 
@@ -410,7 +426,8 @@ Admins can click either to open the full document in a new tab via the Supabase 
 
 ### Phase 5 — Signup Enrichment
 - `POST /auth/extract-document/` endpoint
-- `UserProfile` model migrations (`identity_document_url`, `company_document_url`)
+- `UserProfile` model migrations (`identity_document_url`, `company_document_url`, `date_of_birth`, `id_number`)
+- `Startup` model migrations (`registration_id`, `legal_form`)
 - `POST /copilot/upload/` endpoint
 - New onboarding steps for investor and startup
 - Admin document visibility
