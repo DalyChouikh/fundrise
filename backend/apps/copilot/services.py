@@ -74,16 +74,16 @@ def chat_with_copilot(user, conversation, user_message_text):
     )
 
     # Initialize client
-    api_key = settings.GITHUB_MODELS_TOKEN
+    api_key = settings.AI_API_KEY
     if not api_key:
         return CopilotMessage.objects.create(
             conversation=conversation,
             role="assistant",
-            content="AI Copilot is not configured. Please set the GITHUB_MODELS_TOKEN environment variable.",
+            content="AI Copilot is not configured. Please set the AI_API_KEY environment variable.",
         )
 
     client = OpenAI(
-        base_url="https://models.inference.ai.azure.com",
+        base_url=settings.AI_BASE_URL,
         api_key=api_key,
     )
 
@@ -98,7 +98,7 @@ def chat_with_copilot(user, conversation, user_message_text):
     for _ in range(max_iterations):
         try:
             response = client.chat.completions.create(
-                model="gpt-4o-mini",
+                model=settings.AI_MODEL,
                 messages=messages,
                 tools=TOOL_DEFINITIONS,
             )
@@ -108,7 +108,7 @@ def chat_with_copilot(user, conversation, user_message_text):
             if "429" in error_str or "rate" in error_str.lower():
                 msg = "The AI service is temporarily rate-limited. Please wait a minute and try again."
             elif "401" in error_str or "403" in error_str:
-                msg = "AI Copilot API key is invalid or expired. Please check the GITHUB_MODELS_TOKEN configuration."
+                msg = "AI Copilot API key is invalid or expired. Please check the AI_API_KEY configuration."
             else:
                 msg = "Sorry, I'm having trouble connecting to the AI service right now. Please try again later."
             return CopilotMessage.objects.create(
