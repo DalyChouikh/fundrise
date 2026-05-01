@@ -110,8 +110,11 @@ SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
 SUPABASE_JWT_SECRET = os.environ.get("SUPABASE_JWT_SECRET", "")
 SUPABASE_SERVICE_ROLE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
 
-# AI Copilot
-GITHUB_MODELS_TOKEN = os.environ.get("GITHUB_MODELS_TOKEN", "")
+# AI Copilot (OpenRouter)
+AI_API_KEY = os.environ.get("AI_API_KEY", "")
+AI_BASE_URL = os.environ.get("AI_BASE_URL", "https://openrouter.ai/api/v1")
+AI_MODEL = os.environ.get("AI_MODEL", "google/gemini-3.1-flash-lite-preview")
+AI_VISION_MODEL = os.environ.get("AI_VISION_MODEL", "google/gemini-3.1-flash-lite-preview")
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
