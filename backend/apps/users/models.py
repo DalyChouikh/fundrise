@@ -99,3 +99,32 @@ class InvestorProfile(TimeStampedModel):
 
     def __str__(self):
         return f"InvestorProfile({self.user.full_name})"
+
+
+class SavedPaymentInfo(TimeStampedModel):
+    CARD_TYPES = [
+        ("visa", "Visa"),
+        ("mastercard", "Mastercard"),
+        ("amex", "American Express"),
+        ("discover", "Discover"),
+    ]
+
+    user = models.OneToOneField(
+        UserProfile,
+        on_delete=models.CASCADE,
+        related_name="payment_info",
+    )
+    card_holder = models.CharField(max_length=255)
+    card_last4 = models.CharField(max_length=4)
+    card_type = models.CharField(max_length=20, choices=CARD_TYPES)
+    expiry_month = models.PositiveSmallIntegerField()
+    expiry_year = models.PositiveSmallIntegerField()
+    address_line1 = models.CharField(max_length=255)
+    address_line2 = models.CharField(max_length=255, blank=True, default="")
+    city = models.CharField(max_length=100)
+    state = models.CharField(max_length=100)
+    postal_code = models.CharField(max_length=20)
+    country = models.CharField(max_length=100)
+
+    def __str__(self):
+        return f"{self.user.full_name} — {self.card_type} ···{self.card_last4}"
