@@ -3,7 +3,7 @@ import { X, ArrowLeft, ChevronRight, CreditCard, MapPin } from "lucide-react";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/Button";
 import { CardPreview } from "@/components/investments/CardPreview";
-import { detectCardType, formatCardNumber, formatExpiry, parseExpiry, maxCardDigits } from "@/lib/cardUtils";
+import { formatCardNumber, formatExpiry, parseExpiry, maxCardDigits } from "@/lib/cardUtils";
 import type { CampaignDetail, SavedPaymentInfo, CardType } from "@/types";
 
 const CARD_TYPES: { value: CardType; label: string }[] = [
@@ -72,10 +72,6 @@ export function CheckoutModal({ campaign, onClose, onSuccess }: CheckoutModalPro
     const max = maxCardDigits(cardType);
     const clamped = digits.slice(0, max);
     setCardNumberFormatted(formatCardNumber(clamped, cardType));
-    // Auto-update card type from first digits (only if user hasn't manually selected)
-    if (clamped.length >= 1) {
-      setCardType(detectCardType(clamped));
-    }
   };
 
   // Handle expiry with auto-slash

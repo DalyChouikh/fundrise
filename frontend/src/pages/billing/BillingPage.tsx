@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { CardPreview } from "@/components/investments/CardPreview";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import { detectCardType, formatCardNumber, formatExpiry, parseExpiry, maxCardDigits } from "@/lib/cardUtils";
+import { formatCardNumber, formatExpiry, parseExpiry, maxCardDigits } from "@/lib/cardUtils";
 import type { SavedPaymentInfo, CardType } from "@/types";
 
 const CARD_TYPES: { value: CardType; label: string }[] = [
@@ -69,7 +69,6 @@ export function BillingPage() {
     const digits = raw.replace(/\D/g, "");
     const clamped = digits.slice(0, maxCardDigits(cardType));
     setCardNumberFormatted(formatCardNumber(clamped, cardType));
-    if (clamped.length >= 1) setCardType(detectCardType(clamped));
   };
 
   const handleExpiryChange = (raw: string) => {
