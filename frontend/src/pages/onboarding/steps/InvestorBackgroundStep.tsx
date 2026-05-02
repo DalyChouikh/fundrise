@@ -1,5 +1,5 @@
 interface InvestorBackgroundStepProps {
-  data: { company: string; job_title: string; linkedin_url: string };
+  data: { company: string; job_title: string; linkedin_url: string; date_of_birth?: string; id_number?: string };
   onChange: (field: string, value: unknown) => void;
 }
 
@@ -47,6 +47,27 @@ export function InvestorBackgroundStep({
           value={data.linkedin_url}
           onChange={(e) => onChange("linkedin_url", e.target.value)}
           placeholder="https://linkedin.com/in/..."
+          className={inputClass}
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-brand-text mb-1.5">Date of Birth</label>
+        <input
+          type="date"
+          value={data.date_of_birth || ""}
+          onChange={(e) => onChange("date_of_birth", e.target.value)}
+          className={inputClass}
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-brand-text mb-1.5">ID / CIN Number</label>
+        <input
+          type="text"
+          value={data.id_number || ""}
+          onChange={(e) => onChange("id_number", e.target.value)}
+          placeholder="e.g. 12345678"
           className={inputClass}
         />
       </div>

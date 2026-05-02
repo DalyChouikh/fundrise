@@ -3,6 +3,7 @@ from django.urls import path
 from apps.users import views
 
 urlpatterns = [
+    path("extract-document/", views.extract_document_view, name="extract-document"),
     path("me/", views.UserProfileMeView.as_view(), name="user-me"),
     path("me/delete/", views.DeleteAccountView.as_view(), name="delete-account"),
     path("me/investor-profile/", views.InvestorProfileView.as_view(), name="investor-profile"),

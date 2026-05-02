@@ -14,8 +14,10 @@ import { InvestorAccreditationStep } from "./steps/InvestorAccreditationStep";
 import { FounderStartupStep } from "./steps/FounderStartupStep";
 import { FounderDetailsStep } from "./steps/FounderDetailsStep";
 import { FounderPitchDeckStep } from "./steps/FounderPitchDeckStep";
+import { DocumentUploadStep } from "@/components/onboarding/DocumentUploadStep";
 
 const INVESTOR_STEPS = [
+  { key: "document", label: "Identity" },
   { key: "profile", label: "Profile" },
   { key: "background", label: "Background" },
   { key: "preferences", label: "Preferences" },
@@ -24,6 +26,7 @@ const INVESTOR_STEPS = [
 
 const FOUNDER_STEPS = [
   { key: "profile", label: "Profile" },
+  { key: "document", label: "Company Doc" },
   { key: "startup", label: "Your Startup" },
   { key: "details", label: "Details" },
   { key: "pitch_deck", label: "Pitch Deck" },
@@ -54,6 +57,10 @@ export function OnboardingPage() {
     preferred_stage: "",
     accreditation_status: "",
     accreditation_description: "",
+    // Investor identity fields (from document extraction)
+    date_of_birth: "",
+    id_number: "",
+    identity_document_url: "",
     // Founder startup fields
     startup_name: "",
     startup_industry: "",
@@ -63,32 +70,66 @@ export function OnboardingPage() {
     startup_website: "",
     startup_logo_url: "",
     startup_pitch_deck_url: "",
+    // Founder document fields (from extraction)
+    startup_registration_id: "",
+    startup_legal_form: "",
+    company_document_url: "",
+    // Document step gate
+    document_step_complete: false,
   });
 
   const updateField = (field: string, value: unknown) => {
     setData((prev) => ({ ...prev, [field]: value }));
   };
 
+  const handleInvestorDocExtracted = (result: { extracted: Record<string, string | null>; confidence: string; document_url: string }) => {
+    setData((prev) => ({
+      ...prev,
+      identity_document_url: result.document_url || prev.identity_document_url,
+      full_name: result.extracted.full_name || (prev as unknown as Record<string, string>).full_name || "",
+      date_of_birth: result.extracted.date_of_birth || prev.date_of_birth,
+      id_number: result.extracted.id_number || prev.id_number,
+      document_step_complete: !!result.document_url,
+    }));
+  };
+
+  const handleStartupDocExtracted = (result: { extracted: Record<string, string | null>; confidence: string; document_url: string }) => {
+    setData((prev) => ({
+      ...prev,
+      company_document_url: result.document_url || prev.company_document_url,
+      startup_name: result.extracted.company_name || prev.startup_name,
+      startup_founding_date: result.extracted.formation_date || prev.startup_founding_date,
+      startup_registration_id: result.extracted.registration_id || prev.startup_registration_id,
+      startup_legal_form: result.extracted.legal_form || prev.startup_legal_form,
+      document_step_complete: !!result.document_url,
+    }));
+  };
+
   const saveInvestorStep = async (currentStep: number) => {
     if (currentStep === 0) {
+      // Document step — already handled by DocumentUploadStep, nothing to save here
+    } else if (currentStep === 1) {
       await api.patch("/users/me/", {
         avatar_url: data.avatar_url,
         bio: data.bio,
       });
-    } else if (currentStep === 1) {
+    } else if (currentStep === 2) {
       await api.patch("/users/me/", {
         company: data.company,
         job_title: data.job_title,
         linkedin_url: data.linkedin_url,
+        date_of_birth: data.date_of_birth || null,
+        id_number: data.id_number || null,
+        identity_document_url: data.identity_document_url || null,
       });
-    } else if (currentStep === 2) {
+    } else if (currentStep === 3) {
       await api.post("/users/me/investor-profile/", {
         preferred_industries: data.preferred_industries,
         check_size_min: data.check_size_min,
         check_size_max: data.check_size_max,
         preferred_stage: data.preferred_stage,
       });
-    } else if (currentStep === 3) {
+    } else if (currentStep === 4) {
       await api.post("/users/me/investor-profile/", {
         accreditation_status: data.accreditation_status,
         accreditation_description: data.accreditation_description,
@@ -103,7 +144,7 @@ export function OnboardingPage() {
         bio: data.bio,
       });
     }
-    // Steps 1-3: startup data is accumulated locally, saved at completion
+    // Steps 1-4: startup data is accumulated locally, saved at completion
   };
 
   const handleNext = async () => {
@@ -117,7 +158,6 @@ export function OnboardingPage() {
       }
 
       if (isLastStep) {
-        // Create startup for founders
         if (!isInvestor) {
           const payload: Record<string, unknown> = {
             name: data.startup_name,
@@ -126,11 +166,16 @@ export function OnboardingPage() {
             location: data.startup_location,
             founding_date: data.startup_founding_date,
             website: data.startup_website,
+            registration_id: data.startup_registration_id || "",
+            legal_form: data.startup_legal_form || "",
           };
           if (data.startup_logo_url) payload.logo_url = data.startup_logo_url;
           if (data.startup_pitch_deck_url)
             payload.pitch_deck_url = data.startup_pitch_deck_url;
           await api.post("/startups/", payload);
+          if (data.company_document_url) {
+            await api.patch("/users/me/", { company_document_url: data.company_document_url });
+          }
         }
         await api.post("/users/me/complete-onboarding/", {});
         await refreshProfile();
@@ -145,14 +190,6 @@ export function OnboardingPage() {
     }
   };
 
-  const handleSkip = () => {
-    if (isLastStep) {
-      handleNext(); // still need to call complete-onboarding
-    } else {
-      setStep((s) => s + 1);
-    }
-  };
-
   const handleBack = () => {
     setStep((s) => Math.max(0, s - 1));
   };
@@ -161,37 +198,46 @@ export function OnboardingPage() {
     if (isInvestor) {
       switch (step) {
         case 0:
-          return <ProfileStep data={data} onChange={updateField} />;
-        case 1:
-          return <InvestorBackgroundStep data={data} onChange={updateField} />;
-        case 2:
-          return <InvestorPreferencesStep data={data} onChange={updateField} />;
-        case 3:
           return (
-            <InvestorAccreditationStep data={data} onChange={updateField} />
+            <DocumentUploadStep
+              docType="investor"
+              title="Verify your identity"
+              description="We'll read your document and fill in the form for you. Works with Arabic and Latin documents."
+              onExtracted={handleInvestorDocExtracted}
+              isComplete={data.document_step_complete}
+            />
           );
-        default:
-          return null;
+        case 1: return <ProfileStep data={data} onChange={updateField} />;
+        case 2: return <InvestorBackgroundStep data={data} onChange={updateField} />;
+        case 3: return <InvestorPreferencesStep data={data} onChange={updateField} />;
+        case 4: return <InvestorAccreditationStep data={data} onChange={updateField} />;
+        default: return null;
       }
     } else {
       switch (step) {
-        case 0:
-          return <ProfileStep data={data} onChange={updateField} />;
+        case 0: return <ProfileStep data={data} onChange={updateField} />;
         case 1:
-          return <FounderStartupStep data={data} onChange={updateField} />;
-        case 2:
-          return <FounderDetailsStep data={data} onChange={updateField} />;
-        case 3:
-          return <FounderPitchDeckStep data={data} onChange={updateField} />;
-        default:
-          return null;
+          return (
+            <DocumentUploadStep
+              docType="startup"
+              title="Upload company document"
+              description="We'll read your document and fill in the form for you. Works with Arabic and Latin documents."
+              onExtracted={handleStartupDocExtracted}
+              isComplete={data.document_step_complete}
+            />
+          );
+        case 2: return <FounderStartupStep data={data} onChange={updateField} />;
+        case 3: return <FounderDetailsStep data={data} onChange={updateField} />;
+        case 4: return <FounderPitchDeckStep data={data} onChange={updateField} />;
+        default: return null;
       }
     }
   };
 
-  // Disable Next on founder step 1 if startup name is empty
+  const isDocumentStep = (isInvestor && step === 0) || (!isInvestor && step === 1);
   const isNextDisabled =
-    !isInvestor && step === 1 && !data.startup_name.trim();
+    (isDocumentStep && !data.document_step_complete) ||
+    (!isInvestor && step === 2 && !data.startup_name.trim());
 
   return (
     <div className="min-h-screen bg-brand-bg flex items-center justify-center px-4 py-8">
@@ -263,24 +309,13 @@ export function OnboardingPage() {
                   </Button>
                 )}
               </div>
-              <div className="flex items-center gap-3">
-                {!(!isInvestor && step === 1) && (
-                  <button
-                    type="button"
-                    onClick={handleSkip}
-                    className="text-sm text-brand-muted hover:text-brand-text transition-colors"
-                  >
-                    Skip for now
-                  </button>
-                )}
-                <Button
-                  onClick={handleNext}
-                  loading={saving}
-                  disabled={isNextDisabled}
-                >
-                  {isLastStep ? "Complete Setup" : "Next"}
-                </Button>
-              </div>
+              <Button
+                onClick={handleNext}
+                loading={saving}
+                disabled={isNextDisabled}
+              >
+                {isLastStep ? "Complete Setup" : "Next"}
+              </Button>
             </div>
           </div>
         </Card>

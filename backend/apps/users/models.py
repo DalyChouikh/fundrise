@@ -43,6 +43,10 @@ class UserProfile(TimeStampedModel):
         default=ApprovalStatus.PENDING,
     )
     rejection_reason = models.TextField(blank=True, default="")
+    identity_document_url = models.URLField(max_length=500, null=True, blank=True)
+    company_document_url = models.URLField(max_length=500, null=True, blank=True)
+    date_of_birth = models.DateField(null=True, blank=True)
+    id_number = models.CharField(max_length=50, null=True, blank=True)
 
     class Meta:
         ordering = ["-created_at"]

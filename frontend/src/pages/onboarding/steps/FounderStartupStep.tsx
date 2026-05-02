@@ -4,6 +4,8 @@ interface FounderStartupStepProps {
     startup_industry: string;
     startup_location: string;
     startup_founding_date: string;
+    startup_registration_id?: string;
+    startup_legal_form?: string;
   };
   onChange: (field: string, value: unknown) => void;
 }
@@ -64,6 +66,28 @@ export function FounderStartupStep({
           type="date"
           value={data.startup_founding_date}
           onChange={(e) => onChange("startup_founding_date", e.target.value)}
+          className={inputClass}
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-brand-text mb-1.5">Registration ID</label>
+        <input
+          type="text"
+          value={data.startup_registration_id || ""}
+          onChange={(e) => onChange("startup_registration_id", e.target.value)}
+          placeholder="Company registration number"
+          className={inputClass}
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-brand-text mb-1.5">Legal Form</label>
+        <input
+          type="text"
+          value={data.startup_legal_form || ""}
+          onChange={(e) => onChange("startup_legal_form", e.target.value)}
+          placeholder="e.g. SARL, SA, SAS"
           className={inputClass}
         />
       </div>

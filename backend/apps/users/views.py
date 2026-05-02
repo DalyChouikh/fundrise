@@ -192,3 +192,34 @@ class UserRejectView(APIView):
         )
         send_rejection_email(user, reason)
         return Response(AdminUserSerializer(user).data)
+
+
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from apps.core.async_auth import authenticate_async
+
+
+@csrf_exempt
+async def extract_document_view(request):
+    await authenticate_async(request)
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "Unauthorized"}, status=401)
+    if request.method != "POST":
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+
+    doc_type = request.GET.get("type", "")
+    if doc_type not in ("investor", "startup"):
+        return JsonResponse({"error": "type must be 'investor' or 'startup'"}, status=400)
+
+    file = request.FILES.get("file")
+    if not file:
+        return JsonResponse({"error": "file is required"}, status=400)
+    if file.size > 20 * 1024 * 1024:
+        return JsonResponse({"error": "File too large (max 20MB)"}, status=400)
+
+    from asgiref.sync import sync_to_async
+    from apps.users.extract import extract_document
+
+    file_bytes = await sync_to_async(file.read)()
+    result = await extract_document(file_bytes, file.name, doc_type, str(request.user.id))
+    return JsonResponse(result)

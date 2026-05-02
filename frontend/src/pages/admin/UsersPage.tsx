@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Users, Search, X } from "lucide-react";
+import { Users, Search, X, FileText } from "lucide-react";
 import { api } from "@/lib/api";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -324,6 +324,46 @@ export function UsersPage() {
                   </button>
                 ))}
               </div>
+
+              {(editingUser.identity_document_url || editingUser.company_document_url) && (
+                <div className="mt-4 pt-4 border-t border-brand-border/20">
+                  <h4 className="text-sm font-semibold text-brand-text mb-3">Verification Documents</h4>
+                  <div className="space-y-2">
+                    {editingUser.identity_document_url && (
+                      <div className="flex items-center justify-between py-2 px-3 rounded-xl bg-brand-bg border border-brand-border/30">
+                        <div className="flex items-center gap-2">
+                          <FileText className="w-4 h-4 text-brand-accent" />
+                          <span className="text-sm text-brand-text">Identity Document</span>
+                        </div>
+                        <a
+                          href={editingUser.identity_document_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-brand-accent hover:underline"
+                        >
+                          View
+                        </a>
+                      </div>
+                    )}
+                    {editingUser.company_document_url && (
+                      <div className="flex items-center justify-between py-2 px-3 rounded-xl bg-brand-bg border border-brand-border/30">
+                        <div className="flex items-center gap-2">
+                          <FileText className="w-4 h-4 text-brand-accent" />
+                          <span className="text-sm text-brand-text">Company Document</span>
+                        </div>
+                        <a
+                          href={editingUser.company_document_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-brand-accent hover:underline"
+                        >
+                          View
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

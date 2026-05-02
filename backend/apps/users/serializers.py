@@ -27,6 +27,10 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "linkedin_url",
             "approval_status",
             "rejection_reason",
+            "identity_document_url",
+            "company_document_url",
+            "date_of_birth",
+            "id_number",
             "created_at",
             "updated_at",
         ]
@@ -72,6 +76,10 @@ class AdminUserSerializer(serializers.ModelSerializer):
             "linkedin_url",
             "approval_status",
             "rejection_reason",
+            "identity_document_url",
+            "company_document_url",
+            "date_of_birth",
+            "id_number",
             "created_at",
             "updated_at",
         ]
