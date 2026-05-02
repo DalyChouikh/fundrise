@@ -24,6 +24,7 @@ import {
   Clock,
   FileText,
   Sparkles,
+  CreditCard,
 } from "lucide-react";
 
 const iconMap: Record<string, React.ComponentType<LucideProps>> = {
@@ -51,6 +52,7 @@ const iconMap: Record<string, React.ComponentType<LucideProps>> = {
   Clock,
   FileText,
   Sparkles,
+  CreditCard,
 };
 
 interface DynamicIconProps extends LucideProps {

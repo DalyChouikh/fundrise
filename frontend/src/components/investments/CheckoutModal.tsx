@@ -3,24 +3,15 @@ import { X, ArrowLeft, ChevronRight, CreditCard, MapPin } from "lucide-react";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/Button";
 import { CardPreview } from "@/components/investments/CardPreview";
+import { detectCardType, formatCardNumber, formatExpiry, parseExpiry, maxCardDigits } from "@/lib/cardUtils";
 import type { CampaignDetail, SavedPaymentInfo, CardType } from "@/types";
 
-function detectCardType(num: string): CardType {
-  const n = num.replace(/\D/g, "");
-  if (/^4/.test(n)) return "visa";
-  if (/^5[1-5]/.test(n)) return "mastercard";
-  if (/^3[47]/.test(n)) return "amex";
-  if (/^6/.test(n)) return "discover";
-  return "visa";
-}
-
-function parseExpiry(val: string): [number, number] {
-  const parts = val.replace(/\s/g, "").split("/");
-  const month = parseInt(parts[0] ?? "0", 10);
-  const yearShort = parseInt(parts[1] ?? "0", 10);
-  const year = yearShort < 100 ? 2000 + yearShort : yearShort;
-  return [month, year];
-}
+const CARD_TYPES: { value: CardType; label: string }[] = [
+  { value: "visa", label: "Visa" },
+  { value: "mastercard", label: "Mastercard" },
+  { value: "amex", label: "Amex" },
+  { value: "discover", label: "Discover" },
+];
 
 interface CheckoutModalProps {
   campaign: CampaignDetail;
@@ -41,8 +32,8 @@ export function CheckoutModal({ campaign, onClose, onSuccess }: CheckoutModalPro
   // Step 2 — card
   const [useSavedCard, setUseSavedCard] = useState(false);
   const [cardHolder, setCardHolder] = useState("");
-  const [cardNumber, setCardNumber] = useState("");
-  const [cardFocused, setCardFocused] = useState(false);
+  const [cardNumberFormatted, setCardNumberFormatted] = useState("");
+  const [cardType, setCardType] = useState<CardType>("visa");
   const [expiryInput, setExpiryInput] = useState("");
   const [cvv, setCvv] = useState("");
   const [saveCard, setSaveCard] = useState(true);
@@ -68,14 +59,35 @@ export function CheckoutModal({ campaign, onClose, onSuccess }: CheckoutModalPro
       .finally(() => setLoadingSaved(false));
   }, []);
 
-  const activeCardLast4 = useSavedCard
-    ? (savedInfo?.card_last4 ?? "")
-    : cardNumber.replace(/\D/g, "").slice(-4);
+  // When card type changes, reformat the number
+  const handleCardTypeChange = (type: CardType) => {
+    setCardType(type);
+    const digits = cardNumberFormatted.replace(/\D/g, "");
+    setCardNumberFormatted(formatCardNumber(digits, type));
+  };
 
+  // Handle card number input with auto-formatting
+  const handleCardNumberChange = (raw: string) => {
+    const digits = raw.replace(/\D/g, "");
+    const max = maxCardDigits(cardType);
+    const clamped = digits.slice(0, max);
+    setCardNumberFormatted(formatCardNumber(clamped, cardType));
+    // Auto-update card type from first digits (only if user hasn't manually selected)
+    if (clamped.length >= 1) {
+      setCardType(detectCardType(clamped));
+    }
+  };
+
+  // Handle expiry with auto-slash
+  const handleExpiryChange = (raw: string) => {
+    setExpiryInput((prev) => formatExpiry(raw, prev));
+  };
+
+  const cardLast4 = cardNumberFormatted.replace(/\D/g, "").slice(-4);
+
+  const activeCardLast4 = useSavedCard ? (savedInfo?.card_last4 ?? "") : cardLast4;
   const activeCardHolder = useSavedCard ? (savedInfo?.card_holder ?? "") : cardHolder;
-  const activeCardType: CardType = useSavedCard
-    ? (savedInfo?.card_type ?? "visa")
-    : detectCardType(cardNumber);
+  const activeCardType: CardType = useSavedCard ? (savedInfo?.card_type ?? "visa") : cardType;
   const [activeMonth, activeYear] = useSavedCard
     ? [savedInfo?.expiry_month ?? 1, savedInfo?.expiry_year ?? new Date().getFullYear()]
     : parseExpiry(expiryInput);
@@ -124,7 +136,7 @@ export function CheckoutModal({ campaign, onClose, onSuccess }: CheckoutModalPro
     }
   };
 
-  const inputCls = "w-full border border-brand-border/[0.2] rounded-xl px-3 py-2.5 text-sm text-brand-text placeholder:text-brand-muted/50 focus:outline-none focus:border-brand-accent transition-colors";
+  const inputCls = "w-full border border-[#E8E6E0] rounded-xl px-3 py-2.5 text-sm text-brand-text placeholder:text-brand-muted/50 focus:outline-none focus:border-brand-accent bg-white transition-colors";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -134,7 +146,7 @@ export function CheckoutModal({ campaign, onClose, onSuccess }: CheckoutModalPro
       {/* Modal */}
       <div className="relative bg-[#FAF9F5] rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-brand-border/[0.12]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[#E8E6E0]">
           <div className="flex items-center gap-3">
             {step > 1 && (
               <button
@@ -145,22 +157,19 @@ export function CheckoutModal({ campaign, onClose, onSuccess }: CheckoutModalPro
               </button>
             )}
             <div>
-              <p className="text-[11px] text-brand-muted">
-                Step {step} of 3
-              </p>
+              <p className="text-[11px] text-brand-muted">Step {step} of 3</p>
               <h2 className="text-base font-bold text-brand-text">
                 {step === 1 ? "Investment Amount" : step === 2 ? "Payment Details" : "Review & Confirm"}
               </h2>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            {/* Step dots */}
             <div className="flex gap-1.5">
               {[1, 2, 3].map((s) => (
                 <div
                   key={s}
-                  className={`w-2 h-2 rounded-full transition-colors ${
-                    s === step ? "bg-brand-accent" : s < step ? "bg-brand-accent/40" : "bg-brand-border/40"
+                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                    s === step ? "bg-brand-accent w-4" : s < step ? "bg-brand-accent/40" : "bg-brand-border/40"
                   }`}
                 />
               ))}
@@ -178,8 +187,7 @@ export function CheckoutModal({ campaign, onClose, onSuccess }: CheckoutModalPro
           {/* ── STEP 1: AMOUNT ── */}
           {step === 1 && (
             <>
-              {/* Campaign card */}
-              <div className="bg-white rounded-xl border border-brand-border/[0.12] p-4 space-y-3">
+              <div className="bg-white rounded-xl border border-[#E8E6E0] p-4 space-y-3">
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <p className="text-xs text-brand-muted font-medium">{campaign.startup_name}</p>
@@ -204,7 +212,6 @@ export function CheckoutModal({ campaign, onClose, onSuccess }: CheckoutModalPro
                 </div>
               </div>
 
-              {/* Amount input */}
               <div>
                 <label className="block text-xs font-medium text-brand-muted mb-2">
                   Investment Amount (USD)
@@ -242,13 +249,12 @@ export function CheckoutModal({ campaign, onClose, onSuccess }: CheckoutModalPro
               ) : (
                 <>
                   {/* Card section */}
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     <div className="flex items-center gap-2">
                       <CreditCard className="w-4 h-4 text-brand-muted" />
                       <p className="text-sm font-semibold text-brand-text">Payment Method</p>
                     </div>
 
-                    {/* Card preview */}
                     <div className="flex justify-center">
                       <CardPreview
                         cardHolder={activeCardHolder}
@@ -260,7 +266,7 @@ export function CheckoutModal({ campaign, onClose, onSuccess }: CheckoutModalPro
                     </div>
 
                     {savedInfo && (
-                      <div className="flex items-center gap-2">
+                      <label className="flex items-center gap-2 cursor-pointer">
                         <input
                           type="checkbox"
                           id="useSavedCard"
@@ -268,31 +274,87 @@ export function CheckoutModal({ campaign, onClose, onSuccess }: CheckoutModalPro
                           onChange={(e) => setUseSavedCard(e.target.checked)}
                           className="accent-brand-accent"
                         />
-                        <label htmlFor="useSavedCard" className="text-sm text-brand-text cursor-pointer">
+                        <span className="text-sm text-brand-text">
                           Use saved card ending in {savedInfo.card_last4}
-                        </label>
-                      </div>
+                        </span>
+                      </label>
                     )}
 
                     {!useSavedCard && (
-                      <div className="space-y-2.5">
-                        <input placeholder="Cardholder Name" value={cardHolder} onChange={(e) => setCardHolder(e.target.value)} className={inputCls} />
+                      <div className="space-y-3">
+                        {/* Card type selector */}
+                        <div>
+                          <label className="block text-xs font-medium text-brand-muted mb-2">Card Type</label>
+                          <div className="grid grid-cols-4 gap-2">
+                            {CARD_TYPES.map((ct) => (
+                              <button
+                                key={ct.value}
+                                type="button"
+                                onClick={() => handleCardTypeChange(ct.value)}
+                                className={`py-2 px-1 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
+                                  cardType === ct.value
+                                    ? "border-brand-accent bg-brand-accent/[0.06] text-brand-accent"
+                                    : "border-[#E8E6E0] bg-white text-brand-muted hover:border-brand-accent/40"
+                                }`}
+                              >
+                                {ct.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
                         <input
-                          placeholder="Card Number"
-                          value={cardFocused ? cardNumber : cardNumber.replace(/\D/g, "").length >= 4 ? `•••• •••• •••• ${cardNumber.replace(/\D/g, "").slice(-4)}` : cardNumber}
-                          onFocus={() => setCardFocused(true)}
-                          onBlur={() => setCardFocused(false)}
-                          onChange={(e) => setCardNumber(e.target.value)}
-                          maxLength={19}
-                          inputMode="numeric"
+                          placeholder="Cardholder Name"
+                          value={cardHolder}
+                          onChange={(e) => setCardHolder(e.target.value)}
                           className={inputCls}
                         />
-                        <div className="grid grid-cols-2 gap-2">
-                          <input placeholder="MM/YY" value={expiryInput} onChange={(e) => setExpiryInput(e.target.value)} maxLength={5} className={inputCls} />
-                          <input placeholder="CVV" value={cvv} onChange={(e) => setCvv(e.target.value)} maxLength={4} inputMode="numeric" className={inputCls} />
+
+                        {/* Card number with auto-formatting */}
+                        <div>
+                          <label className="block text-xs font-medium text-brand-muted mb-1.5">Card Number</label>
+                          <input
+                            placeholder={cardType === "amex" ? "•••• •••••• •••••" : "•••• •••• •••• ••••"}
+                            value={cardNumberFormatted}
+                            onChange={(e) => handleCardNumberChange(e.target.value)}
+                            inputMode="numeric"
+                            className={`${inputCls} font-mono tracking-widest`}
+                          />
                         </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          {/* Expiry with auto-slash */}
+                          <div>
+                            <label className="block text-xs font-medium text-brand-muted mb-1.5">Expiry</label>
+                            <input
+                              placeholder="MM/YY"
+                              value={expiryInput}
+                              onChange={(e) => handleExpiryChange(e.target.value)}
+                              maxLength={5}
+                              inputMode="numeric"
+                              className={`${inputCls} font-mono tracking-wider`}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-brand-muted mb-1.5">CVV</label>
+                            <input
+                              placeholder={cardType === "amex" ? "••••" : "•••"}
+                              value={cvv}
+                              onChange={(e) => setCvv(e.target.value.replace(/\D/g, "").slice(0, cardType === "amex" ? 4 : 3))}
+                              maxLength={cardType === "amex" ? 4 : 3}
+                              inputMode="numeric"
+                              className={`${inputCls} font-mono tracking-wider`}
+                            />
+                          </div>
+                        </div>
+
                         <label className="flex items-center gap-2 cursor-pointer">
-                          <input type="checkbox" checked={saveCard} onChange={(e) => setSaveCard(e.target.checked)} className="accent-brand-accent" />
+                          <input
+                            type="checkbox"
+                            checked={saveCard}
+                            onChange={(e) => setSaveCard(e.target.checked)}
+                            className="accent-brand-accent"
+                          />
                           <span className="text-sm text-brand-text">Save this card to my profile</span>
                         </label>
                       </div>
@@ -300,14 +362,14 @@ export function CheckoutModal({ campaign, onClose, onSuccess }: CheckoutModalPro
                   </div>
 
                   {/* Address section */}
-                  <div className="space-y-3 border-t border-brand-border/[0.12] pt-4">
+                  <div className="space-y-3 border-t border-[#E8E6E0] pt-4">
                     <div className="flex items-center gap-2">
                       <MapPin className="w-4 h-4 text-brand-muted" />
                       <p className="text-sm font-semibold text-brand-text">Billing Address</p>
                     </div>
 
                     {savedInfo && (
-                      <div className="flex items-center gap-2">
+                      <label className="flex items-center gap-2 cursor-pointer">
                         <input
                           type="checkbox"
                           id="useSavedAddr"
@@ -315,10 +377,10 @@ export function CheckoutModal({ campaign, onClose, onSuccess }: CheckoutModalPro
                           onChange={(e) => setUseSavedAddress(e.target.checked)}
                           className="accent-brand-accent"
                         />
-                        <label htmlFor="useSavedAddr" className="text-sm text-brand-text cursor-pointer">
+                        <span className="text-sm text-brand-text">
                           Use saved address ({savedInfo.city}, {savedInfo.country})
-                        </label>
-                      </div>
+                        </span>
+                      </label>
                     )}
 
                     {!useSavedAddress && (
@@ -358,7 +420,7 @@ export function CheckoutModal({ campaign, onClose, onSuccess }: CheckoutModalPro
                 />
               </div>
 
-              <div className="bg-white rounded-xl border border-brand-border/[0.12] p-4 space-y-3">
+              <div className="bg-white rounded-xl border border-[#E8E6E0] p-4 space-y-3">
                 <div className="flex justify-between text-sm">
                   <span className="text-brand-muted">Campaign</span>
                   <span className="font-medium text-brand-text">{campaign.title}</span>
@@ -369,15 +431,15 @@ export function CheckoutModal({ campaign, onClose, onSuccess }: CheckoutModalPro
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-brand-muted">Card</span>
-                  <span className="font-medium text-brand-text">
+                  <span className="font-medium text-brand-text font-mono">
                     {activeCardType.toUpperCase()} ···· {activeCardLast4}
                   </span>
                 </div>
-                {(useSavedAddress ? savedInfo : null) && (
+                {useSavedAddress && savedInfo && (
                   <div className="flex justify-between text-sm">
                     <span className="text-brand-muted">Address</span>
                     <span className="font-medium text-brand-text text-right">
-                      {savedInfo!.city}, {savedInfo!.country}
+                      {savedInfo.city}, {savedInfo.country}
                     </span>
                   </div>
                 )}
@@ -389,7 +451,6 @@ export function CheckoutModal({ campaign, onClose, onSuccess }: CheckoutModalPro
                 )}
               </div>
 
-              {/* Disclaimer */}
               <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
                 <p className="text-xs text-amber-800 leading-relaxed">
                   This is a pledge — your card will not be charged. The startup founder will review and confirm your investment.
@@ -416,7 +477,7 @@ export function CheckoutModal({ campaign, onClose, onSuccess }: CheckoutModalPro
             <div className="flex gap-3">
               <button
                 onClick={() => setConfirmClose(false)}
-                className="px-4 py-2 rounded-xl text-sm font-medium text-brand-muted border border-brand-border/[0.2] hover:bg-brand-bg transition-colors cursor-pointer"
+                className="px-4 py-2 rounded-xl text-sm font-medium text-brand-muted border border-[#E8E6E0] hover:bg-brand-bg transition-colors cursor-pointer"
               >
                 Keep going
               </button>

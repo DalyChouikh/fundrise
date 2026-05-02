@@ -5,23 +5,15 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { CardPreview } from "@/components/investments/CardPreview";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { detectCardType, formatCardNumber, formatExpiry, parseExpiry, maxCardDigits } from "@/lib/cardUtils";
 import type { SavedPaymentInfo, CardType } from "@/types";
 
-function detectCardType(num: string): CardType {
-  const n = num.replace(/\D/g, "");
-  if (/^4/.test(n)) return "visa";
-  if (/^5[1-5]/.test(n)) return "mastercard";
-  if (/^3[47]/.test(n)) return "amex";
-  if (/^6/.test(n)) return "discover";
-  return "visa";
-}
-
-function parseExpiry(val: string): [number, number] {
-  const parts = val.replace(/\s/g, "").split("/");
-  const month = parseInt(parts[0] ?? "0", 10);
-  const yearShort = parseInt(parts[1] ?? "0", 10);
-  return [month, yearShort < 100 ? 2000 + yearShort : yearShort];
-}
+const CARD_TYPES: { value: CardType; label: string }[] = [
+  { value: "visa", label: "Visa" },
+  { value: "mastercard", label: "Mastercard" },
+  { value: "amex", label: "Amex" },
+  { value: "discover", label: "Discover" },
+];
 
 export function BillingPage() {
   const [info, setInfo] = useState<SavedPaymentInfo | null>(null);
@@ -32,8 +24,8 @@ export function BillingPage() {
 
   // Form fields
   const [cardHolder, setCardHolder] = useState("");
-  const [cardNumber, setCardNumber] = useState("");
-  const [cardFocused, setCardFocused] = useState(false);
+  const [cardNumberFormatted, setCardNumberFormatted] = useState("");
+  const [cardType, setCardType] = useState<CardType>("visa");
   const [expiryInput, setExpiryInput] = useState("");
   const [cvv, setCvv] = useState("");
   const [addressLine1, setAddressLine1] = useState("");
@@ -53,7 +45,8 @@ export function BillingPage() {
   const openEdit = () => {
     if (info) {
       setCardHolder(info.card_holder);
-      setCardNumber("");
+      setCardNumberFormatted(""); // never pre-fill number
+      setCardType(info.card_type);
       setExpiryInput(`${String(info.expiry_month).padStart(2, "0")}/${String(info.expiry_year).slice(-2)}`);
       setCvv("");
       setAddressLine1(info.address_line1);
@@ -66,16 +59,34 @@ export function BillingPage() {
     setEditing(true);
   };
 
+  const handleCardTypeChange = (type: CardType) => {
+    setCardType(type);
+    const digits = cardNumberFormatted.replace(/\D/g, "");
+    setCardNumberFormatted(formatCardNumber(digits, type));
+  };
+
+  const handleCardNumberChange = (raw: string) => {
+    const digits = raw.replace(/\D/g, "");
+    const clamped = digits.slice(0, maxCardDigits(cardType));
+    setCardNumberFormatted(formatCardNumber(clamped, cardType));
+    if (clamped.length >= 1) setCardType(detectCardType(clamped));
+  };
+
+  const handleExpiryChange = (raw: string) => {
+    setExpiryInput((prev) => formatExpiry(raw, prev));
+  };
+
   const handleSave = async () => {
     setSaving(true);
     try {
-      const last4 = cardNumber ? cardNumber.replace(/\D/g, "").slice(-4) : info?.card_last4 ?? "";
-      const cardType = cardNumber ? detectCardType(cardNumber) : info?.card_type ?? "visa";
+      const rawDigits = cardNumberFormatted.replace(/\D/g, "");
+      const last4 = rawDigits ? rawDigits.slice(-4) : info?.card_last4 ?? "";
+      const resolvedType = rawDigits ? cardType : info?.card_type ?? "visa";
       const [month, year] = parseExpiry(expiryInput);
       const saved = await api.put<SavedPaymentInfo>("/users/me/payment-profile/", {
         card_holder: cardHolder,
         card_last4: last4,
-        card_type: cardType,
+        card_type: resolvedType,
         expiry_month: month,
         expiry_year: year,
         address_line1: addressLine1,
@@ -107,17 +118,17 @@ export function BillingPage() {
     }
   };
 
-  const inputCls = "w-full border border-brand-border/[0.2] rounded-xl px-3 py-2.5 text-sm text-brand-text placeholder:text-brand-muted/50 focus:outline-none focus:border-brand-accent transition-colors bg-white";
+  const inputCls = "w-full border border-[#E8E6E0] rounded-xl px-3 py-2.5 text-sm text-brand-text placeholder:text-brand-muted/50 focus:outline-none focus:border-brand-accent transition-colors bg-white";
 
+  // Live card preview values while editing
   const previewLast4 = editing
-    ? (cardNumber ? cardNumber.replace(/\D/g, "").slice(-4) : info?.card_last4 ?? "")
+    ? (cardNumberFormatted ? cardNumberFormatted.replace(/\D/g, "").slice(-4) : info?.card_last4 ?? "")
     : (info?.card_last4 ?? "");
-  const previewType: CardType = editing
-    ? (cardNumber ? detectCardType(cardNumber) : info?.card_type ?? "visa")
-    : (info?.card_type ?? "visa");
-  const [previewMonth, previewYear] = editing
-    ? (expiryInput ? parseExpiry(expiryInput) : [info?.expiry_month ?? 1, info?.expiry_year ?? new Date().getFullYear()])
+  const previewType: CardType = editing ? cardType : (info?.card_type ?? "visa");
+  const [previewMonth, previewYear] = editing && expiryInput
+    ? parseExpiry(expiryInput)
     : [info?.expiry_month ?? 1, info?.expiry_year ?? new Date().getFullYear()];
+  const previewHolder = editing ? cardHolder : (info?.card_holder ?? "");
 
   if (loading) return <LoadingSpinner fullscreen />;
 
@@ -130,11 +141,11 @@ export function BillingPage() {
         </p>
       </div>
 
-      {/* Card Preview */}
+      {/* Live Card Preview */}
       {(info || editing) && (
         <div className="flex justify-start">
           <CardPreview
-            cardHolder={editing ? cardHolder : info!.card_holder}
+            cardHolder={previewHolder}
             cardLast4={previewLast4}
             cardType={previewType}
             expiryMonth={previewMonth}
@@ -143,7 +154,7 @@ export function BillingPage() {
         </div>
       )}
 
-      {/* Payment Method */}
+      {/* Payment Method Card */}
       <Card>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
@@ -152,10 +163,10 @@ export function BillingPage() {
           </div>
           {info && !editing && (
             <div className="flex items-center gap-2">
-              <button onClick={openEdit} className="p-1.5 rounded-lg hover:bg-brand-bg transition-colors cursor-pointer">
+              <button onClick={openEdit} className="p-1.5 rounded-lg hover:bg-brand-bg transition-colors cursor-pointer" title="Edit">
                 <Pencil className="w-4 h-4 text-brand-muted" />
               </button>
-              <button onClick={handleRemove} disabled={removing} className="p-1.5 rounded-lg hover:bg-red-50 transition-colors cursor-pointer">
+              <button onClick={handleRemove} disabled={removing} className="p-1.5 rounded-lg hover:bg-red-50 transition-colors cursor-pointer" title="Remove">
                 <Trash2 className="w-4 h-4 text-red-400" />
               </button>
             </div>
@@ -165,33 +176,86 @@ export function BillingPage() {
         {!info && !editing ? (
           <div className="text-center py-6">
             <p className="text-sm text-brand-muted mb-3">No payment method saved</p>
-            <Button onClick={() => { setEditing(true); }} className="gap-2">
+            <Button onClick={() => setEditing(true)} className="gap-2">
               <Plus className="w-4 h-4" /> Add Payment Method
             </Button>
           </div>
         ) : editing ? (
-          <div className="space-y-2.5">
-            <input placeholder="Cardholder Name" value={cardHolder} onChange={(e) => setCardHolder(e.target.value)} className={inputCls} />
+          <div className="space-y-4">
+            {/* Card type selector */}
+            <div>
+              <label className="block text-xs font-medium text-brand-muted mb-2">Card Type</label>
+              <div className="grid grid-cols-4 gap-2">
+                {CARD_TYPES.map((ct) => (
+                  <button
+                    key={ct.value}
+                    type="button"
+                    onClick={() => handleCardTypeChange(ct.value)}
+                    className={`py-2 px-1 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
+                      cardType === ct.value
+                        ? "border-brand-accent bg-brand-accent/[0.06] text-brand-accent"
+                        : "border-[#E8E6E0] bg-white text-brand-muted hover:border-brand-accent/40"
+                    }`}
+                  >
+                    {ct.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <input
-              placeholder={info ? `Card ending in ${info.card_last4} (leave blank to keep)` : "Card Number"}
-              value={cardFocused ? cardNumber : cardNumber.replace(/\D/g, "").length >= 4 ? `•••• •••• •••• ${cardNumber.replace(/\D/g, "").slice(-4)}` : cardNumber}
-              onFocus={() => setCardFocused(true)}
-              onBlur={() => setCardFocused(false)}
-              onChange={(e) => setCardNumber(e.target.value)}
-              maxLength={19}
-              inputMode="numeric"
+              placeholder="Cardholder Name"
+              value={cardHolder}
+              onChange={(e) => setCardHolder(e.target.value)}
               className={inputCls}
             />
-            <div className="grid grid-cols-2 gap-2">
-              <input placeholder="MM/YY" value={expiryInput} onChange={(e) => setExpiryInput(e.target.value)} maxLength={5} className={inputCls} />
-              <input placeholder="CVV" value={cvv} onChange={(e) => setCvv(e.target.value)} maxLength={4} inputMode="numeric" className={inputCls} />
+
+            {/* Card number */}
+            <div>
+              <label className="block text-xs font-medium text-brand-muted mb-1.5">
+                Card Number{info ? ` (leave blank to keep ···· ${info.card_last4})` : ""}
+              </label>
+              <input
+                placeholder={cardType === "amex" ? "•••• •••••• •••••" : "•••• •••• •••• ••••"}
+                value={cardNumberFormatted}
+                onChange={(e) => handleCardNumberChange(e.target.value)}
+                inputMode="numeric"
+                className={`${inputCls} font-mono tracking-widest`}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              {/* Expiry */}
+              <div>
+                <label className="block text-xs font-medium text-brand-muted mb-1.5">Expiry</label>
+                <input
+                  placeholder="MM/YY"
+                  value={expiryInput}
+                  onChange={(e) => handleExpiryChange(e.target.value)}
+                  maxLength={5}
+                  inputMode="numeric"
+                  className={`${inputCls} font-mono tracking-wider`}
+                />
+              </div>
+              {/* CVV */}
+              <div>
+                <label className="block text-xs font-medium text-brand-muted mb-1.5">CVV</label>
+                <input
+                  placeholder={cardType === "amex" ? "••••" : "•••"}
+                  value={cvv}
+                  onChange={(e) => setCvv(e.target.value.replace(/\D/g, "").slice(0, cardType === "amex" ? 4 : 3))}
+                  maxLength={cardType === "amex" ? 4 : 3}
+                  inputMode="numeric"
+                  className={`${inputCls} font-mono tracking-wider`}
+                />
+              </div>
             </div>
           </div>
         ) : (
           <div className="flex items-center gap-3 text-sm">
-            <span className="font-mono text-brand-text">•••• •••• •••• {info!.card_last4}</span>
-            <span className="text-brand-muted uppercase text-xs">{info!.card_type}</span>
-            <span className="text-brand-muted text-xs">
+            <span className="font-mono text-brand-text tracking-widest">•••• •••• •••• {info!.card_last4}</span>
+            <span className="text-brand-muted uppercase text-xs font-semibold">{info!.card_type}</span>
+            <span className="text-brand-muted text-xs tabular-nums">
               {String(info!.expiry_month).padStart(2, "0")}/{String(info!.expiry_year).slice(-2)}
             </span>
           </div>
@@ -240,7 +304,7 @@ export function BillingPage() {
           </Button>
           <button
             onClick={() => setEditing(false)}
-            className="flex-1 px-4 py-2 rounded-xl text-sm font-medium text-brand-muted border border-brand-border/[0.2] hover:bg-brand-bg transition-colors cursor-pointer"
+            className="flex-1 px-4 py-2 rounded-xl text-sm font-medium text-brand-muted border border-[#E8E6E0] hover:bg-brand-bg transition-colors cursor-pointer"
           >
             Cancel
           </button>
