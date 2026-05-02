@@ -36,6 +36,10 @@ class CopilotMessage(models.Model):
     content = models.TextField(blank=True, default="")
     tool_calls = models.JSONField(null=True, blank=True)
     tool_name = models.CharField(max_length=100, blank=True, default="")
+    thinking_content = models.TextField(blank=True, null=True)
+    thinking_duration = models.FloatField(null=True, blank=True)
+    media_url = models.URLField(max_length=500, null=True, blank=True)
+    media_type = models.CharField(max_length=10, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

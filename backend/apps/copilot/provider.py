@@ -15,13 +15,14 @@ class AIProvider:
         return self.vision_model if use_vision else self.model
 
     async def stream(self, messages: list, tools: list | None = None, use_vision: bool = False):
-        kwargs = {
+        kwargs: dict = {
             "model": self._select_model(use_vision),
             "messages": messages,
             "max_tokens": 1500,
             "stream": True,
-            "extra_body": {"reasoning": {"max_reasoning_tokens": 800}},
         }
+        if not use_vision:
+            kwargs["extra_body"] = {"reasoning": {"enabled": True}}
         if tools:
             kwargs["tools"] = tools
             kwargs["tool_choice"] = "auto"
