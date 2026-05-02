@@ -1,13 +1,21 @@
 import { useState } from "react";
+import { useLocation } from "react-router-dom";
 import { Bot, X } from "lucide-react";
 import { AICopilotPanel } from "./AICopilotPanel";
 
 export function AICopilotBubble() {
   const [isOpen, setIsOpen] = useState(false);
+  const location = useLocation();
+
+  if (location.pathname === "/ai") return null;
 
   return (
     <>
-      {isOpen && <AICopilotPanel onClose={() => setIsOpen(false)} />}
+      {isOpen && (
+        <div className="fixed bottom-24 right-6 z-50 w-96 bg-white rounded-2xl shadow-modal overflow-hidden border border-brand-border/30">
+          <AICopilotPanel onClose={() => setIsOpen(false)} />
+        </div>
+      )}
 
       <button
         onClick={() => setIsOpen(!isOpen)}
@@ -16,7 +24,7 @@ export function AICopilotBubble() {
             ? "bg-brand-dark text-white rotate-0"
             : "bg-brand-accent text-white hover:bg-brand-accent/90 hover:scale-105"
         }`}
-        aria-label={isOpen ? "Close AI Copilot" : "Open AI Copilot"}
+        aria-label={isOpen ? "Close Fundy AI" : "Open Fundy AI"}
       >
         {isOpen ? (
           <X className="w-6 h-6" />

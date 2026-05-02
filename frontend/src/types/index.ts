@@ -14,6 +14,10 @@ export interface UserProfile {
   linkedin_url: string;
   approval_status: "pending_approval" | "approved" | "rejected";
   rejection_reason: string;
+  identity_document_url?: string | null;
+  company_document_url?: string | null;
+  date_of_birth?: string | null;
+  id_number?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -319,8 +323,13 @@ export interface InvitationCreateResponse {
 // Copilot types
 export interface CopilotMessage {
   id: number;
-  role: "user" | "assistant";
+  role: "user" | "assistant" | "tool";
   content: string;
+  media_url?: string | null;
+  media_type?: string | null;
+  thinking_content?: string | null;
+  thinking_duration?: number | null;
+  tool_calls?: ToolCallState[];
   created_at: string;
 }
 
@@ -338,4 +347,43 @@ export interface CopilotConversationDetail {
   messages: CopilotMessage[];
   created_at: string;
   updated_at: string;
+}
+
+export interface QuestionOption {
+  value: string;
+}
+
+export interface QuestionDef {
+  id: string;
+  type: "radio" | "checkbox" | "text" | "textarea";
+  label: string;
+  options?: string[];
+  placeholder?: string;
+  required?: boolean;
+}
+
+export interface QuestionForm {
+  tool_call_id: string;
+  title: string;
+  questions: QuestionDef[];
+}
+
+export interface ToolCallState {
+  tool_call_id: string;
+  tool_name: string;
+  input: Record<string, unknown>;
+  result?: unknown;
+}
+
+export interface AIStreamState {
+  pendingUserContent: string | null;
+  pendingMediaUrl: string | null;
+  pendingMediaType: string | null;
+  liveThinking: string;
+  thinkingDuration: number | null;
+  liveText: string;
+  toolCalls: ToolCallState[];
+  questionForm: QuestionForm | null;
+  isStreaming: boolean;
+  streamError: string | null;
 }

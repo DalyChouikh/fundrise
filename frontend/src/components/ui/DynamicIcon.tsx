@@ -23,6 +23,7 @@ import {
   CheckCircle,
   Clock,
   FileText,
+  Sparkles,
 } from "lucide-react";
 
 const iconMap: Record<string, React.ComponentType<LucideProps>> = {
@@ -49,6 +50,7 @@ const iconMap: Record<string, React.ComponentType<LucideProps>> = {
   CheckCircle,
   Clock,
   FileText,
+  Sparkles,
 };
 
 interface DynamicIconProps extends LucideProps {

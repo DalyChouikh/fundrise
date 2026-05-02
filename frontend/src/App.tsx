@@ -17,6 +17,7 @@ import { KanbanStartupSelector } from "@/pages/kanban/KanbanStartupSelector";
 import { NotificationsPage } from "@/pages/notifications/NotificationsPage";
 import { SettingsPage } from "@/pages/settings/SettingsPage";
 import { ChatPage } from "@/pages/chat/ChatPage";
+import { AICopilotPage } from "@/pages/ai/AICopilotPage";
 import { InviteAcceptPage } from "@/pages/invites/InviteAcceptPage";
 import { OnboardingPage } from "@/pages/onboarding/OnboardingPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
@@ -61,6 +62,7 @@ export default function App() {
                 path="/chat"
                 element={<ChatPage />}
               />
+              <Route path="/ai" element={<AICopilotPage />} />
               <Route
                 path="/notifications"
                 element={<NotificationsPage />}

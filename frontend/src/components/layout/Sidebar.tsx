@@ -63,6 +63,7 @@ const NAV_ITEMS: NavItem[] = [
     roles: ["founder", "team_member"],
   },
   { label: "Chat", path: "/chat", icon: "MessageSquare" },
+  { label: "Fundy AI", path: "/ai", icon: "Sparkles" },
   { label: "Notifications", path: "/notifications", icon: "Bell" },
   { label: "Settings", path: "/settings", icon: "Settings" },
 ];

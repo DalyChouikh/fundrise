@@ -1,368 +1,363 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import {
-  Bot,
-  Send,
-  ArrowLeft,
-  Plus,
-  Sparkles,
-  Trash2,
-} from "lucide-react";
+import { Bot, Send, ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { api } from "@/lib/api";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { useAIStream } from "@/hooks/useAIStream";
+import { ThinkingBlock } from "./ThinkingBlock";
+import { ToolCallBlock } from "./ToolCallBlock";
+import { MediaPreview } from "./MediaPreview";
+import { FileUploadZone } from "./FileUploadZone";
+import { ExamplePrompts } from "./ExamplePrompts";
+import { QuestionForm } from "./QuestionForm";
+import { MarkdownMessage } from "./MarkdownMessage";
 import type {
   CopilotConversation,
   CopilotConversationDetail,
   CopilotMessage,
 } from "@/types";
 
-interface AICopilotPanelProps {
-  onClose: () => void;
+interface AttachedFile {
+  url: string;
+  mediaType: string;
+  filename: string;
+  sizeBytes: number;
 }
 
-export function AICopilotPanel({ onClose }: AICopilotPanelProps) {
+interface AICopilotPanelProps {
+  onClose?: () => void;
+  fullPage?: boolean;
+}
+
+export function AICopilotPanel({ onClose, fullPage = false }: AICopilotPanelProps) {
   const [conversations, setConversations] = useState<CopilotConversation[]>([]);
-  const [activeConversation, setActiveConversation] =
-    useState<CopilotConversationDetail | null>(null);
+  const [activeConversation, setActiveConversation] = useState<CopilotConversationDetail | null>(null);
   const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [sending, setSending] = useState(false);
+  const [attached, setAttached] = useState<AttachedFile | null>(null);
+  const [loadingConvs, setLoadingConvs] = useState(false);
+  const [loadingChat, setLoadingChat] = useState(false);
   const [view, setView] = useState<"list" | "chat">("list");
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  const activeConvRef = useRef<CopilotConversationDetail | null>(null);
+  activeConvRef.current = activeConversation;
+
+  // Ref so handleStreamDone can call resetStream without being in its dep array
+  const resetStreamRef = useRef<() => void>(() => {});
+
+  const handleStreamDone = useCallback(async (_messageId: string) => {
+    const conv = activeConvRef.current;
+    if (!conv) return;
+    try {
+      const detail = await api.get<CopilotConversationDetail>(
+        `/copilot/conversations/${conv.id}/`
+      );
+      setActiveConversation(detail);
+      setConversations((prev) =>
+        prev.map((c) =>
+          c.id === detail.id
+            ? { ...c, title: detail.title, last_message: detail.messages[detail.messages.length - 1] ?? null }
+            : c
+        )
+      );
+      resetStreamRef.current();
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  const { state: stream, submit, submitToolResult, reset: resetStream } = useAIStream(
+    activeConversation?.id ?? null,
+    handleStreamDone,
+  );
+
+  resetStreamRef.current = resetStream;
 
   useEffect(() => {
-    setLoading(true);
-    api
-      .get<CopilotConversation[]>("/copilot/conversations/")
+    setLoadingConvs(true);
+    api.get<CopilotConversation[]>("/copilot/conversations/")
       .then(setConversations)
       .catch(console.error)
-      .finally(() => setLoading(false));
+      .finally(() => setLoadingConvs(false));
   }, []);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [activeConversation?.messages]);
+  }, [activeConversation?.messages, stream.liveText]);
 
   useEffect(() => {
-    if (view === "chat") {
-      inputRef.current?.focus();
-    }
+    if (view === "chat") inputRef.current?.focus();
   }, [view]);
 
   const handleNewConversation = useCallback(async () => {
-    try {
-      const conv = await api.post<CopilotConversation>(
-        "/copilot/conversations/",
-        {}
-      );
-      setConversations((prev) => [conv, ...prev]);
-      setActiveConversation({ ...conv, messages: [] });
-      setView("chat");
-    } catch (err) {
-      console.error("Failed to create conversation:", err);
-    }
-  }, []);
+    const conv = await api.post<CopilotConversation>("/copilot/conversations/", {});
+    setConversations((prev) => [conv, ...prev]);
+    setActiveConversation({ ...conv, messages: [] });
+    resetStream();
+    setView("chat");
+  }, [resetStream]);
 
   const handleSelectConversation = useCallback(async (id: string) => {
-    try {
-      setLoading(true);
-      const detail = await api.get<CopilotConversationDetail>(
-        `/copilot/conversations/${id}/`
-      );
-      setActiveConversation(detail);
-      setView("chat");
-    } catch (err) {
-      console.error("Failed to load conversation:", err);
-    } finally {
-      setLoading(false);
+    setLoadingChat(true);
+    const detail = await api.get<CopilotConversationDetail>(`/copilot/conversations/${id}/`);
+    setActiveConversation(detail);
+    resetStream();
+    setView("chat");
+    setLoadingChat(false);
+  }, [resetStream]);
+
+  const handleDelete = useCallback(async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    await api.delete(`/copilot/conversations/${id}/`);
+    setConversations((prev) => prev.filter((c) => c.id !== id));
+    if (activeConversation?.id === id) {
+      setActiveConversation(null);
+      setView("list");
     }
-  }, []);
+  }, [activeConversation?.id]);
 
-  const handleDeleteConversation = useCallback(
-    async (e: React.MouseEvent, id: string) => {
-      e.stopPropagation();
-      try {
-        await api.delete(`/copilot/conversations/${id}/`);
-        setConversations((prev) => prev.filter((c) => c.id !== id));
-        if (activeConversation?.id === id) {
-          setActiveConversation(null);
-          setView("list");
-        }
-      } catch (err) {
-        console.error("Failed to delete conversation:", err);
-      }
-    },
-    [activeConversation?.id]
-  );
-
-  const handleSend = useCallback(async () => {
-    if (!input.trim() || !activeConversation || sending) return;
-
-    const userMessageText = input.trim();
+  const handleSend = useCallback(() => {
+    const text = input.trim();
+    if ((!text && !attached) || stream.isStreaming || !activeConversation) return;
     setInput("");
-    setSending(true);
+    setAttached(null);
+    submit(text, attached?.url, attached?.mediaType);
+  }, [input, attached, stream.isStreaming, activeConversation, submit]);
 
-    const tempUserMsg: CopilotMessage = {
-      id: Date.now(),
-      role: "user",
-      content: userMessageText,
-      created_at: new Date().toISOString(),
-    };
-    setActiveConversation((prev) =>
-      prev
-        ? {
-            ...prev,
-            messages: [...prev.messages, tempUserMsg],
-          }
-        : null
-    );
-
-    try {
-      const response = await api.post<CopilotMessage>(
-        `/copilot/conversations/${activeConversation.id}/messages/`,
-        { message: userMessageText }
-      );
-      setActiveConversation((prev) =>
-        prev
-          ? {
-              ...prev,
-              messages: [...prev.messages, response],
-            }
-          : null
-      );
-      setConversations((prev) =>
-        prev.map((c) =>
-          c.id === activeConversation.id
-            ? {
-                ...c,
-                title: c.title || userMessageText.slice(0, 100),
-                last_message: response,
-              }
-            : c
-        )
-      );
-    } catch (err) {
-      console.error("Failed to send message:", err);
-      setActiveConversation((prev) =>
-        prev
-          ? {
-              ...prev,
-              messages: [
-                ...prev.messages,
-                {
-                  id: Date.now() + 1,
-                  role: "assistant" as const,
-                  content:
-                    "Sorry, I encountered an error. Please try again.",
-                  created_at: new Date().toISOString(),
-                },
-              ],
-            }
-          : null
-      );
-    } finally {
-      setSending(false);
-    }
-  }, [input, activeConversation, sending]);
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
   };
 
-  return (
-    <div className="fixed bottom-24 right-6 z-50 w-96 h-[32rem] bg-white rounded-2xl shadow-modal flex flex-col overflow-hidden border border-brand-border/30">
+  const messages: CopilotMessage[] = activeConversation?.messages ?? [];
+  const isEmpty = messages.length === 0 && !stream.pendingUserContent;
+
+  const chatContent = (
+    <div className={`flex flex-col ${fullPage ? "h-full" : "h-[440px]"}`}>
       {/* Header */}
-      <div className="px-4 py-3 border-b border-brand-border/20 flex items-center gap-3 bg-white">
-        {view === "chat" && (
-          <button
-            onClick={() => setView("list")}
-            className="p-1 rounded-lg hover:bg-brand-bg text-brand-muted hover:text-brand-text transition-colors"
-          >
+      <div className="flex items-center gap-2 px-3 py-2.5 border-b border-brand-border/30 shrink-0">
+        {!fullPage && (
+          <button onClick={() => { setView("list"); resetStream(); }} className="text-brand-muted hover:text-brand-text">
             <ArrowLeft className="w-4 h-4" />
           </button>
         )}
-        <div className="w-8 h-8 rounded-full bg-brand-accent/10 flex items-center justify-center">
-          <Sparkles className="w-4 h-4 text-brand-accent" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <h3 className="text-sm font-semibold text-brand-text">AI Copilot</h3>
-          <p className="text-[10px] text-brand-muted">
-            Ask me anything about your data
-          </p>
-        </div>
-        <button
-          onClick={handleNewConversation}
-          className="p-1.5 rounded-lg hover:bg-brand-bg text-brand-muted hover:text-brand-text transition-colors"
-          title="New conversation"
-        >
-          <Plus className="w-4 h-4" />
-        </button>
+        <Bot className="w-4 h-4 text-brand-accent" />
+        <span className="text-sm font-medium text-brand-text truncate flex-1">
+          {activeConversation?.title || "New conversation"}
+        </span>
+        {onClose && !fullPage && (
+          <button onClick={onClose} className="text-brand-muted hover:text-brand-text text-lg leading-none">×</button>
+        )}
       </div>
 
-      {/* Body */}
-      {view === "list" ? (
-        <div className="flex-1 overflow-y-auto">
-          {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <LoadingSpinner />
-            </div>
-          ) : conversations.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
-              <div className="w-12 h-12 rounded-full bg-brand-accent/10 flex items-center justify-center mb-3">
-                <Bot className="w-6 h-6 text-brand-accent" />
-              </div>
-              <p className="text-sm font-medium text-brand-text mb-1">
-                Welcome to AI Copilot
-              </p>
-              <p className="text-xs text-brand-muted mb-4">
-                I can help you understand your campaigns, investments, and team
-                tasks.
-              </p>
-              <button
-                onClick={handleNewConversation}
-                className="px-4 py-2 bg-brand-accent text-white text-sm font-semibold rounded-xl hover:bg-brand-accent/90 transition-colors"
-              >
-                Start a conversation
-              </button>
-            </div>
-          ) : (
-            conversations.map((conv) => (
-              <div
-                key={conv.id}
-                role="button"
-                tabIndex={0}
-                onClick={() => handleSelectConversation(conv.id)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") handleSelectConversation(conv.id);
-                }}
-                className="w-full text-left p-4 border-b border-brand-border/10 hover:bg-brand-bg/60 transition-colors group cursor-pointer"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-brand-text truncate">
-                      {conv.title || "New conversation"}
-                    </p>
-                    {conv.last_message && (
-                      <p className="text-xs text-brand-muted truncate mt-0.5">
-                        {conv.last_message.content}
-                      </p>
-                    )}
-                    <p className="text-[10px] text-brand-muted mt-1">
-                      {formatRelativeTime(conv.updated_at)}
-                    </p>
-                  </div>
-                  <button
-                    onClick={(e) => handleDeleteConversation(e, conv.id)}
-                    className="p-1 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-red-50 text-brand-muted hover:text-red-500 transition-all"
-                    title="Delete conversation"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      ) : (
-        <>
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {activeConversation?.messages.length === 0 && !sending && (
-              <div className="flex flex-col items-center justify-center py-8 text-center">
-                <p className="text-xs text-brand-muted">
-                  Ask me about your campaigns, investments, or tasks.
-                </p>
-              </div>
-            )}
-            {activeConversation?.messages.map((msg) => (
-              <div
-                key={msg.id}
-                className={`flex gap-2.5 ${
-                  msg.role === "user" ? "flex-row-reverse" : ""
-                }`}
-              >
-                {msg.role === "assistant" && (
-                  <div className="w-7 h-7 rounded-full bg-brand-accent/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Sparkles className="w-3.5 h-3.5 text-brand-accent" />
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto min-h-0 px-3 py-3 space-y-3">
+        {loadingChat && <div className="flex justify-center py-4"><LoadingSpinner /></div>}
+
+        {isEmpty && !loadingChat && (
+          <ExamplePrompts onSelect={(p) => submit(p)} />
+        )}
+
+        {messages.map((msg) => (
+          <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+            {msg.role === "user" ? (
+              <div className="max-w-[80%]">
+                {msg.media_url && (
+                  <div className="flex justify-end">
+                    <MediaPreview url={msg.media_url} mediaType={msg.media_type ?? "image"} />
                   </div>
                 )}
-                <div
-                  className={`max-w-[80%] rounded-xl px-3.5 py-2.5 text-sm whitespace-pre-wrap ${
-                    msg.role === "user"
-                      ? "bg-brand-accent/10 text-brand-text"
-                      : "bg-white text-brand-text shadow-sm border border-brand-border/20"
-                  }`}
-                >
+                <div className="bg-brand-accent text-white px-3 py-2 rounded-2xl rounded-tr-sm text-sm">
                   {msg.content}
                 </div>
               </div>
-            ))}
-            {sending && (
-              <div className="flex gap-2.5">
-                <div className="w-7 h-7 rounded-full bg-brand-accent/10 flex items-center justify-center flex-shrink-0">
-                  <Sparkles className="w-3.5 h-3.5 text-brand-accent" />
-                </div>
-                <div className="bg-white shadow-sm border border-brand-border/20 rounded-xl px-3.5 py-2.5">
-                  <div className="flex items-center gap-1.5">
-                    <div
-                      className="w-1.5 h-1.5 bg-brand-muted rounded-full animate-bounce"
-                      style={{ animationDelay: "0ms" }}
-                    />
-                    <div
-                      className="w-1.5 h-1.5 bg-brand-muted rounded-full animate-bounce"
-                      style={{ animationDelay: "150ms" }}
-                    />
-                    <div
-                      className="w-1.5 h-1.5 bg-brand-muted rounded-full animate-bounce"
-                      style={{ animationDelay: "300ms" }}
-                    />
-                  </div>
+            ) : (
+              <div className="max-w-[85%] space-y-0.5">
+                {msg.thinking_content && (
+                  <ThinkingBlock
+                    content={msg.thinking_content}
+                    duration={msg.thinking_duration ?? null}
+                    isStreaming={false}
+                  />
+                )}
+                {msg.tool_calls && msg.tool_calls.length > 0 && (
+                  <ToolCallBlock toolCalls={msg.tool_calls} />
+                )}
+                <div className="px-3 py-2 rounded-2xl rounded-tl-sm bg-white border border-brand-border/20 shadow-sm">
+                  <MarkdownMessage content={msg.content} />
                 </div>
               </div>
             )}
-            <div ref={messagesEndRef} />
           </div>
+        ))}
 
-          {/* Input */}
-          <div className="p-3 border-t border-brand-border/20 bg-white">
-            <div className="flex items-center gap-2">
-              <input
-                ref={inputRef}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Ask anything..."
-                disabled={sending}
-                className="flex-1 bg-brand-bg border border-brand-border/60 rounded-xl px-3.5 py-2 text-sm text-brand-text placeholder:text-brand-muted focus:outline-none focus:ring-2 focus:ring-brand-accent/30 focus:border-brand-accent/50 disabled:opacity-50"
-              />
-              <button
-                onClick={handleSend}
-                disabled={!input.trim() || sending}
-                className="p-2 bg-brand-accent text-white rounded-xl hover:bg-brand-accent/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                <Send className="w-4 h-4" />
-              </button>
+        {/* Pending user message */}
+        {stream.pendingUserContent !== null && (
+          <div className="flex justify-end">
+            <div className="max-w-[80%]">
+              {stream.pendingMediaUrl && (
+                <div className="flex justify-end">
+                  <MediaPreview
+                    url={stream.pendingMediaUrl}
+                    mediaType={stream.pendingMediaType ?? "image"}
+                  />
+                </div>
+              )}
+              <div className="bg-brand-accent text-white px-3 py-2 rounded-2xl rounded-tr-sm text-sm">
+                {stream.pendingUserContent}
+              </div>
             </div>
           </div>
-        </>
-      )}
+        )}
+
+        {/* Streaming AI response */}
+        {(stream.toolCalls.length > 0 || stream.liveThinking || stream.liveText || stream.isStreaming) && (
+          <div className="flex justify-start">
+            <div className="max-w-[85%] space-y-0.5">
+              <ToolCallBlock toolCalls={stream.toolCalls} />
+              {(stream.liveThinking || (stream.isStreaming && !stream.liveText)) && (
+                <ThinkingBlock
+                  content={stream.liveThinking}
+                  duration={stream.thinkingDuration}
+                  isStreaming={stream.isStreaming && !stream.thinkingDuration}
+                />
+              )}
+              {stream.liveText && (
+                <div className="px-3 py-2 rounded-2xl rounded-tl-sm bg-white border border-brand-border/20 shadow-sm">
+                  <MarkdownMessage content={stream.liveText} />
+                  {stream.isStreaming && <span className="inline-block w-1 h-4 bg-brand-muted animate-pulse ml-0.5 align-text-bottom" />}
+                </div>
+              )}
+              {stream.isStreaming && !stream.liveText && !stream.liveThinking && stream.toolCalls.length === 0 && (
+                <div className="px-3 py-2 rounded-2xl rounded-tl-sm bg-white border border-brand-border/20 shadow-sm">
+                  <div className="flex gap-1">
+                    {[0, 1, 2].map((i) => (
+                      <span key={i} className="w-1.5 h-1.5 rounded-full bg-brand-muted animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Question form */}
+        {stream.questionForm && (
+          <div className="flex justify-start">
+            <div className="max-w-[90%] w-full">
+              <QuestionForm
+                form={stream.questionForm}
+                onSubmit={submitToolResult}
+                disabled={stream.isStreaming}
+              />
+            </div>
+          </div>
+        )}
+
+        {stream.streamError && (
+          <div className="text-xs text-red-500 px-3">{stream.streamError}</div>
+        )}
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Input */}
+      <div className="border-t border-brand-border/30 shrink-0">
+        <FileUploadZone onAttach={setAttached} attached={attached} disabled={stream.isStreaming}>
+          <textarea
+            ref={inputRef}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Message Fundy AI..."
+            rows={1}
+            disabled={stream.isStreaming || !!stream.questionForm}
+            className="flex-1 resize-none bg-transparent text-sm text-brand-text placeholder:text-brand-muted focus:outline-none py-2 pr-2 min-h-[36px] max-h-24"
+            style={{ fieldSizing: "content" } as React.CSSProperties}
+          />
+          <button
+            onClick={handleSend}
+            disabled={(!input.trim() && !attached) || stream.isStreaming || !!stream.questionForm}
+            className="mb-1 p-2 rounded-lg bg-brand-accent text-white disabled:opacity-40 hover:bg-brand-accent/90 transition-colors"
+          >
+            <Send className="w-4 h-4" />
+          </button>
+        </FileUploadZone>
+      </div>
     </div>
   );
-}
 
-function formatRelativeTime(isoDate: string): string {
-  const date = new Date(isoDate);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  if (diffMins < 1) return "just now";
-  if (diffMins < 60) return `${diffMins}m ago`;
-  const diffHours = Math.floor(diffMins / 60);
-  if (diffHours < 24) return `${diffHours}h ago`;
-  const diffDays = Math.floor(diffHours / 24);
-  if (diffDays < 7) return `${diffDays}d ago`;
-  return date.toLocaleDateString();
+  const listContent = (
+    <div className={`flex flex-col ${fullPage ? "h-full" : "h-[440px]"}`}>
+      <div className="flex items-center justify-between px-3 py-2.5 border-b border-brand-border/30 shrink-0">
+        <div className="flex items-center gap-2">
+          <Bot className="w-4 h-4 text-brand-accent" />
+          <span className="text-sm font-medium text-brand-text">Fundy AI</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <button onClick={handleNewConversation} className="p-1.5 rounded-lg hover:bg-brand-border/20 text-brand-muted hover:text-brand-text transition-colors" title="New conversation">
+            <Plus className="w-4 h-4" />
+          </button>
+          {onClose && !fullPage && (
+            <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-brand-border/20 text-brand-muted hover:text-brand-text transition-colors text-lg leading-none">×</button>
+          )}
+        </div>
+      </div>
+      <div className="flex-1 overflow-y-auto">
+        {loadingConvs ? (
+          <div className="flex justify-center py-6"><LoadingSpinner /></div>
+        ) : conversations.length === 0 ? (
+          <div className="flex flex-col items-center gap-3 py-10 px-4 text-center">
+            <Bot className="w-8 h-8 text-brand-muted/50" />
+            <p className="text-sm text-brand-muted">No conversations yet.</p>
+            <button onClick={handleNewConversation} className="text-sm text-brand-accent hover:underline">Start one</button>
+          </div>
+        ) : (
+          conversations.map((conv) => (
+            <div
+              key={conv.id}
+              onClick={() => handleSelectConversation(conv.id)}
+              className="group flex items-start gap-2 px-3 py-2.5 hover:bg-brand-border/20 cursor-pointer border-b border-brand-border/10 last:border-0"
+            >
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-brand-text truncate">{conv.title || "Untitled"}</p>
+                {conv.last_message && (
+                  <p className="text-xs text-brand-muted truncate mt-0.5">{conv.last_message.content}</p>
+                )}
+              </div>
+              <button
+                onClick={(e) => handleDelete(e, conv.id)}
+                className="opacity-0 group-hover:opacity-100 p-1 rounded text-brand-muted hover:text-red-500 transition-all shrink-0"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+
+  if (fullPage) {
+    return (
+      <div className="flex h-full">
+        <div className="w-[280px] shrink-0 border-r border-brand-border/30 overflow-hidden">
+          {listContent}
+        </div>
+        <div className="flex-1 overflow-hidden">
+          {activeConversation ? chatContent : (
+            <div className="flex flex-col items-center justify-center h-full gap-3 text-brand-muted">
+              <Bot className="w-10 h-10 opacity-30" />
+              <p className="text-sm">Select or start a conversation</p>
+              <button onClick={handleNewConversation} className="text-sm text-brand-accent hover:underline">New conversation</button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return view === "chat" ? chatContent : listContent;
 }

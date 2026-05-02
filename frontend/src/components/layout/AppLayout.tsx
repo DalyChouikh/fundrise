@@ -54,10 +54,10 @@ export function AppLayout() {
   return (
     <div className="min-h-screen bg-brand-bg">
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      <div className="lg:ml-[var(--sidebar-width)] min-h-screen flex flex-col">
+      <div className="lg:ml-[var(--sidebar-width)] h-screen flex flex-col">
         <Topbar onMenuClick={() => setSidebarOpen(true)} />
         <ApprovalBanner />
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 xl:p-10">
+        <main className="flex-1 overflow-auto min-h-0 p-4 sm:p-6 lg:p-8 xl:p-10">
           <Outlet />
         </main>
       </div>
