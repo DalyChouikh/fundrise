@@ -25,6 +25,8 @@ class Startup(TimeStampedModel):
     pitch_deck_url = models.URLField(max_length=500, blank=True, default="")
     logo_url = models.URLField(max_length=500, blank=True, default="")
     website = models.URLField(max_length=500, blank=True, default="")
+    registration_id = models.CharField(max_length=100, blank=True, default="")
+    legal_form = models.CharField(max_length=50, blank=True, default="")
     created_by = models.ForeignKey(
         "users.UserProfile",
         on_delete=models.CASCADE,

@@ -67,6 +67,7 @@ class StartupCreateSerializer(serializers.ModelSerializer):
         fields = [
             "name", "description", "industry", "location",
             "founding_date", "pitch_deck_url", "logo_url", "website",
+            "registration_id", "legal_form",
         ]
 
 
