@@ -12,11 +12,12 @@ logger = logging.getLogger(__name__)
 
 from apps.notifications.utils import create_notification
 from apps.users.email import send_approval_email, send_rejection_email
-from apps.users.models import InvestorProfile, UserProfile
+from apps.users.models import InvestorProfile, SavedPaymentInfo, UserProfile
 from apps.users.permissions import IsAdmin
 from apps.users.serializers import (
     AdminUserSerializer,
     InvestorProfileSerializer,
+    SavedPaymentInfoSerializer,
     UserProfileMinimalSerializer,
     UserProfileSerializer,
 )
@@ -192,6 +193,36 @@ class UserRejectView(APIView):
         )
         send_rejection_email(user, reason)
         return Response(AdminUserSerializer(user).data)
+
+
+class PaymentProfileView(APIView):
+    """GET/PUT/DELETE /api/users/me/payment-profile/ — investor saved card + address."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        try:
+            info = request.user.payment_info
+        except SavedPaymentInfo.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(SavedPaymentInfoSerializer(info).data)
+
+    def put(self, request):
+        try:
+            info = request.user.payment_info
+        except SavedPaymentInfo.DoesNotExist:
+            info = SavedPaymentInfo(user=request.user)
+        serializer = SavedPaymentInfoSerializer(info, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(user=request.user)
+        return Response(serializer.data)
+
+    def delete(self, request):
+        try:
+            request.user.payment_info.delete()
+        except SavedPaymentInfo.DoesNotExist:
+            pass
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 from django.http import JsonResponse

@@ -21,6 +21,8 @@ import { AICopilotPage } from "@/pages/ai/AICopilotPage";
 import { InviteAcceptPage } from "@/pages/invites/InviteAcceptPage";
 import { OnboardingPage } from "@/pages/onboarding/OnboardingPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
+import { BillingPage } from "@/pages/billing/BillingPage";
+import { InvestorKanbanPage } from "@/pages/kanban/InvestorKanbanPage";
 
 export default function App() {
   return (
@@ -52,6 +54,8 @@ export default function App() {
                 path="/investments"
                 element={<InvestmentsPage />}
               />
+              <Route path="/investments/board/:startupId" element={<InvestorKanbanPage />} />
+              <Route path="/billing" element={<BillingPage />} />
               <Route path="/users" element={<UsersPage />} />
               <Route path="/kanban" element={<KanbanStartupSelector />} />
               <Route

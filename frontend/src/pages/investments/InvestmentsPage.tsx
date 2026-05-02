@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { DollarSign, TrendingUp, Clock, XCircle, CheckCircle, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
@@ -26,6 +26,7 @@ const tabs: { label: string; value: InvestmentStatus | "all" }[] = [
 
 export function InvestmentsPage() {
   const { profile } = useAuth();
+  const navigate = useNavigate();
   const [investments, setInvestments] = useState<Investment[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<InvestmentStatus | "all">("all");
@@ -217,6 +218,20 @@ export function InvestmentsPage() {
                       </p>
                     </div>
                     <Badge status={inv.status} />
+                    {profile?.role === "investor" &&
+                      inv.status === "confirmed" &&
+                      inv.campaign_detail.status === "active" && (
+                        <button
+                          onClick={() =>
+                            navigate(`/investments/board/${inv.campaign_detail.startup}`, {
+                              state: { startupName: inv.campaign_detail.startup_name },
+                            })
+                          }
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-brand-blue bg-blue-50 hover:bg-blue-100 transition-colors cursor-pointer"
+                        >
+                          View Board
+                        </button>
+                      )}
                   </div>
                 </div>
               </Card>

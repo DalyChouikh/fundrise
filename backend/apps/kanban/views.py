@@ -4,7 +4,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from apps.kanban.models import KanbanColumn, KanbanTask, TaskComment
-from apps.kanban.permissions import IsStartupMemberForKanban
+from apps.kanban.permissions import CanViewKanbanBoard, IsStartupMemberForKanban
 from apps.kanban.serializers import (
     KanbanColumnSerializer,
     KanbanTaskCreateSerializer,
@@ -20,7 +20,7 @@ class KanbanBoardView(generics.ListAPIView):
     """GET /api/kanban/{startup_id}/board/ — all columns with nested tasks."""
 
     serializer_class = KanbanColumnSerializer
-    permission_classes = [permissions.IsAuthenticated, IsStartupMemberForKanban]
+    permission_classes = [permissions.IsAuthenticated, CanViewKanbanBoard]
 
     def get_queryset(self):
         startup_id = self.kwargs["startup_id"]
@@ -36,7 +36,11 @@ class KanbanBoardView(generics.ListAPIView):
 
 class KanbanColumnViewSet(viewsets.ModelViewSet):
     serializer_class = KanbanColumnSerializer
-    permission_classes = [permissions.IsAuthenticated, IsStartupMemberForKanban]
+
+    def get_permissions(self):
+        if self.action in ("list", "retrieve"):
+            return [permissions.IsAuthenticated(), CanViewKanbanBoard()]
+        return [permissions.IsAuthenticated(), IsStartupMemberForKanban()]
 
     def get_queryset(self):
         return KanbanColumn.objects.filter(
@@ -58,7 +62,11 @@ class KanbanColumnViewSet(viewsets.ModelViewSet):
 
 
 class KanbanTaskViewSet(viewsets.ModelViewSet):
-    permission_classes = [permissions.IsAuthenticated, IsStartupMemberForKanban]
+
+    def get_permissions(self):
+        if self.action in ("list", "retrieve"):
+            return [permissions.IsAuthenticated(), CanViewKanbanBoard()]
+        return [permissions.IsAuthenticated(), IsStartupMemberForKanban()]
 
     def get_serializer_class(self):
         if self.action == "create":

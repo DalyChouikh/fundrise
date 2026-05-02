@@ -54,6 +54,17 @@ class ApiClient {
     return res.json();
   }
 
+  async put<T>(path: string, body: Record<string, unknown>): Promise<T> {
+    const res = await fetch(`${this.baseUrl}${path}`, {
+      method: "PUT",
+      headers: await this.getHeaders(),
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) throw new ApiError(res.status, await res.text());
+    if (res.status === 204) return undefined as T;
+    return res.json();
+  }
+
   async getPublic<T>(path: string): Promise<T> {
     const res = await fetch(`${this.baseUrl}${path}`, {
       headers: { "Content-Type": "application/json" },

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from apps.users.models import InvestorProfile, UserProfile
+from apps.users.models import InvestorProfile, SavedPaymentInfo, UserProfile
 
 
 class UserProfileMinimalSerializer(serializers.ModelSerializer):
@@ -100,3 +100,26 @@ class InvestorProfileSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["created_at", "updated_at"]
+
+
+class SavedPaymentInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SavedPaymentInfo
+        fields = [
+            "card_holder", "card_last4", "card_type",
+            "expiry_month", "expiry_year",
+            "address_line1", "address_line2", "city",
+            "state", "postal_code", "country",
+            "created_at", "updated_at",
+        ]
+        read_only_fields = ["created_at", "updated_at"]
+
+    def validate_card_last4(self, value):
+        if not value.isdigit() or len(value) != 4:
+            raise serializers.ValidationError("Must be exactly 4 digits.")
+        return value
+
+    def validate_expiry_month(self, value):
+        if not 1 <= value <= 12:
+            raise serializers.ValidationError("Month must be between 1 and 12.")
+        return value

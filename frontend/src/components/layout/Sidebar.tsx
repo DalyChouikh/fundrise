@@ -51,6 +51,12 @@ const NAV_ITEMS: NavItem[] = [
     roles: ["investor"],
   },
   {
+    label: "Payment & Billing",
+    path: "/billing",
+    icon: "CreditCard",
+    roles: ["investor"],
+  },
+  {
     label: "Users",
     path: "/users",
     icon: "Users",

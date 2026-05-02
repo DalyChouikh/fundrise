@@ -128,6 +128,7 @@ export type InvestmentStatus = "pending" | "confirmed" | "cancelled";
 export interface InvestmentCampaignDetail {
   id: number;
   title: string;
+  startup: number;
   startup_name: string;
   funding_goal: string;
   current_funding: string;
@@ -142,6 +143,26 @@ export interface Investment {
   campaign_detail: InvestmentCampaignDetail;
   amount: string;
   status: InvestmentStatus;
+  card_last4: string | null;
+  card_type: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type CardType = "visa" | "mastercard" | "amex" | "discover";
+
+export interface SavedPaymentInfo {
+  card_holder: string;
+  card_last4: string;
+  card_type: CardType;
+  expiry_month: number;
+  expiry_year: number;
+  address_line1: string;
+  address_line2: string;
+  city: string;
+  state: string;
+  postal_code: string;
+  country: string;
   created_at: string;
   updated_at: string;
 }
