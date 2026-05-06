@@ -32,6 +32,7 @@ export function InvestmentsPage() {
   const [investments, setInvestments] = useState<Investment[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<InvestmentStatus | "all">("all");
+  const [confirmError, setConfirmError] = useState<string | null>(null);
   const { requireStepUp, dialogProps } = usePasskeyStepUp();
 
   useEffect(() => {
@@ -49,21 +50,28 @@ export function InvestmentsPage() {
   }, []);
 
   const handleConfirm = async (investmentId: number) => {
+    setConfirmError(null);
+    let token: string | undefined;
     try {
-      const token = await requireStepUp(
+      const result = await requireStepUp(
         "Confirm Investment",
         "Verify with your passkey to confirm this investment."
       );
+      token = result ?? undefined;
+    } catch {
+      return; // step-up cancelled
+    }
+    try {
       const updated = await api.post<Investment>(
         `/investments/${investmentId}/confirm/`,
         {},
-        { stepUpToken: token ?? undefined }
+        { stepUpToken: token }
       );
       setInvestments((prev) =>
         prev.map((inv) => (inv.id === investmentId ? updated : inv))
       );
     } catch {
-      // ignore (includes step-up cancellation)
+      setConfirmError("Failed to confirm investment. Please try again.");
     }
   };
 
@@ -146,6 +154,12 @@ export function InvestmentsPage() {
           </button>
         ))}
       </div>
+
+      {confirmError && (
+        <div className="px-4 py-3 rounded-xl bg-red-50 border border-red-100 text-red-700 text-sm animate-fade-in">
+          {confirmError}
+        </div>
+      )}
 
       {/* Investment list */}
       {filtered.length === 0 ? (

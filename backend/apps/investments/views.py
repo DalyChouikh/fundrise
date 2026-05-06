@@ -53,6 +53,7 @@ class InvestmentViewSet(
         ).values_list("startup_id", flat=True)
         return qs.filter(campaign__startup_id__in=user_startup_ids)
 
+    @require_step_up_if_passkey
     def create(self, request, *args, **kwargs):
         if request.user.approval_status != "approved":
             return Response(

@@ -3,6 +3,8 @@ import { X, ArrowLeft, ChevronRight, CreditCard, MapPin } from "lucide-react";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/Button";
 import { CardPreview } from "@/components/investments/CardPreview";
+import { PasskeyConfirmDialog } from "@/components/passkey/PasskeyConfirmDialog";
+import { usePasskeyStepUp } from "@/hooks/usePasskeyStepUp";
 import { formatCardNumber, formatExpiry, parseExpiry, maxCardDigits } from "@/lib/cardUtils";
 import type { CampaignDetail, SavedPaymentInfo, CardType } from "@/types";
 
@@ -20,6 +22,7 @@ interface CheckoutModalProps {
 }
 
 export function CheckoutModal({ campaign, onClose, onSuccess }: CheckoutModalProps) {
+  const { requireStepUp, dialogProps } = usePasskeyStepUp();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [savedInfo, setSavedInfo] = useState<SavedPaymentInfo | null>(null);
   const [loadingSaved, setLoadingSaved] = useState(true);
@@ -99,6 +102,17 @@ export function CheckoutModal({ campaign, onClose, onSuccess }: CheckoutModalPro
   };
 
   const handleConfirm = async () => {
+    let stepUpToken: string | undefined;
+    try {
+      const result = await requireStepUp(
+        "Confirm Pledge",
+        "Verify with your passkey before placing this investment."
+      );
+      stepUpToken = result ?? undefined;
+    } catch {
+      return; // step-up cancelled
+    }
+
     setSubmitting(true);
     try {
       await api.post("/investments/", {
@@ -106,7 +120,7 @@ export function CheckoutModal({ campaign, onClose, onSuccess }: CheckoutModalPro
         amount,
         card_last4: activeCardLast4 || null,
         card_type: activeCardType || null,
-      });
+      }, { stepUpToken });
       if (saveCard && !useSavedCard && cardHolder && activeCardLast4) {
         const [m, y] = parseExpiry(expiryInput);
         await api.put("/users/me/payment-profile/", {
@@ -463,6 +477,8 @@ export function CheckoutModal({ campaign, onClose, onSuccess }: CheckoutModalPro
             </>
           )}
         </div>
+
+        {dialogProps && <PasskeyConfirmDialog {...dialogProps} />}
 
         {/* Close confirm dialog */}
         {confirmClose && (
