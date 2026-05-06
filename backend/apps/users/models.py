@@ -128,3 +128,22 @@ class SavedPaymentInfo(TimeStampedModel):
 
     def __str__(self):
         return f"{self.user.full_name} — {self.card_type} ···{self.card_last4}"
+
+
+class PasskeyCredential(TimeStampedModel):
+    user = models.ForeignKey(
+        "users.UserProfile",
+        on_delete=models.CASCADE,
+        related_name="passkeys",
+    )
+    # BinaryField returns memoryview on read; use bytes(credential_id) before comparing
+    credential_id = models.BinaryField(unique=True)
+    public_key = models.BinaryField()
+    sign_count = models.PositiveIntegerField(default=0)
+    aaguid = models.CharField(max_length=36, blank=True, default="")
+    transports = models.JSONField(default=list, blank=True)
+    name = models.CharField(max_length=100, blank=True, default="")
+    last_used_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"PasskeyCredential({self.user.email} — {self.name})"
