@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from urllib.parse import urlparse as _urlparse
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -85,6 +86,13 @@ CHANNEL_LAYERS = {
     },
 }
 
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": os.environ.get("REDIS_URL", "redis://localhost:6379/0"),
+    }
+}
+
 # Django REST Framework
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
@@ -165,3 +173,9 @@ EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
 EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "False") == "True"
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "Funderaise <noreply@funderaise.app>")
 FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:5173")
+
+# WebAuthn / Passkeys
+_frontend = _urlparse(FRONTEND_URL)
+WEBAUTHN_RP_ID = os.environ.get("WEBAUTHN_RP_ID", _frontend.hostname or "localhost")
+WEBAUTHN_RP_NAME = os.environ.get("WEBAUTHN_RP_NAME", "Funderaise")
+WEBAUTHN_EXPECTED_ORIGIN = os.environ.get("WEBAUTHN_EXPECTED_ORIGIN", FRONTEND_URL)
