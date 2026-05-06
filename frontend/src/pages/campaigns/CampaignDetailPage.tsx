@@ -24,6 +24,8 @@ import { Badge } from "@/components/ui/Badge";
 import { Avatar } from "@/components/ui/Avatar";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { CheckoutModal } from "@/components/investments/CheckoutModal";
+import { PasskeyConfirmDialog } from "@/components/passkey/PasskeyConfirmDialog";
+import { usePasskeyStepUp } from "@/hooks/usePasskeyStepUp";
 import type { CampaignDetail, CampaignUpdate, CampaignMilestone, Investment, CampaignComment } from "@/types";
 
 export function CampaignDetailPage() {
@@ -37,6 +39,8 @@ export function CampaignDetailPage() {
   const [loading, setLoading] = useState(true);
   const [showCheckout, setShowCheckout] = useState(false);
   const [comments, setComments] = useState<CampaignComment[]>([]);
+  const [confirmError, setConfirmError] = useState<string | null>(null);
+  const { requireStepUp, dialogProps } = usePasskeyStepUp();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -84,20 +88,35 @@ export function CampaignDetailPage() {
   };
 
   const handleConfirmInvestment = async (investmentId: number) => {
+    if (!campaign) return;
+
+    setConfirmError(null);
+    let stepUpToken: string | undefined;
+    try {
+      const result = await requireStepUp(
+        "Confirm Investment",
+        "Verify with your passkey to confirm this investment."
+      );
+      stepUpToken = result ?? undefined;
+    } catch {
+      return;
+    }
+
     try {
       const updated = await api.post<Investment>(
         `/investments/${investmentId}/confirm/`,
-        {}
+        {},
+        { stepUpToken }
       );
       setInvestments((prev) =>
         prev.map((inv) => (inv.id === investmentId ? updated : inv))
       );
       const updatedCampaign = await api.get<CampaignDetail>(
-        `/campaigns/${campaign?.id}/`
+        `/campaigns/${campaign.id}/`
       );
       setCampaign(updatedCampaign);
     } catch {
-      // ignore
+      setConfirmError("Failed to confirm investment. Please try again.");
     }
   };
 
@@ -300,6 +319,11 @@ export function CampaignDetailPage() {
               <h3 className="text-sm font-bold text-brand-text mb-3">
                 Recent Investors ({investments.length})
               </h3>
+              {confirmError && (
+                <div className="px-3 py-2 rounded-xl bg-red-50 border border-red-100 text-red-700 text-xs mb-3">
+                  {confirmError}
+                </div>
+              )}
               <div className="space-y-2.5">
                 {investments.slice(0, 5).map((inv) => (
                   <div
@@ -408,6 +432,8 @@ export function CampaignDetailPage() {
           }}
         />
       )}
+
+      {dialogProps && <PasskeyConfirmDialog {...dialogProps} />}
     </div>
   );
 }
