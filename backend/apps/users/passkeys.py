@@ -18,11 +18,9 @@ from webauthn import (
     verify_registration_response,
 )
 from webauthn.helpers.structs import (
-    AuthenticationCredential,
     AuthenticatorSelectionCriteria,
     AuthenticatorTransport,
     PublicKeyCredentialDescriptor,
-    RegistrationCredential,
     ResidentKeyRequirement,
     UserVerificationRequirement,
 )
@@ -87,7 +85,7 @@ class PasskeyRegisterCompleteView(APIView):
 
         try:
             verification = verify_registration_response(
-                credential=RegistrationCredential.parse_raw(json.dumps(credential_data)),
+                credential=credential_data,
                 expected_rp_id=settings.WEBAUTHN_RP_ID,
                 expected_origin=settings.WEBAUTHN_EXPECTED_ORIGIN,
                 expected_challenge=challenge,
@@ -224,7 +222,7 @@ class PasskeyLoginCompleteView(APIView):
 
         try:
             verification = verify_authentication_response(
-                credential=AuthenticationCredential.parse_raw(json.dumps(credential_data)),
+                credential=credential_data,
                 expected_rp_id=settings.WEBAUTHN_RP_ID,
                 expected_origin=settings.WEBAUTHN_EXPECTED_ORIGIN,
                 expected_challenge=challenge,
@@ -261,7 +259,7 @@ class PasskeyLoginCompleteView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-        otp = resp.json()["properties"]["email_otp"]
+        otp = resp.json()["email_otp"]
 
         return Response({"email": passkey.user.email, "token": otp})
 
@@ -338,7 +336,7 @@ class PasskeyStepUpCompleteView(APIView):
 
         try:
             verification = verify_authentication_response(
-                credential=AuthenticationCredential.parse_raw(json.dumps(credential_data)),
+                credential=credential_data,
                 expected_rp_id=settings.WEBAUTHN_RP_ID,
                 expected_origin=settings.WEBAUTHN_EXPECTED_ORIGIN,
                 expected_challenge=challenge,
