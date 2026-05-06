@@ -33,10 +33,23 @@ class ApiClient {
     return res.json();
   }
 
-  async post<T>(path: string, body: Record<string, unknown>): Promise<T> {
+  async post<T>(path: string, body: Record<string, unknown>, options?: { stepUpToken?: string }): Promise<T> {
+    const headers = await this.getHeaders() as Record<string, string>;
+    if (options?.stepUpToken) headers["X-Step-Up-Token"] = options.stepUpToken;
     const res = await fetch(`${this.baseUrl}${path}`, {
       method: "POST",
-      headers: await this.getHeaders(),
+      headers,
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) throw new ApiError(res.status, await res.text());
+    if (res.status === 204) return undefined as T;
+    return res.json();
+  }
+
+  async postPublic<T>(path: string, body: Record<string, unknown>): Promise<T> {
+    const res = await fetch(`${this.baseUrl}${path}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
     if (!res.ok) throw new ApiError(res.status, await res.text());
@@ -54,10 +67,12 @@ class ApiClient {
     return res.json();
   }
 
-  async put<T>(path: string, body: Record<string, unknown>): Promise<T> {
+  async put<T>(path: string, body: Record<string, unknown>, options?: { stepUpToken?: string }): Promise<T> {
+    const headers = await this.getHeaders() as Record<string, string>;
+    if (options?.stepUpToken) headers["X-Step-Up-Token"] = options.stepUpToken;
     const res = await fetch(`${this.baseUrl}${path}`, {
       method: "PUT",
-      headers: await this.getHeaders(),
+      headers,
       body: JSON.stringify(body),
     });
     if (!res.ok) throw new ApiError(res.status, await res.text());
@@ -73,10 +88,12 @@ class ApiClient {
     return res.json();
   }
 
-  async delete(path: string): Promise<void> {
+  async delete(path: string, options?: { stepUpToken?: string }): Promise<void> {
+    const headers = await this.getHeaders() as Record<string, string>;
+    if (options?.stepUpToken) headers["X-Step-Up-Token"] = options.stepUpToken;
     const res = await fetch(`${this.baseUrl}${path}`, {
       method: "DELETE",
-      headers: await this.getHeaders(),
+      headers,
     });
     if (!res.ok) throw new ApiError(res.status, await res.text());
   }

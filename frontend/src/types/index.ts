@@ -18,6 +18,7 @@ export interface UserProfile {
   company_document_url?: string | null;
   date_of_birth?: string | null;
   id_number?: string | null;
+  has_passkeys: boolean;
   created_at: string;
   updated_at: string;
 }
