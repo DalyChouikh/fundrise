@@ -1,12 +1,15 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, Mail, Shield, Save, Trash2, Calendar } from "lucide-react";
+import { User, Mail, Shield, Save, Trash2, Calendar, KeyRound } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { AvatarUpload } from "@/components/upload/AvatarUpload";
+import { PasskeyList } from "@/components/passkey/PasskeyList";
+import { PasskeyConfirmDialog } from "@/components/passkey/PasskeyConfirmDialog";
+import { usePasskeyStepUp } from "@/hooks/usePasskeyStepUp";
 
 export function SettingsPage() {
   const { profile, refreshProfile, signOut } = useAuth();
@@ -19,6 +22,8 @@ export function SettingsPage() {
     bio: profile?.bio || "",
     avatar_url: profile?.avatar_url || "",
   });
+
+  const { requireStepUp, dialogProps } = usePasskeyStepUp();
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -143,6 +148,18 @@ export function SettingsPage() {
         </div>
       </Card>
 
+      {/* Passkeys */}
+      <Card>
+        <h3 className="text-base font-semibold text-brand-text mb-1 flex items-center gap-2">
+          <KeyRound className="w-4 h-4 text-brand-muted" />
+          Passkeys
+        </h3>
+        <p className="text-sm text-brand-muted mb-4">
+          Sign in with biometrics and secure sensitive actions with a hardware-backed passkey.
+        </p>
+        <PasskeyList onPasskeyAdded={refreshProfile} />
+      </Card>
+
       {/* Danger Zone */}
       <Card className="!border-red-200/40">
         <h3 className="text-base font-semibold text-red-600 mb-2 flex items-center gap-2">
@@ -161,9 +178,20 @@ export function SettingsPage() {
               "Are you sure you want to delete your account? This action is permanent and cannot be undone."
             );
             if (!confirmed) return;
+
+            let token: string | null;
+            try {
+              token = await requireStepUp(
+                "Delete Account",
+                "Verify your identity with your passkey before permanently deleting your account."
+              );
+            } catch {
+              return;
+            }
+
             setDeleting(true);
             try {
-              await api.post("/users/me/delete/", {});
+              await api.post("/users/me/delete/", {}, { stepUpToken: token ?? undefined });
               await signOut();
               navigate("/login");
             } catch {
@@ -175,6 +203,8 @@ export function SettingsPage() {
           Delete Account
         </Button>
       </Card>
+
+      {dialogProps && <PasskeyConfirmDialog {...dialogProps} />}
     </div>
   );
 }

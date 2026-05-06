@@ -6,6 +6,8 @@ import { api } from "@/lib/api";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { PasskeyConfirmDialog } from "@/components/passkey/PasskeyConfirmDialog";
+import { usePasskeyStepUp } from "@/hooks/usePasskeyStepUp";
 import type { Investment, InvestmentStatus } from "@/types";
 
 const statusConfig: Record<
@@ -30,6 +32,7 @@ export function InvestmentsPage() {
   const [investments, setInvestments] = useState<Investment[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<InvestmentStatus | "all">("all");
+  const { requireStepUp, dialogProps } = usePasskeyStepUp();
 
   useEffect(() => {
     const fetchInvestments = async () => {
@@ -47,15 +50,20 @@ export function InvestmentsPage() {
 
   const handleConfirm = async (investmentId: number) => {
     try {
+      const token = await requireStepUp(
+        "Confirm Investment",
+        "Verify with your passkey to confirm this investment."
+      );
       const updated = await api.post<Investment>(
         `/investments/${investmentId}/confirm/`,
-        {}
+        {},
+        { stepUpToken: token ?? undefined }
       );
       setInvestments((prev) =>
         prev.map((inv) => (inv.id === investmentId ? updated : inv))
       );
     } catch {
-      // ignore
+      // ignore (includes step-up cancellation)
     }
   };
 
@@ -239,6 +247,8 @@ export function InvestmentsPage() {
           })}
         </div>
       )}
+
+      {dialogProps && <PasskeyConfirmDialog {...dialogProps} />}
     </div>
   );
 }

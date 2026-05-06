@@ -1,8 +1,10 @@
 import { useState, type FormEvent } from "react";
 import { Navigate, Link, useLocation, useSearchParams } from "react-router-dom";
+import { KeyRound } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/Button";
 import { Logo } from "@/components/ui/Logo";
+import { loginWithPasskey } from "@/lib/passkey";
 
 export function LoginPage() {
   const { session, signIn, signInWithGoogle, loading: authLoading } = useAuth();
@@ -13,6 +15,7 @@ export function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [passkeyLoading, setPasskeyLoading] = useState(false);
 
   const redirectParam = searchParams.get("redirect");
   const from = redirectParam
@@ -41,6 +44,22 @@ export function LoginPage() {
     if (authError) {
       setError(authError.message);
       setGoogleLoading(false);
+    }
+  };
+
+  const handlePasskeySignIn = async () => {
+    setError("");
+    setPasskeyLoading(true);
+    try {
+      await loginWithPasskey();
+      // onAuthStateChange in AuthContext handles navigation
+    } catch (e) {
+      if (e instanceof Error && e.name === "NotAllowedError") {
+        setError("Passkey sign-in was cancelled.");
+      } else {
+        setError(e instanceof Error ? e.message : "Passkey sign-in failed. Please try again.");
+      }
+      setPasskeyLoading(false);
     }
   };
 
@@ -99,6 +118,16 @@ export function LoginPage() {
                 <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
               </svg>
               {googleLoading ? "Connecting..." : "Continue with Google"}
+            </button>
+
+            <button
+              type="button"
+              onClick={handlePasskeySignIn}
+              disabled={passkeyLoading}
+              className="flex items-center justify-center gap-3 w-full px-4 py-3 rounded-xl border border-brand-border/40 bg-white text-sm font-medium text-brand-text hover:bg-brand-bg hover:border-brand-border/60 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm cursor-pointer"
+            >
+              <KeyRound className="w-5 h-5 text-brand-muted" />
+              {passkeyLoading ? "Verifying..." : "Sign in with passkey"}
             </button>
 
             <div className="relative">
