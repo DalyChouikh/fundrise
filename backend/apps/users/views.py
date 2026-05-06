@@ -14,6 +14,7 @@ from apps.notifications.utils import create_notification
 from apps.users.email import send_approval_email, send_rejection_email
 from apps.users.models import InvestorProfile, SavedPaymentInfo, UserProfile
 from apps.users.permissions import IsAdmin
+from apps.users.step_up import require_step_up_if_passkey
 from apps.users.serializers import (
     AdminUserSerializer,
     InvestorProfileSerializer,
@@ -111,6 +112,7 @@ class DeleteAccountView(APIView):
 
     permission_classes = [permissions.IsAuthenticated]
 
+    @require_step_up_if_passkey
     def post(self, request):
         user = request.user
         supabase_uid = str(user.id)
@@ -207,6 +209,7 @@ class PaymentProfileView(APIView):
             return Response(status=status.HTTP_404_NOT_FOUND)
         return Response(SavedPaymentInfoSerializer(info).data)
 
+    @require_step_up_if_passkey
     def put(self, request):
         try:
             info = request.user.payment_info
@@ -217,6 +220,7 @@ class PaymentProfileView(APIView):
         serializer.save(user=request.user)
         return Response(serializer.data)
 
+    @require_step_up_if_passkey
     def delete(self, request):
         try:
             request.user.payment_info.delete()

@@ -11,6 +11,11 @@ class UserProfileMinimalSerializer(serializers.ModelSerializer):
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
+    has_passkeys = serializers.SerializerMethodField(read_only=True)
+
+    def get_has_passkeys(self, instance):
+        return instance.passkeys.exists()
+
     class Meta:
         model = UserProfile
         fields = [
@@ -31,12 +36,14 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "company_document_url",
             "date_of_birth",
             "id_number",
+            "has_passkeys",
             "created_at",
             "updated_at",
         ]
         read_only_fields = [
             "id",
             "email",
+            "has_passkeys",
             "approval_status",
             "rejection_reason",
             "created_at",

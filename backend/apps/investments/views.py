@@ -14,6 +14,7 @@ from apps.investments.serializers import InvestmentCreateSerializer, InvestmentL
 from apps.notifications.utils import create_notification
 from apps.startups.models import StartupMember
 from apps.users.permissions import IsInvestor
+from apps.users.step_up import require_step_up_if_passkey
 
 
 class InvestmentViewSet(
@@ -86,6 +87,7 @@ class InvestmentViewSet(
             IsCampaignStartupFounderForInvestment,
         ],
     )
+    @require_step_up_if_passkey
     def confirm(self, request, pk=None):
         investment = self.get_object()
         if investment.status != Investment.Status.PENDING:
