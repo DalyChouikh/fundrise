@@ -801,6 +801,7 @@ git commit -m "feat: add select, date, number, rating, slider question types to 
 - [ ] **Step 1: Create `frontend/src/components/startups/StartupCard.tsx`**
 
 ```tsx
+import { type CSSProperties } from "react";
 import { Building2, MapPin, Users, Heart, CheckCircle2, XCircle } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -815,7 +816,7 @@ interface StartupCardProps {
   onApprove?: (id: number) => void;
   onReject?: (id: number) => void;
   className?: string;
-  style?: React.CSSProperties;
+  style?: CSSProperties;
 }
 
 export function StartupCard({
@@ -1001,6 +1002,7 @@ git commit -m "refactor: extract StartupCard component from StartupsPage"
 - [ ] **Step 1: Create `frontend/src/components/campaigns/CampaignCard.tsx`**
 
 ```tsx
+import { type CSSProperties } from "react";
 import { Building2, Calendar, CheckCircle2, XCircle } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -1013,7 +1015,7 @@ interface CampaignCardProps {
   onApprove?: (id: number) => void;
   onReject?: (id: number) => void;
   className?: string;
-  style?: React.CSSProperties;
+  style?: CSSProperties;
 }
 
 export function CampaignCard({

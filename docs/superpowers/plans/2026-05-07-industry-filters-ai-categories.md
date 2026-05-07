@@ -749,16 +749,15 @@ export function Combobox({
 }
 ```
 
-- [ ] **Step 3: Add Combobox and FilterDrawer exports to index.ts**
+- [ ] **Step 3: Add Combobox export to index.ts**
 
 In `frontend/src/components/ui/index.ts`, add:
 
 ```ts
 export { Combobox } from "./Combobox";
-export { FilterDrawer } from "./FilterDrawer";
 ```
 
-(FilterDrawer is created in Task 7 — add both exports now so the barrel is complete after Task 7.)
+(FilterDrawer will be added to the barrel in Task 7 after it is created.)
 
 - [ ] **Step 4: Type-check**
 
@@ -766,7 +765,7 @@ export { FilterDrawer } from "./FilterDrawer";
 docker compose exec react-frontend npx tsc --noEmit
 ```
 
-Expected: no errors (FilterDrawer export will fail until Task 7 — add only Combobox export for now, add FilterDrawer after Task 7).
+Expected: no errors.
 
 - [ ] **Step 5: Commit**
 
