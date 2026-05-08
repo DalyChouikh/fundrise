@@ -47,6 +47,7 @@ export function AICopilotPanel({ onClose, fullPage = false }: AICopilotPanelProp
 
   // Ref so handleStreamDone can call resetStream without being in its dep array
   const resetStreamRef = useRef<() => void>(() => {});
+  const completeStreamRef = useRef<() => void>(() => {});
 
   const handleStreamDone = useCallback(async (_messageId: string) => {
     const conv = activeConvRef.current;
@@ -63,18 +64,19 @@ export function AICopilotPanel({ onClose, fullPage = false }: AICopilotPanelProp
             : c
         )
       );
-      resetStreamRef.current();
+      completeStreamRef.current();
     } catch {
       /* ignore */
     }
   }, []);
 
-  const { state: stream, submit, submitToolResult, reset: resetStream } = useAIStream(
+  const { state: stream, submit, submitToolResult, reset: resetStream, completeStream } = useAIStream(
     activeConversation?.id ?? null,
     handleStreamDone,
   );
 
   resetStreamRef.current = resetStream;
+  completeStreamRef.current = completeStream;
 
   useEffect(() => {
     setLoadingConvs(true);

@@ -40,6 +40,20 @@ export function useAIStream(
     setState(INITIAL_STATE);
   }, []);
 
+  const completeStream = useCallback(() => {
+    setState((s) => ({
+      ...s,
+      isStreaming: false,
+      liveThinking: "",
+      thinkingDuration: null,
+      liveText: "",
+      toolCalls: [],
+      pendingUserContent: null,
+      pendingMediaUrl: null,
+      pendingMediaType: null,
+    }));
+  }, []);
+
   const _consumeStream = useCallback(
     async (url: string, body: Record<string, unknown>) => {
       if (abortRef.current) abortRef.current.abort();
@@ -222,5 +236,5 @@ export function useAIStream(
     [conversationId, _consumeStream],
   );
 
-  return { state, submit, submitToolResult, reset };
+  return { state, submit, submitToolResult, reset, completeStream };
 }
