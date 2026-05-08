@@ -31,8 +31,10 @@ export function Select({
 }: SelectProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [focusedIndex, setFocusedIndex] = useState(-1);
   const containerRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   const selected = options.find((o) => o.value === value);
   const filtered = searchable
@@ -40,11 +42,20 @@ export function Select({
     : options;
 
   useEffect(() => {
-    if (!open) { setSearch(""); return; }
+    if (!open) {
+      setSearch("");
+      setFocusedIndex(-1);
+      return;
+    }
+    const idx = filtered.findIndex((o) => o.value === value);
+    setFocusedIndex(idx);
     if (searchable) setTimeout(() => searchRef.current?.focus(), 0);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, searchable]);
 
+  // Only attach click-outside listener while open
   useEffect(() => {
+    if (!open) return;
     function onClickOutside(e: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setOpen(false);
@@ -52,18 +63,44 @@ export function Select({
     }
     document.addEventListener("mousedown", onClickOutside);
     return () => document.removeEventListener("mousedown", onClickOutside);
-  }, []);
+  }, [open]);
 
-  function handleKeyDown(e: KeyboardEvent) {
-    if (e.key === "Escape") setOpen(false);
+  function handleKeyDown(e: KeyboardEvent<HTMLButtonElement | HTMLInputElement>) {
+    if (e.key === "Escape") {
+      setOpen(false);
+      triggerRef.current?.focus();
+      return;
+    }
+    if (!open) {
+      if (e.key === "Enter" || e.key === " " || e.key === "ArrowDown") {
+        e.preventDefault();
+        setOpen(true);
+      }
+      return;
+    }
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setFocusedIndex((i) => Math.min(i + 1, filtered.length - 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setFocusedIndex((i) => Math.max(i - 1, 0));
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (focusedIndex >= 0 && focusedIndex < filtered.length) {
+        onChange(filtered[focusedIndex].value);
+        setOpen(false);
+        triggerRef.current?.focus();
+      }
+    }
   }
 
   return (
     <div ref={containerRef} className={cn("relative", className)}>
       <button
+        ref={triggerRef}
         type="button"
         disabled={disabled}
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => { if (!disabled) setOpen((o) => !o); }}
         onKeyDown={handleKeyDown}
         aria-haspopup="listbox"
         aria-expanded={open}
@@ -86,10 +123,7 @@ export function Select({
       </button>
 
       {open && (
-        <div
-          role="listbox"
-          className="absolute z-50 mt-1 w-full bg-white rounded-xl border border-brand-border/30 shadow-lg overflow-hidden"
-        >
+        <div className="absolute z-50 mt-1 w-full bg-white rounded-xl border border-brand-border/30 shadow-lg overflow-hidden">
           {searchable && (
             <div className="p-2 border-b border-brand-border/[0.08]">
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-brand-bg">
@@ -99,19 +133,20 @@ export function Select({
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
+                  onKeyDown={handleKeyDown}
                   placeholder="Search..."
                   className="bg-transparent outline-none text-sm text-brand-text placeholder:text-brand-muted/60 w-full"
                 />
               </div>
             </div>
           )}
-          <ul className="max-h-52 overflow-y-auto py-1">
+          <ul role="listbox" className="max-h-52 overflow-y-auto py-1">
             {filtered.length === 0 ? (
               <li className="px-4 py-2.5 text-sm text-brand-muted">
                 {options.length === 0 ? "No options available" : "No results"}
               </li>
             ) : (
-              filtered.map((opt) => (
+              filtered.map((opt, idx) => (
                 <li
                   key={opt.value}
                   role="option"
@@ -121,7 +156,9 @@ export function Select({
                     "flex items-center justify-between px-4 py-2 text-sm cursor-pointer transition-colors",
                     opt.value === value
                       ? "bg-brand-accent/[0.06] text-brand-accent font-medium"
-                      : "text-brand-text hover:bg-brand-bg"
+                      : idx === focusedIndex
+                        ? "bg-brand-bg text-brand-text"
+                        : "text-brand-text hover:bg-brand-bg"
                   )}
                 >
                   {opt.label}
