@@ -70,11 +70,17 @@ ASK_USER_QUESTIONS_DEFINITION = {
                         "required": ["id", "type", "label"],
                         "properties": {
                             "id": {"type": "string"},
-                            "type": {"type": "string", "enum": ["radio", "checkbox", "text", "textarea"]},
+                            "type": {
+                                "type": "string",
+                                "enum": ["radio", "checkbox", "text", "textarea", "select", "date", "number", "rating", "slider"],
+                            },
                             "label": {"type": "string"},
                             "options": {"type": "array", "items": {"type": "string"}},
                             "placeholder": {"type": "string"},
                             "required": {"type": "boolean"},
+                            "min":  {"type": "number", "description": "Minimum value (number, slider)"},
+                            "max":  {"type": "number", "description": "Maximum value (number, slider)"},
+                            "step": {"type": "number", "description": "Step increment (number, slider)"},
                         },
                     },
                 },
