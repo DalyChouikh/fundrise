@@ -1,6 +1,9 @@
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, Check, Edit2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Check, Edit2, Star } from "lucide-react";
 import type { QuestionDef, QuestionForm as QuestionFormType } from "@/types";
+import { Select } from "@/components/ui/Select";
+import { DateInput } from "@/components/ui/DateInput";
+import { Input } from "@/components/ui/Input";
 
 interface QuestionFormProps {
   form: QuestionFormType;
@@ -70,19 +73,105 @@ function QuestionInput({
     );
   }
 
+  if (question.type === "select") {
+    const opts = (question.options ?? []).map((o) => ({ value: o, label: o }));
+    return (
+      <Select
+        options={opts}
+        value={(value as string) ?? ""}
+        onChange={(val) => onChange(val)}
+        placeholder={question.placeholder ?? "Select…"}
+      />
+    );
+  }
+
+  if (question.type === "date") {
+    return (
+      <DateInput
+        value={(value as string) ?? ""}
+        onChange={(e) => onChange(e.target.value)}
+      />
+    );
+  }
+
+  if (question.type === "number") {
+    return (
+      <Input
+        type="number"
+        value={(value as string) ?? ""}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={question.placeholder ?? ""}
+        min={question.min}
+        max={question.max}
+        step={question.step}
+      />
+    );
+  }
+
+  if (question.type === "rating") {
+    const rating = Number(value as string) || 0;
+    return (
+      <div className="flex gap-1.5">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <button
+            key={star}
+            type="button"
+            onClick={() => onChange(String(star))}
+            className="focus:outline-none"
+          >
+            <Star
+              className={`w-6 h-6 transition-colors ${
+                star <= rating
+                  ? "text-amber-400 fill-amber-400"
+                  : "text-brand-border hover:text-amber-300"
+              }`}
+            />
+          </button>
+        ))}
+      </div>
+    );
+  }
+
+  if (question.type === "slider") {
+    const numVal = Number(value as string) || (question.min ?? 0);
+    const min = question.min ?? 0;
+    const max = question.max ?? 100;
+    const step = question.step ?? 1;
+    return (
+      <div className="space-y-2">
+        <div className="text-center text-sm font-medium text-brand-text tabular-nums">
+          {numVal}
+        </div>
+        <input
+          type="range"
+          value={numVal}
+          min={min}
+          max={max}
+          step={step}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-full accent-brand-accent"
+        />
+        <div className="flex justify-between text-xs text-brand-muted tabular-nums">
+          <span>{min}</span>
+          <span>{max}</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <input
+    <Input
       type="text"
       value={(value as string) ?? ""}
       onChange={(e) => onChange(e.target.value)}
       placeholder={question.placeholder ?? ""}
-      className="w-full rounded-xl border border-brand-border/40 bg-brand-bg px-3 py-2 text-sm text-brand-text placeholder:text-brand-muted focus:outline-none focus:ring-1 focus:ring-brand-accent"
     />
   );
 }
 
-function formatAnswer(_q: QuestionDef, value: unknown): string {
+function formatAnswer(q: QuestionDef, value: unknown): string {
   if (Array.isArray(value)) return (value as string[]).join(", ") || "—";
+  if (q.type === "rating" && value) return `${value as string} / 5`;
   return (value as string) || "—";
 }
 
