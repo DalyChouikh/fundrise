@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/Badge";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { PasskeyConfirmDialog } from "@/components/passkey/PasskeyConfirmDialog";
 import { usePasskeyStepUp } from "@/hooks/usePasskeyStepUp";
+import { Alert } from "@/components/ui";
+import { useToast } from "@/hooks/useToast";
 import type { Investment, InvestmentStatus } from "@/types";
 
 const statusConfig: Record<
@@ -29,6 +31,7 @@ const tabs: { label: string; value: InvestmentStatus | "all" }[] = [
 export function InvestmentsPage() {
   const { profile } = useAuth();
   const navigate = useNavigate();
+  const toast = useToast();
   const [investments, setInvestments] = useState<Investment[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<InvestmentStatus | "all">("all");
@@ -41,7 +44,7 @@ export function InvestmentsPage() {
         const data = await api.get<Investment[]>("/investments/");
         setInvestments(data);
       } catch {
-        // ignore
+        toast.error("Failed to load investments. Please refresh and try again.");
       } finally {
         setLoading(false);
       }
@@ -70,6 +73,7 @@ export function InvestmentsPage() {
       setInvestments((prev) =>
         prev.map((inv) => (inv.id === investmentId ? updated : inv))
       );
+      toast.success("Investment confirmed.");
     } catch {
       setConfirmError("Failed to confirm investment. Please try again.");
     }
@@ -84,8 +88,9 @@ export function InvestmentsPage() {
       setInvestments((prev) =>
         prev.map((inv) => (inv.id === investmentId ? updated : inv))
       );
+      toast.success("Investment cancelled.");
     } catch {
-      // ignore
+      toast.error("Failed to cancel investment. Please try again.");
     }
   };
 
@@ -156,9 +161,7 @@ export function InvestmentsPage() {
       </div>
 
       {confirmError && (
-        <div className="px-4 py-3 rounded-xl bg-red-50 border border-red-100 text-red-700 text-sm animate-fade-in">
-          {confirmError}
-        </div>
+        <Alert variant="error">{confirmError}</Alert>
       )}
 
       {/* Investment list */}

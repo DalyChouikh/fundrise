@@ -26,12 +26,15 @@ import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { CheckoutModal } from "@/components/investments/CheckoutModal";
 import { PasskeyConfirmDialog } from "@/components/passkey/PasskeyConfirmDialog";
 import { usePasskeyStepUp } from "@/hooks/usePasskeyStepUp";
+import { Alert, Input, Textarea } from "@/components/ui";
+import { useToast } from "@/hooks/useToast";
 import type { CampaignDetail, CampaignUpdate, CampaignMilestone, Investment, CampaignComment } from "@/types";
 
 export function CampaignDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { profile } = useAuth();
   const navigate = useNavigate();
+  const toast = useToast();
   const [campaign, setCampaign] = useState<CampaignDetail | null>(null);
   const [updates, setUpdates] = useState<CampaignUpdate[]>([]);
   const [milestones, setMilestones] = useState<CampaignMilestone[]>([]);
@@ -63,7 +66,7 @@ export function CampaignDetailPage() {
           setInvestments(invs.filter((inv) => inv.campaign === c.id));
           setComments(cmts);
         } catch {
-          // ignore
+          toast.error("Failed to load campaign activity details.");
         }
       } catch {
         navigate("/campaigns", { replace: true });
@@ -82,8 +85,9 @@ export function CampaignDetailPage() {
         {}
       );
       setCampaign(updated);
+      toast.success("Campaign submitted for approval.");
     } catch {
-      // silently fail
+      toast.error("Failed to submit campaign. Please try again.");
     }
   };
 
@@ -115,6 +119,7 @@ export function CampaignDetailPage() {
         `/campaigns/${campaign.id}/`
       );
       setCampaign(updatedCampaign);
+      toast.success("Investment confirmed.");
     } catch {
       setConfirmError("Failed to confirm investment. Please try again.");
     }
@@ -129,8 +134,9 @@ export function CampaignDetailPage() {
       setInvestments((prev) =>
         prev.map((inv) => (inv.id === investmentId ? updated : inv))
       );
+      toast.success("Investment cancelled.");
     } catch {
-      // ignore
+      toast.error("Failed to cancel investment. Please try again.");
     }
   };
 
@@ -320,9 +326,7 @@ export function CampaignDetailPage() {
                 Recent Investors ({investments.length})
               </h3>
               {confirmError && (
-                <div className="px-3 py-2 rounded-xl bg-red-50 border border-red-100 text-red-700 text-xs mb-3">
-                  {confirmError}
-                </div>
+                <Alert variant="error" className="mb-3">{confirmError}</Alert>
               )}
               <div className="space-y-2.5">
                 {investments.slice(0, 5).map((inv) => (
@@ -428,7 +432,9 @@ export function CampaignDetailPage() {
             // Refresh investments list
             api.get<Investment[]>("/investments/").then((invs) => {
               setInvestments(invs.filter((inv) => inv.campaign === campaign.id));
-            }).catch(() => {});
+            }).catch(() => {
+              toast.error("Failed to refresh investments.");
+            });
           }}
         />
       )}
@@ -449,6 +455,7 @@ function UpdatesSection({
   setUpdates: React.Dispatch<React.SetStateAction<CampaignUpdate[]>>;
   isStartupMember: boolean;
 }) {
+  const toast = useToast();
   const [showForm, setShowForm] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -466,8 +473,9 @@ function UpdatesSection({
       setTitle("");
       setContent("");
       setShowForm(false);
+      toast.success("Update posted.");
     } catch {
-      // ignore
+      toast.error("Failed to post update. Please try again.");
     }
     setPosting(false);
   };
@@ -491,18 +499,17 @@ function UpdatesSection({
 
       {showForm && (
         <div className="mb-4 p-4 rounded-xl border border-brand-accent/20 bg-brand-accent/[0.02]">
-          <input
+          <Input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Update title"
-            className="w-full bg-white border border-brand-border/30 rounded-xl px-4 py-2.5 text-sm text-brand-text placeholder:text-brand-muted/60 outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all shadow-sm mb-2"
+            className="mb-2"
           />
-          <textarea
+          <Textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="Share what's new with your campaign..."
             rows={3}
-            className="w-full bg-white border border-brand-border/30 rounded-xl px-4 py-2.5 text-sm text-brand-text placeholder:text-brand-muted/60 outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all resize-none shadow-sm"
           />
           <div className="flex justify-end gap-2 mt-2">
             <Button
@@ -581,6 +588,7 @@ function MilestonesSection({
   setMilestones: React.Dispatch<React.SetStateAction<CampaignMilestone[]>>;
   isStartupMember: boolean;
 }) {
+  const toast = useToast();
   const [showForm, setShowForm] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -604,8 +612,9 @@ function MilestonesSection({
       setDescription("");
       setTargetDate("");
       setShowForm(false);
+      toast.success("Milestone added.");
     } catch {
-      // ignore
+      toast.error("Failed to add milestone. Please try again.");
     }
     setPosting(false);
   };
@@ -619,8 +628,13 @@ function MilestonesSection({
       setMilestones((prev) =>
         prev.map((m) => (m.id === milestone.id ? updated : m))
       );
+      toast.success(
+        updated.is_completed
+          ? "Milestone marked as complete."
+          : "Milestone marked as incomplete."
+      );
     } catch {
-      // ignore
+      toast.error("Failed to update milestone. Please try again.");
     }
   };
 
@@ -643,23 +657,22 @@ function MilestonesSection({
 
       {showForm && (
         <div className="mb-3 p-4 rounded-xl border border-brand-accent/20 bg-brand-accent/[0.02]">
-          <input
+          <Input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Milestone title"
-            className="w-full bg-white border border-brand-border/30 rounded-xl px-4 py-2.5 text-sm text-brand-text placeholder:text-brand-muted/60 outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all shadow-sm mb-2"
+            className="mb-2"
           />
-          <input
+          <Input
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Description (optional)"
-            className="w-full bg-white border border-brand-border/30 rounded-xl px-4 py-2.5 text-sm text-brand-text placeholder:text-brand-muted/60 outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all shadow-sm mb-2"
+            className="mb-2"
           />
-          <input
+          <Input
             type="date"
             value={targetDate}
             onChange={(e) => setTargetDate(e.target.value)}
-            className="w-full bg-white border border-brand-border/30 rounded-xl px-4 py-2.5 text-sm text-brand-text outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all shadow-sm"
           />
           <div className="flex justify-end gap-2 mt-2">
             <Button
@@ -766,6 +779,7 @@ function DiscussionSection({
   setComments: React.Dispatch<React.SetStateAction<CampaignComment[]>>;
 }) {
   const { profile } = useAuth();
+  const toast = useToast();
   const [newComment, setNewComment] = useState("");
   const [posting, setPosting] = useState(false);
 
@@ -781,7 +795,7 @@ function DiscussionSection({
       setComments((prev) => [comment, ...prev]);
       setNewComment("");
     } catch {
-      // ignore
+      toast.error("Failed to post comment. Please try again.");
     }
     setPosting(false);
   };
@@ -817,12 +831,11 @@ function DiscussionSection({
             className="flex-shrink-0 mt-1"
           />
           <div className="flex-1">
-            <textarea
+            <Textarea
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               placeholder="Ask a question or share your thoughts..."
               rows={2}
-              className="w-full bg-white border border-brand-border/30 rounded-xl px-4 py-2.5 text-sm text-brand-text placeholder:text-brand-muted/60 outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all resize-none shadow-sm"
             />
             <div className="flex justify-end mt-2">
               <Button
@@ -874,6 +887,7 @@ function CommentThread({
   onReplyAdded: (parentId: number, reply: CampaignComment) => void;
 }) {
   const { profile } = useAuth();
+  const toast = useToast();
   const [showReply, setShowReply] = useState(false);
   const [replyText, setReplyText] = useState("");
   const [posting, setPosting] = useState(false);
@@ -898,7 +912,7 @@ function CommentThread({
       setReplyText("");
       setShowReply(false);
     } catch {
-      // ignore
+      toast.error("Failed to post reply. Please try again.");
     }
     setPosting(false);
   };
@@ -976,13 +990,13 @@ function CommentThread({
       {/* Reply input */}
       {showReply && (
         <div className="ml-11 mt-3 flex gap-2">
-          <textarea
+          <Textarea
             ref={replyInputRef}
             value={replyText}
             onChange={(e) => setReplyText(e.target.value)}
             placeholder="Write a reply..."
             rows={1}
-            className="flex-1 bg-white border border-brand-border/30 rounded-xl px-4 py-2.5 text-sm text-brand-text placeholder:text-brand-muted/60 outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all resize-none shadow-sm"
+            className="flex-1"
           />
           <Button
             size="sm"
