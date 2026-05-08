@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { Select } from "@/components/ui/Select";
 import type { UserProfile, UserRole } from "@/types";
 
 const ROLE_OPTIONS: { value: UserRole; label: string }[] = [
@@ -124,28 +125,25 @@ export function UsersPage() {
             className="bg-transparent outline-none w-full text-brand-text placeholder:text-brand-muted/60"
           />
         </div>
-        <select
+        <Select
+          options={[{ value: "", label: "All Roles" }, ...ROLE_OPTIONS]}
           value={roleFilter}
-          onChange={(e) => setRoleFilter(e.target.value)}
-          className="px-4 py-2.5 rounded-xl bg-white border border-brand-border/30 text-brand-text text-sm shadow-sm outline-none focus:border-brand-blue/40 transition-colors cursor-pointer"
-        >
-          <option value="">All Roles</option>
-          {ROLE_OPTIONS.map((role) => (
-            <option key={role.value} value={role.value}>
-              {role.label}
-            </option>
-          ))}
-        </select>
-        <select
+          onChange={(val) => setRoleFilter(val)}
+          placeholder="All Roles"
+          className="w-44"
+        />
+        <Select
+          options={[
+            { value: "", label: "All Status" },
+            { value: "pending_approval", label: "Pending" },
+            { value: "approved", label: "Approved" },
+            { value: "rejected", label: "Rejected" },
+          ]}
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-2.5 rounded-xl bg-white border border-brand-border/30 text-brand-text text-sm shadow-sm outline-none focus:border-brand-blue/40 transition-colors cursor-pointer"
-        >
-          <option value="">All Status</option>
-          <option value="pending_approval">Pending</option>
-          <option value="approved">Approved</option>
-          <option value="rejected">Rejected</option>
-        </select>
+          onChange={(val) => setStatusFilter(val)}
+          placeholder="All Status"
+          className="w-44"
+        />
       </div>
 
       {/* Users Table */}
