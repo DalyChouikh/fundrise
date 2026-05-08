@@ -905,6 +905,90 @@ def update_my_profile(user, full_name=None, bio=None):
     }
 
 
+def show_startup_cards(user, startup_ids):
+    startups = (
+        Startup.objects.filter(id__in=startup_ids[:6])
+        .annotate(
+            members_count=Count("members"),
+            followers_count=Count("followers"),
+        )
+        .select_related("created_by")
+    )
+    return {
+        "card_type": "startup",
+        "items": [
+            {
+                "id": s.id,
+                "name": s.name,
+                "description": s.description[:200],
+                "industry": s.industry,
+                "location": s.location,
+                "founding_date": str(s.founding_date),
+                "status": s.status,
+                "logo_url": s.logo_url,
+                "website": s.website or "",
+                "members_count": s.members_count,
+                "followers_count": s.followers_count,
+                "is_following": StartupFollow.objects.filter(startup=s, user=user).exists(),
+                "created_by": {
+                    "id": str(s.created_by.id),
+                    "full_name": s.created_by.full_name,
+                    "avatar_url": s.created_by.avatar_url or "",
+                    "role": s.created_by.role,
+                },
+                "created_at": str(s.created_at),
+                "updated_at": str(s.updated_at),
+            }
+            for s in startups
+        ],
+    }
+
+
+def show_campaign_cards(user, campaign_ids):
+    campaigns = (
+        Campaign.objects.filter(id__in=campaign_ids[:6])
+        .select_related("startup")
+    )
+    return {
+        "card_type": "campaign",
+        "items": [
+            {
+                "id": c.id,
+                "title": c.title,
+                "description": c.description[:200],
+                "startup": c.startup.id,
+                "startup_name": c.startup.name,
+                "startup_logo_url": c.startup.logo_url,
+                "startup_industry": c.startup.industry,
+                "funding_goal": str(c.funding_goal),
+                "current_funding": str(c.current_funding),
+                "funding_percentage": c.funding_percentage,
+                "equity_offered": str(c.equity_offered),
+                "deadline": str(c.deadline),
+                "status": c.status,
+                "created_at": str(c.created_at),
+                "updated_at": str(c.updated_at),
+            }
+            for c in campaigns
+        ],
+    }
+
+
+def render_chart(user, chart_type, title, data, x_label=None, y_label=None):
+    allowed_types = {"bar", "line", "pie", "area"}
+    if chart_type not in allowed_types:
+        return {"error": f"Invalid chart_type. Must be one of: {', '.join(sorted(allowed_types))}"}
+    if not data or not isinstance(data, list):
+        return {"error": "data must be a non-empty list"}
+    return {
+        "chart_type": chart_type,
+        "title": title,
+        "data": data,
+        "x_label": x_label,
+        "y_label": y_label,
+    }
+
+
 # ---------------------------------------------------------------------------
 # Tool definitions for OpenAI-compatible function calling
 # ---------------------------------------------------------------------------
@@ -1471,6 +1555,96 @@ TOOL_DEFINITIONS = [
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "show_startup_cards",
+            "description": (
+                "Display startup cards visually in the chat. "
+                "Call after search_startups or list_startups to render results as rich cards. "
+                "Pass the startup IDs from those results."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "startup_ids": {
+                        "type": "array",
+                        "items": {"type": "integer"},
+                        "description": "List of startup IDs to display as cards (max 6)",
+                    }
+                },
+                "required": ["startup_ids"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "show_campaign_cards",
+            "description": (
+                "Display campaign cards visually in the chat. "
+                "Call after search_campaigns or get_my_campaigns to render results as rich cards. "
+                "Pass the campaign IDs from those results."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "campaign_ids": {
+                        "type": "array",
+                        "items": {"type": "integer"},
+                        "description": "List of campaign IDs to display as cards (max 6)",
+                    }
+                },
+                "required": ["campaign_ids"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "render_chart",
+            "description": (
+                "Render a chart or graph visually in the chat. "
+                "Use bar for comparisons between items, line or area for trends over time, "
+                "pie for proportions or breakdowns. "
+                "Always call this after fetching the underlying data with other tools — do not make up data."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "chart_type": {
+                        "type": "string",
+                        "enum": ["bar", "line", "pie", "area"],
+                    },
+                    "title": {
+                        "type": "string",
+                        "description": "Chart title",
+                    },
+                    "data": {
+                        "type": "array",
+                        "description": "Data points. For bar/line/area: [{label, value}]. For pie: [{name, value}].",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "label": {"type": "string"},
+                                "name":  {"type": "string"},
+                                "value": {"type": "number"},
+                            },
+                        },
+                    },
+                    "x_label": {
+                        "type": "string",
+                        "description": "X-axis label (bar, line, area only). Optional.",
+                    },
+                    "y_label": {
+                        "type": "string",
+                        "description": "Y-axis label (bar, line, area only). Optional.",
+                    },
+                },
+                "required": ["chart_type", "title", "data"],
+            },
+        },
+    },
 ]
 
 
@@ -1510,6 +1684,9 @@ TOOL_REGISTRY = {
     "post_campaign_comment": post_campaign_comment,
     "mark_notifications_read": mark_notifications_read,
     "update_my_profile": update_my_profile,
+    "show_startup_cards": show_startup_cards,
+    "show_campaign_cards": show_campaign_cards,
+    "render_chart": render_chart,
 }
 
 
