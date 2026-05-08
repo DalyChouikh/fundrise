@@ -5,19 +5,21 @@ from django.db import transaction
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions, status, viewsets
+from rest_framework.permissions import AllowAny
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.chat.models import ChatRoom, ChatRoomParticipant
 from apps.startups.email import send_invite_email
-from apps.startups.models import Startup, StartupFollow, StartupInvitation, StartupMember
+from apps.startups.models import Industry, Startup, StartupFollow, StartupInvitation, StartupMember
 from apps.startups.permissions import (
     IsStartupCreatorOrAdmin,
     IsStartupFounderFromURL,
     IsStartupMemberOrAdmin,
 )
 from apps.startups.serializers import (
+    IndustrySerializer,
     InvitationCreateSerializer,
     InvitationListSerializer,
     InvitationPublicSerializer,
@@ -30,6 +32,12 @@ from apps.startups.serializers import (
 )
 from apps.notifications.utils import create_notification
 from apps.users.permissions import IsFounder
+
+
+class IndustryListView(generics.ListAPIView):
+    serializer_class = IndustrySerializer
+    permission_classes = [AllowAny]
+    queryset = Industry.objects.filter(is_active=True)
 
 
 class StartupViewSet(viewsets.ModelViewSet):
