@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { KeyRound, X } from "lucide-react";
+import { KeyRound } from "lucide-react";
 import { stepUpWithPasskey } from "@/lib/passkey";
+import { Modal, Alert } from "@/components/ui";
 import { Button } from "@/components/ui/Button";
 
 interface Props {
@@ -14,8 +15,6 @@ interface Props {
 export function PasskeyConfirmDialog({ open, onClose, onConfirmed, title, description }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
-  if (!open) return null;
 
   const handleVerify = async () => {
     setError("");
@@ -35,36 +34,14 @@ export function PasskeyConfirmDialog({ open, onClose, onConfirmed, title, descri
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-      onClick={onClose}
-    >
-      <div
-        className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl mx-4"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-brand-accent/10 flex items-center justify-center flex-shrink-0">
-              <KeyRound className="w-5 h-5 text-brand-accent" />
-            </div>
-            <h3 className="text-base font-semibold text-brand-text">{title}</h3>
-          </div>
-          <button
-            onClick={onClose}
-            className="text-brand-muted hover:text-brand-text transition-colors cursor-pointer ml-2"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-        <p className="text-sm text-brand-muted mb-4">{description}</p>
-        {error && (
-          <div className="px-3 py-2 rounded-xl bg-red-50 border border-red-100 text-red-700 text-sm mb-3">
-            {error}
-          </div>
-        )}
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={title}
+      maxWidth="sm"
+      footer={
         <div className="flex gap-2 justify-end">
-          <Button variant="secondary" size="sm" onClick={onClose}>
+          <Button variant="secondary" size="sm" onClick={onClose} disabled={loading}>
             Cancel
           </Button>
           <Button size="sm" loading={loading} onClick={handleVerify}>
@@ -72,7 +49,17 @@ export function PasskeyConfirmDialog({ open, onClose, onConfirmed, title, descri
             Verify with passkey
           </Button>
         </div>
+      }
+    >
+      <div className="space-y-3">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-brand-accent/10 flex items-center justify-center flex-shrink-0">
+            <KeyRound className="w-5 h-5 text-brand-accent" />
+          </div>
+          <p className="text-sm text-brand-muted">{description}</p>
+        </div>
+        {error && <Alert variant="error">{error}</Alert>}
       </div>
-    </div>
+    </Modal>
   );
 }

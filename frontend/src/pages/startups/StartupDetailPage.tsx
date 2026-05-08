@@ -24,12 +24,15 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Avatar } from "@/components/ui/Avatar";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { Alert, Input } from "@/components/ui";
+import { useToast } from "@/hooks/useToast";
 import type { StartupDetail, Campaign, StartupInvitation, InvitationCreateResponse } from "@/types";
 
 export function StartupDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { profile } = useAuth();
   const navigate = useNavigate();
+  const toast = useToast();
   const [startup, setStartup] = useState<StartupDetail | null>(null);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
@@ -65,7 +68,9 @@ export function StartupDetailPage() {
           api
             .get<StartupInvitation[]>(`/startups/${id}/invitations/list/`)
             .then(setPendingInvites)
-            .catch(() => {});
+            .catch(() => {
+              toast.error("Failed to load pending invitations.");
+            });
         }
       } catch {
         navigate("/startups", { replace: true });
@@ -87,11 +92,14 @@ export function StartupDetailPage() {
         { email: inviteEmail }
       );
       setInviteResult(result);
+      toast.success("Invitation sent successfully.");
       // Refresh pending invites
       api
         .get<StartupInvitation[]>(`/startups/${id}/invitations/list/`)
         .then(setPendingInvites)
-        .catch(() => {});
+        .catch(() => {
+          toast.error("Failed to refresh pending invitations.");
+        });
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to send invitation.";
       try {
@@ -110,8 +118,9 @@ export function StartupDetailPage() {
     try {
       await api.post(`/startups/${id}/invitations/${inviteId}/cancel/`, {});
       setPendingInvites((prev) => prev.filter((i) => i.id !== inviteId));
+      toast.success("Invitation cancelled.");
     } catch {
-      // silently fail
+      toast.error("Failed to cancel invitation. Please try again.");
     }
   };
 
@@ -141,8 +150,11 @@ export function StartupDetailPage() {
         followers_count:
           startup.followers_count + (res.following ? 1 : -1),
       });
+      toast.success(
+        res.following ? "You are now following this startup." : "You unfollowed this startup."
+      );
     } catch {
-      // silently fail
+      toast.error("Failed to update follow status. Please try again.");
     }
   };
 
@@ -466,11 +478,11 @@ export function StartupDetailPage() {
                     Invite link
                   </label>
                   <div className="flex gap-2">
-                    <input
+                    <Input
                       type="text"
                       readOnly
                       value={inviteResult.invite_url}
-                      className="flex-1 px-3 py-2 rounded-xl bg-brand-bg/60 border border-brand-border/[0.12] text-brand-text text-sm outline-none"
+                      className="flex-1"
                     />
                     <button
                       onClick={() => handleCopyLink(inviteResult.invite_url)}
@@ -508,20 +520,17 @@ export function StartupDetailPage() {
                   <label className="block text-[13px] font-medium text-brand-text mb-1.5">
                     Email address
                   </label>
-                  <input
+                  <Input
                     type="email"
                     value={inviteEmail}
                     onChange={(e) => setInviteEmail(e.target.value)}
                     placeholder="colleague@example.com"
-                    className="w-full px-4 py-2.5 rounded-xl bg-white border border-brand-border/30 text-brand-text placeholder:text-brand-muted/60 text-sm outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all shadow-sm"
                     onKeyDown={(e) => e.key === "Enter" && handleInvite()}
                   />
                 </div>
 
                 {inviteError && (
-                  <div className="px-4 py-3 rounded-xl bg-red-50 border border-red-100 text-red-700 text-sm">
-                    {inviteError}
-                  </div>
+                  <Alert variant="error">{inviteError}</Alert>
                 )}
 
                 <p className="text-xs text-brand-muted leading-relaxed">

@@ -1,3 +1,4 @@
+import { Textarea } from "@/components/ui";
 import { AvatarUpload } from "@/components/upload/AvatarUpload";
 
 interface ProfileStepProps {
@@ -21,12 +22,11 @@ export function ProfileStep({ data, onChange }: ProfileStepProps) {
         <label className="block text-sm font-medium text-brand-text mb-1.5">
           Bio
         </label>
-        <textarea
+        <Textarea
           value={data.bio}
           onChange={(e) => onChange("bio", e.target.value)}
           placeholder="Tell us a bit about yourself..."
           rows={4}
-          className="w-full px-4 py-2.5 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text placeholder:text-brand-muted text-sm outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/10 transition-all resize-none"
         />
       </div>
     </div>

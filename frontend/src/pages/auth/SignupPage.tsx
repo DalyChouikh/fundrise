@@ -4,6 +4,7 @@ import { Building2, TrendingUp, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/Button";
 import { Logo } from "@/components/ui/Logo";
+import { Input, Alert } from "@/components/ui";
 
 type SelectableRole = "founder" | "investor";
 
@@ -125,11 +126,7 @@ export function SignupPage() {
           </div>
 
           <div className="space-y-5">
-            {error && (
-              <div className="px-4 py-3 rounded-xl bg-red-50 border border-red-100 text-red-700 text-sm animate-fade-in">
-                {error}
-              </div>
-            )}
+            {error && <Alert variant="error">{error}</Alert>}
 
             <button
               type="button"
@@ -160,13 +157,12 @@ export function SignupPage() {
                 <label className="block text-[13px] font-medium text-brand-text mb-1.5">
                   Full name
                 </label>
-                <input
+                <Input
                   type="text"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="John Doe"
                   required
-                  className="w-full px-4 py-2.5 rounded-xl bg-white border border-brand-border/40 text-brand-text placeholder:text-brand-muted/60 text-sm outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all shadow-sm"
                 />
               </div>
 
@@ -174,13 +170,12 @@ export function SignupPage() {
                 <label className="block text-[13px] font-medium text-brand-text mb-1.5">
                   Email
                 </label>
-                <input
+                <Input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
                   required
-                  className="w-full px-4 py-2.5 rounded-xl bg-white border border-brand-border/40 text-brand-text placeholder:text-brand-muted/60 text-sm outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all shadow-sm"
                 />
               </div>
 
@@ -188,14 +183,13 @@ export function SignupPage() {
                 <label className="block text-[13px] font-medium text-brand-text mb-1.5">
                   Password
                 </label>
-                <input
+                <Input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Min. 6 characters"
                   required
                   minLength={6}
-                  className="w-full px-4 py-2.5 rounded-xl bg-white border border-brand-border/40 text-brand-text placeholder:text-brand-muted/60 text-sm outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all shadow-sm"
                 />
               </div>
 

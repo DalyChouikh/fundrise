@@ -16,6 +16,7 @@ import { api } from "@/lib/api";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { useToast } from "@/hooks/useToast";
 import type { Notification, NotificationType } from "@/types";
 
 const typeConfig: Record<
@@ -38,6 +39,7 @@ const typeConfig: Record<
 };
 
 export function NotificationsPage() {
+  const toast = useToast();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -47,7 +49,7 @@ export function NotificationsPage() {
         const data = await api.get<Notification[]>("/notifications/");
         setNotifications(data);
       } catch {
-        // ignore
+        toast.error("Failed to load notifications. Please refresh and try again.");
       } finally {
         setLoading(false);
       }
@@ -61,8 +63,9 @@ export function NotificationsPage() {
       setNotifications((prev) =>
         prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
       );
+      toast.success("Notification marked as read.");
     } catch {
-      // ignore
+      toast.error("Failed to mark notification as read. Please try again.");
     }
   };
 
@@ -70,8 +73,9 @@ export function NotificationsPage() {
     try {
       await api.post("/notifications/read-all/", {});
       setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+      toast.success("All notifications marked as read.");
     } catch {
-      // ignore
+      toast.error("Failed to mark notifications as read. Please try again.");
     }
   };
 

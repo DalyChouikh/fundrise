@@ -1,3 +1,5 @@
+import { Select } from "@/components/ui";
+
 interface InvestorPreferencesStepProps {
   data: {
     preferred_industries: string[];
@@ -56,8 +58,23 @@ export function InvestorPreferencesStep({
     }
   };
 
-  const selectClass =
-    "w-full px-4 py-2.5 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text text-sm outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/10 transition-all";
+  const checkSizeValue =
+    CHECK_SIZES.find(
+      (s) =>
+        s.min === data.check_size_min && s.max === data.check_size_max
+    )
+      ? `${data.check_size_min}-${data.check_size_max}`
+      : "";
+
+  const checkSizeOptions = CHECK_SIZES.map((size) => ({
+    value: `${size.min}-${size.max}`,
+    label: size.label,
+  }));
+
+  const stageOptions = STAGES.map((stage) => ({
+    value: stage.value,
+    label: stage.label,
+  }));
 
   return (
     <div className="space-y-5">
@@ -87,49 +104,28 @@ export function InvestorPreferencesStep({
         <label className="block text-sm font-medium text-brand-text mb-1.5">
           Typical Check Size
         </label>
-        <select
-          value={
-            CHECK_SIZES.find(
-              (s) =>
-                s.min === data.check_size_min && s.max === data.check_size_max
-            )
-              ? `${data.check_size_min}-${data.check_size_max}`
-              : ""
-          }
-          onChange={(e) => {
-            const size = CHECK_SIZES.find(
-              (s) => `${s.min}-${s.max}` === e.target.value
-            );
+        <Select
+          options={checkSizeOptions}
+          value={checkSizeValue}
+          onChange={(val) => {
+            const size = CHECK_SIZES.find((s) => `${s.min}-${s.max}` === val);
             onChange("check_size_min", size?.min ?? null);
             onChange("check_size_max", size?.max ?? null);
           }}
-          className={selectClass}
-        >
-          <option value="">Select a range...</option>
-          {CHECK_SIZES.map((size) => (
-            <option key={size.label} value={`${size.min}-${size.max}`}>
-              {size.label}
-            </option>
-          ))}
-        </select>
+          placeholder="Select a range..."
+        />
       </div>
 
       <div>
         <label className="block text-sm font-medium text-brand-text mb-1.5">
           Preferred Stage
         </label>
-        <select
+        <Select
+          options={stageOptions}
           value={data.preferred_stage}
-          onChange={(e) => onChange("preferred_stage", e.target.value)}
-          className={selectClass}
-        >
-          <option value="">Select a stage...</option>
-          {STAGES.map((stage) => (
-            <option key={stage.value} value={stage.value}>
-              {stage.label}
-            </option>
-          ))}
-        </select>
+          onChange={(val) => onChange("preferred_stage", val)}
+          placeholder="Select a stage..."
+        />
       </div>
     </div>
   );

@@ -6,7 +6,6 @@ import {
   Users,
   Heart,
   Building2,
-  X,
   Search,
   CheckCircle2,
   XCircle,
@@ -21,9 +20,12 @@ import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import type { Startup } from "@/types";
 import { LogoUpload } from "@/components/upload/LogoUpload";
 import { FileUpload } from "@/components/upload/FileUpload";
+import { Input, Textarea, DateInput, Alert, Modal } from "@/components/ui";
+import { useToast } from "@/hooks/useToast";
 
 export function StartupsPage() {
   const { profile } = useAuth();
+  const toast = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
   const [startups, setStartups] = useState<Startup[]>([]);
   const [loading, setLoading] = useState(true);
@@ -71,7 +73,7 @@ export function StartupsPage() {
         )
       );
     } catch {
-      // silently fail
+      toast.error("Failed to update follow status.");
     }
   };
 
@@ -299,6 +301,7 @@ function CreateStartupModal({
   onClose: () => void;
   onCreated: () => void;
 }) {
+  const toast = useToast();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [form, setForm] = useState({
@@ -322,6 +325,7 @@ function CreateStartupModal({
       if (!payload.logo_url) delete payload.logo_url;
       if (!payload.pitch_deck_url) delete payload.pitch_deck_url;
       await api.post("/startups/", payload);
+      toast.success("Startup created successfully.");
       onCreated();
     } catch {
       setError("Failed to create startup. Please check your inputs.");
@@ -334,134 +338,108 @@ function CreateStartupModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white rounded-2xl shadow-modal w-full max-w-xl mx-4 max-h-[90vh] overflow-y-auto animate-fade-in-scale">
-        <div className="flex items-center justify-between p-5 border-b border-brand-border/[0.1]">
-          <h2 className="text-base font-bold text-brand-text">
-            Create Startup
-          </h2>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-xl hover:bg-brand-bg text-brand-muted transition-colors cursor-pointer"
-          >
-            <X className="w-5 h-5" />
-          </button>
+    <Modal open={true} onClose={onClose} title="Create Startup">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {error && <Alert variant="error">{error}</Alert>}
+
+        <LogoUpload
+          startupName={form.name}
+          onUpload={(url) => updateField("logo_url", url)}
+        />
+
+        <div>
+          <label className="block text-[13px] font-medium text-brand-text mb-1.5">
+            Startup Name *
+          </label>
+          <Input
+            type="text"
+            required
+            value={form.name}
+            onChange={(e) => updateField("name", e.target.value)}
+            placeholder="My Awesome Startup"
+          />
         </div>
 
-        <form onSubmit={handleSubmit} className="p-5 space-y-4">
-          {error && (
-            <div className="px-4 py-3 rounded-xl bg-red-50 border border-red-100 text-red-700 text-sm">
-              {error}
-            </div>
-          )}
-
-          <LogoUpload
-            startupName={form.name}
-            onUpload={(url) => updateField("logo_url", url)}
+        <div>
+          <label className="block text-[13px] font-medium text-brand-text mb-1.5">
+            Description *
+          </label>
+          <Textarea
+            required
+            value={form.description}
+            onChange={(e) => updateField("description", e.target.value)}
+            placeholder="Describe what your startup does..."
+            rows={3}
           />
+        </div>
 
+        <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-[13px] font-medium text-brand-text mb-1.5">
-              Startup Name *
+              Industry *
             </label>
-            <input
+            <Input
               type="text"
               required
-              value={form.name}
-              onChange={(e) => updateField("name", e.target.value)}
-              placeholder="My Awesome Startup"
-              className="w-full px-4 py-2.5 rounded-xl bg-white border border-brand-border/30 text-brand-text placeholder:text-brand-muted/60 text-sm outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all shadow-sm"
+              value={form.industry}
+              onChange={(e) => updateField("industry", e.target.value)}
+              placeholder="e.g. FinTech"
             />
           </div>
-
           <div>
             <label className="block text-[13px] font-medium text-brand-text mb-1.5">
-              Description *
+              Location *
             </label>
-            <textarea
+            <Input
+              type="text"
               required
-              value={form.description}
-              onChange={(e) => updateField("description", e.target.value)}
-              placeholder="Describe what your startup does..."
-              rows={3}
-              className="w-full px-4 py-2.5 rounded-xl bg-white border border-brand-border/30 text-brand-text placeholder:text-brand-muted/60 text-sm outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all resize-none shadow-sm"
+              value={form.location}
+              onChange={(e) => updateField("location", e.target.value)}
+              placeholder="e.g. Tunisia"
             />
           </div>
+        </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-[13px] font-medium text-brand-text mb-1.5">
-                Industry *
-              </label>
-              <input
-                type="text"
-                required
-                value={form.industry}
-                onChange={(e) => updateField("industry", e.target.value)}
-                placeholder="e.g. FinTech"
-                className="w-full px-4 py-2.5 rounded-xl bg-white border border-brand-border/30 text-brand-text placeholder:text-brand-muted/60 text-sm outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all shadow-sm"
-              />
-            </div>
-            <div>
-              <label className="block text-[13px] font-medium text-brand-text mb-1.5">
-                Location *
-              </label>
-              <input
-                type="text"
-                required
-                value={form.location}
-                onChange={(e) => updateField("location", e.target.value)}
-                placeholder="e.g. Tunisia"
-                className="w-full px-4 py-2.5 rounded-xl bg-white border border-brand-border/30 text-brand-text placeholder:text-brand-muted/60 text-sm outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all shadow-sm"
-              />
-            </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-[13px] font-medium text-brand-text mb-1.5">
+              Founding Date *
+            </label>
+            <DateInput
+              required
+              value={form.founding_date}
+              onChange={(e) => updateField("founding_date", e.target.value)}
+            />
           </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-[13px] font-medium text-brand-text mb-1.5">
-                Founding Date *
-              </label>
-              <input
-                type="date"
-                required
-                value={form.founding_date}
-                onChange={(e) => updateField("founding_date", e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl bg-white border border-brand-border/30 text-brand-text text-sm outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all shadow-sm"
-              />
-            </div>
-            <div>
-              <label className="block text-[13px] font-medium text-brand-text mb-1.5">
-                Website
-              </label>
-              <input
-                type="url"
-                value={form.website}
-                onChange={(e) => updateField("website", e.target.value)}
-                placeholder="https://..."
-                className="w-full px-4 py-2.5 rounded-xl bg-white border border-brand-border/30 text-brand-text placeholder:text-brand-muted/60 text-sm outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all shadow-sm"
-              />
-            </div>
+          <div>
+            <label className="block text-[13px] font-medium text-brand-text mb-1.5">
+              Website
+            </label>
+            <Input
+              type="url"
+              value={form.website}
+              onChange={(e) => updateField("website", e.target.value)}
+              placeholder="https://..."
+            />
           </div>
+        </div>
 
-          <FileUpload
-            bucket="documents"
-            label="Pitch Deck (PDF)"
-            onUpload={(url) => updateField("pitch_deck_url", url)}
-            hint="Upload your pitch deck as PDF, max 10MB"
-          />
+        <FileUpload
+          bucket="documents"
+          label="Pitch Deck (PDF)"
+          onUpload={(url) => updateField("pitch_deck_url", url)}
+          hint="Upload your pitch deck as PDF, max 10MB"
+        />
 
-          <div className="flex justify-end gap-3 pt-2">
-            <Button type="button" variant="secondary" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button type="submit" loading={loading}>
-              Create Startup
-            </Button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <div className="flex justify-end gap-3 pt-2">
+          <Button type="button" variant="secondary" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="submit" loading={loading}>
+            Create Startup
+          </Button>
+        </div>
+      </form>
+    </Modal>
   );
 }

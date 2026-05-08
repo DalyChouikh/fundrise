@@ -29,6 +29,7 @@ import { api } from "@/lib/api";
 import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { useToast } from "@/hooks/useToast";
 import type {
   KanbanColumn,
   KanbanTask,
@@ -38,6 +39,7 @@ import type {
 
 export function KanbanBoardPage() {
   const { startupId } = useParams<{ startupId: string }>();
+  const toast = useToast();
   const [columns, setColumns] = useState<KanbanColumn[]>([]);
   const [members, setMembers] = useState<StartupMember[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,7 +63,7 @@ export function KanbanBoardPage() {
       setColumns(boardData);
       setMembers(membersData);
     } catch {
-      // ignore
+      toast.error("Failed to load the board. Please refresh and try again.");
     } finally {
       setLoading(false);
     }
@@ -82,8 +84,9 @@ export function KanbanBoardPage() {
       setColumns((prev) => [...prev, { ...col, tasks: [] }]);
       setNewColumnName("");
       setAddingColumn(false);
+      toast.success("Column added.");
     } catch {
-      // ignore
+      toast.error("Failed to add column. Please try again.");
     }
   };
 
@@ -92,8 +95,9 @@ export function KanbanBoardPage() {
     try {
       await api.delete(`/kanban/${startupId}/columns/${columnId}/`);
       setColumns((prev) => prev.filter((c) => c.id !== columnId));
+      toast.success("Column deleted.");
     } catch {
-      // ignore
+      toast.error("Failed to delete column. Please try again.");
     }
   };
 
@@ -111,8 +115,9 @@ export function KanbanBoardPage() {
             : col
         )
       );
+      toast.success("Task created.");
     } catch {
-      // ignore
+      toast.error("Failed to create task. Please try again.");
     }
   };
 
@@ -127,8 +132,9 @@ export function KanbanBoardPage() {
         }))
       );
       if (taskDetail?.id === taskId) setTaskDetail(null);
+      toast.success("Task deleted.");
     } catch {
-      // ignore
+      toast.error("Failed to delete task. Please try again.");
     }
   };
 
@@ -150,7 +156,7 @@ export function KanbanBoardPage() {
       );
       if (taskDetail?.id === taskId) setTaskDetail({ ...taskDetail, ...updated });
     } catch {
-      // ignore
+      toast.error("Failed to update task. Please try again.");
     }
   };
 
@@ -219,6 +225,7 @@ export function KanbanBoardPage() {
         order: targetOrder,
       });
     } catch {
+      toast.error("Failed to move task. Reverting changes.");
       fetchBoard(); // revert on failure
     }
   };
@@ -315,7 +322,6 @@ export function KanbanBoardPage() {
         <TaskDetailSidebar
           task={taskDetail}
           members={members}
-          startupId={startupId!}
           onClose={() => setTaskDetail(null)}
           onUpdate={handleUpdateTask}
           onDelete={handleDeleteTask}
@@ -595,18 +601,17 @@ function TaskCard({
 function TaskDetailSidebar({
   task,
   members,
-  startupId,
   onClose,
   onUpdate,
   onDelete,
 }: {
   task: KanbanTask;
   members: StartupMember[];
-  startupId: string;
   onClose: () => void;
   onUpdate: (taskId: number, data: Partial<KanbanTask>) => void;
   onDelete: (taskId: number) => void;
 }) {
+  const toast = useToast();
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description);
   const [comments, setComments] = useState<TaskComment[]>([]);
@@ -625,7 +630,7 @@ function TaskDetailSidebar({
       );
       setComments(data);
     } catch {
-      // ignore
+      toast.error("Failed to load task comments.");
     }
   };
 
@@ -652,7 +657,7 @@ function TaskDetailSidebar({
       setComments((prev) => [...prev, comment]);
       setNewComment("");
     } catch {
-      // ignore
+      toast.error("Failed to post comment. Please try again.");
     }
   };
 
