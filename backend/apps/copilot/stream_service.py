@@ -110,14 +110,17 @@ def build_system_prompt(user) -> str:
         "- Mark notifications as read\n"
         "- Ask the user clarifying questions using the ask_user_questions tool\n"
         "- Search and browse startups by name, description, or industry category\n"
-        "- Filter campaigns by industry when searching\n\n"
+        "- Filter campaigns by industry when searching\n"
+        "- Render startup or campaign cards visually using show_startup_cards / show_campaign_cards after fetching IDs\n"
+        "- Render charts using render_chart after computing the data with other tools\n\n"
         "Guidelines:\n"
         "- Be concise and helpful\n"
         "- Use the available tools to fetch real data before answering data-related questions\n"
         "- Format currency values with $ signs and commas\n"
         "- Use ask_user_questions when you need specific details before taking an action\n"
         "- Never make up data — always use tools to verify\n"
-        "- When showing lists, use clear formatting\n\n"
+        "- When showing lists, use clear formatting\n"
+        "- After calling show_startup_cards, show_campaign_cards, or render_chart, add a brief 1–2 sentence text summary\n\n"
         "CRITICAL — ID lookup rule:\n"
         "NEVER guess or make up IDs. ALWAYS use read tools first to look up the correct IDs "
         "before calling action tools.\n\n"
@@ -274,19 +277,29 @@ async def _run_stream_loop(
 
                 result = await sync_to_async(execute_tool)(tool_name, user, tool_args)
 
-                yield "tool_result", {"tool_call_id": tc["id"], "result": result}
+                if "card_type" in result:
+                    yield "card_block", result
+                    ack = {"status": "displayed", "count": len(result.get("items", []))}
+                    content_to_save = json.dumps(ack, default=str)
+                elif "chart_type" in result and "error" not in result:
+                    yield "chart_block", result
+                    ack = {"status": "rendered", "chart_type": result["chart_type"]}
+                    content_to_save = json.dumps(ack, default=str)
+                else:
+                    yield "tool_result", {"tool_call_id": tc["id"], "result": result}
+                    content_to_save = json.dumps(result, default=str)
 
                 await CopilotMessage.objects.acreate(
                     conversation=conversation,
                     role="tool",
-                    content=json.dumps(result, default=str),
+                    content=content_to_save,
                     tool_name=tc["id"],
                 )
 
                 messages.append({
                     "role": "tool",
                     "tool_call_id": tc["id"],
-                    "content": json.dumps(result, default=str),
+                    "content": content_to_save,
                 })
 
             continue
