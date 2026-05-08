@@ -353,6 +353,8 @@ export interface CopilotMessage {
   thinking_content?: string | null;
   thinking_duration?: number | null;
   tool_calls?: ToolCallState[];
+  card_blocks?: CardBlock[];
+  chart_blocks?: ChartBlock[];
   created_at: string;
 }
 

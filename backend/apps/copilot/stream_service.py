@@ -9,6 +9,82 @@ import httpx
 from apps.copilot.models import CopilotConversation, CopilotMessage
 from apps.copilot.provider import get_provider
 
+VISUAL_TOOL_NAMES = {"show_startup_cards", "show_campaign_cards", "render_chart"}
+
+
+def _tool_name(tool_definition: dict) -> str:
+    return tool_definition.get("function", {}).get("name", "")
+
+
+def _tool_definitions_for_iteration(visual_content_rendered: bool) -> list:
+    from apps.copilot.tools import TOOL_DEFINITIONS
+
+    if not visual_content_rendered:
+        return TOOL_DEFINITIONS
+    return [
+        tool
+        for tool in TOOL_DEFINITIONS
+        if _tool_name(tool) not in VISUAL_TOOL_NAMES
+    ]
+
+
+def _extract_reasoning_delta(delta) -> str:
+    for attr in ("reasoning_content", "reasoning"):
+        reasoning = getattr(delta, attr, None)
+        if isinstance(reasoning, str) and reasoning:
+            return reasoning
+
+    details = getattr(delta, "reasoning_details", None) or []
+    parts = []
+    for detail in details:
+        if isinstance(detail, dict):
+            text = detail.get("text") or detail.get("summary")
+        else:
+            text = getattr(detail, "text", None) or getattr(detail, "summary", None)
+        if isinstance(text, str) and text:
+            parts.append(text)
+    return "\n".join(parts)
+
+
+def _is_card_block(value) -> bool:
+    return (
+        isinstance(value, dict)
+        and value.get("card_type") in {"startup", "campaign"}
+        and isinstance(value.get("items"), list)
+    )
+
+
+def _is_chart_block(value) -> bool:
+    return (
+        isinstance(value, dict)
+        and value.get("chart_type") in {"bar", "line", "pie", "area"}
+        and "error" not in value
+        and isinstance(value.get("data"), list)
+    )
+
+
+def _visual_tool_ack(value) -> dict | None:
+    if _is_card_block(value):
+        return {"status": "displayed", "count": len(value.get("items", []))}
+    if _is_chart_block(value):
+        return {"status": "rendered", "chart_type": value["chart_type"]}
+    return None
+
+
+def _json_loads_or_none(value: str):
+    try:
+        return json.loads(value)
+    except (json.JSONDecodeError, TypeError):
+        return None
+
+
+def _message_content_for_model(msg: CopilotMessage) -> str:
+    parsed = _json_loads_or_none(msg.content)
+    ack = _visual_tool_ack(parsed)
+    if ack is not None:
+        return json.dumps(ack, default=str)
+    return msg.content
+
 
 async def _fetch_supabase_bytes(url: str) -> bytes:
     from django.conf import settings
@@ -162,18 +238,24 @@ async def _build_messages(user, conversation: CopilotConversation) -> list:
                 messages.append({"role": "user", "content": text})
         elif msg.role == "assistant":
             if msg.tool_calls:
-                messages.append({
+                assistant_message = {
                     "role": "assistant",
                     "content": msg.content or None,
                     "tool_calls": msg.tool_calls,
-                })
+                }
+                if msg.thinking_content:
+                    assistant_message["reasoning"] = msg.thinking_content
+                messages.append(assistant_message)
             else:
-                messages.append({"role": "assistant", "content": msg.content})
+                assistant_message = {"role": "assistant", "content": msg.content}
+                if msg.thinking_content:
+                    assistant_message["reasoning"] = msg.thinking_content
+                messages.append(assistant_message)
         elif msg.role == "tool":
             messages.append({
                 "role": "tool",
                 "tool_call_id": msg.tool_name,
-                "content": msg.content,
+                "content": _message_content_for_model(msg),
             })
     return messages
 
@@ -184,13 +266,17 @@ async def _run_stream_loop(
     messages: list,
     use_vision: bool = False,
 ) -> AsyncGenerator[tuple[str, dict], None]:
-    from apps.copilot.tools import TOOL_DEFINITIONS, execute_tool
+    from apps.copilot.tools import execute_tool
     from asgiref.sync import sync_to_async
 
-    all_tools = [ASK_USER_QUESTIONS_DEFINITION] + TOOL_DEFINITIONS
     provider = get_provider()
+    visual_content_rendered = False
+    rendered_visual_signatures: set[str] = set()
 
     for _ in range(8):
+        all_tools = [ASK_USER_QUESTIONS_DEFINITION] + _tool_definitions_for_iteration(
+            visual_content_rendered
+        )
         thinking_start = time.time()
         accumulated_thinking = ""
         accumulated_text = ""
@@ -205,7 +291,7 @@ async def _run_stream_loop(
             choice = chunk.choices[0]
             delta = choice.delta
 
-            reasoning = getattr(delta, "reasoning_content", None)
+            reasoning = _extract_reasoning_delta(delta)
             if reasoning:
                 accumulated_thinking += reasoning
                 has_thinking = True
@@ -275,25 +361,60 @@ async def _run_stream_loop(
                     }
                     return
 
-                yield "tool_start", {
-                    "tool_call_id": tc["id"],
-                    "tool_name": tool_name,
-                    "input": tool_args,
-                }
+                is_visual_tool = tool_name in VISUAL_TOOL_NAMES
+                visual_signature = None
+                if is_visual_tool:
+                    visual_signature = json.dumps(
+                        {"tool_name": tool_name, "arguments": tool_args},
+                        sort_keys=True,
+                        default=str,
+                    )
+                    if visual_signature in rendered_visual_signatures:
+                        content_to_model = json.dumps({
+                            "status": "already_displayed",
+                            "instruction": "Do not call this visual display tool again; provide the final text summary.",
+                        })
+                        await CopilotMessage.objects.acreate(
+                            conversation=conversation,
+                            role="tool",
+                            content=content_to_model,
+                            tool_name=tc["id"],
+                        )
+                        messages.append({
+                            "role": "tool",
+                            "tool_call_id": tc["id"],
+                            "content": content_to_model,
+                        })
+                        continue
+                else:
+                    yield "tool_start", {
+                        "tool_call_id": tc["id"],
+                        "tool_name": tool_name,
+                        "input": tool_args,
+                    }
 
                 result = await sync_to_async(execute_tool)(tool_name, user, tool_args)
 
-                if "card_type" in result:
-                    yield "card_block", result
-                    ack = {"status": "displayed", "count": len(result.get("items", []))}
-                    content_to_save = json.dumps(ack, default=str)
-                elif "chart_type" in result and "error" not in result:
+                ack = _visual_tool_ack(result)
+                if _is_card_block(result):
+                    if result.get("items"):
+                        yield "card_block", result
+                    visual_content_rendered = True
+                    if visual_signature is not None:
+                        rendered_visual_signatures.add(visual_signature)
+                    content_to_save = json.dumps(result, default=str)
+                    content_to_model = json.dumps(ack, default=str)
+                elif _is_chart_block(result):
                     yield "chart_block", result
-                    ack = {"status": "rendered", "chart_type": result["chart_type"]}
-                    content_to_save = json.dumps(ack, default=str)
+                    visual_content_rendered = True
+                    if visual_signature is not None:
+                        rendered_visual_signatures.add(visual_signature)
+                    content_to_save = json.dumps(result, default=str)
+                    content_to_model = json.dumps(ack, default=str)
                 else:
                     yield "tool_result", {"tool_call_id": tc["id"], "result": result}
                     content_to_save = json.dumps(result, default=str)
+                    content_to_model = content_to_save
 
                 await CopilotMessage.objects.acreate(
                     conversation=conversation,
@@ -305,7 +426,7 @@ async def _run_stream_loop(
                 messages.append({
                     "role": "tool",
                     "tool_call_id": tc["id"],
-                    "content": content_to_save,
+                    "content": content_to_model,
                 })
 
             continue

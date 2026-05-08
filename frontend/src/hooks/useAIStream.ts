@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabase";
-import type { AIStreamState, CardBlock, ChartBlock, QuestionForm, ToolCallState } from "@/types";
+import type { AIStreamState, CardBlock, ChartBlock, QuestionForm } from "@/types";
 
 const API_BASE = "/api";
 
@@ -48,6 +48,9 @@ export function useAIStream(
       thinkingDuration: null,
       liveText: "",
       toolCalls: [],
+      questionForm: null,
+      cardBlocks: [],
+      chartBlocks: [],
       pendingUserContent: null,
       pendingMediaUrl: null,
       pendingMediaType: null,

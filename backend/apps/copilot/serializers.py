@@ -3,14 +3,24 @@ import json
 from rest_framework import serializers
 
 from apps.copilot.models import CopilotConversation, CopilotMessage
+from apps.copilot.stream_service import _is_card_block, _is_chart_block
 
-_HIDDEN_TOOLS = {"ask_user_questions"}
+_HIDDEN_TOOLS = {"ask_user_questions", "show_startup_cards", "show_campaign_cards", "render_chart"}
 
 
 class CopilotMessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = CopilotMessage
-        fields = ["id", "role", "content", "media_url", "media_type", "thinking_content", "thinking_duration", "created_at"]
+        fields = [
+            "id",
+            "role",
+            "content",
+            "media_url",
+            "media_type",
+            "thinking_content",
+            "thinking_duration",
+            "created_at",
+        ]
         read_only_fields = fields
 
 
@@ -64,6 +74,8 @@ class CopilotConversationDetailSerializer(serializers.ModelSerializer):
             thinking_content = None
             thinking_duration = None
             tool_calls_out = []
+            card_blocks_out = []
+            chart_blocks_out = []
             final_content = ""
             final_id = msg.id
             final_created_at = msg.created_at
@@ -82,9 +94,17 @@ class CopilotConversationDetailSerializer(serializers.ModelSerializer):
                     while j < len(all_msgs) and all_msgs[j].role == "tool":
                         tr = all_msgs[j]
                         try:
-                            tool_result_map[tr.tool_name] = json.loads(tr.content)
+                            parsed = json.loads(tr.content)
                         except (json.JSONDecodeError, TypeError):
-                            tool_result_map[tr.tool_name] = tr.content
+                            parsed = tr.content
+
+                        if _is_card_block(parsed):
+                            if parsed.get("items"):
+                                card_blocks_out.append(parsed)
+                        elif _is_chart_block(parsed):
+                            chart_blocks_out.append(parsed)
+                        else:
+                            tool_result_map[tr.tool_name] = parsed
                         j += 1
 
                     for tc in asst.tool_calls:
@@ -125,6 +145,8 @@ class CopilotConversationDetailSerializer(serializers.ModelSerializer):
                 "thinking_content": thinking_content,
                 "thinking_duration": thinking_duration,
                 "tool_calls": tool_calls_out,
+                "card_blocks": card_blocks_out,
+                "chart_blocks": chart_blocks_out,
                 "created_at": final_created_at.isoformat(),
             })
 

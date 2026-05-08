@@ -190,9 +190,17 @@ export function AICopilotPanel({ onClose, fullPage = false }: AICopilotPanelProp
                 {msg.tool_calls && msg.tool_calls.length > 0 && (
                   <ToolCallBlock toolCalls={msg.tool_calls} />
                 )}
-                <div className="px-3 py-2 rounded-2xl rounded-tl-sm bg-white border border-brand-border/20 shadow-sm">
-                  <MarkdownMessage content={msg.content} />
-                </div>
+                {msg.content && (
+                  <div className="px-3 py-2 rounded-2xl rounded-tl-sm bg-white border border-brand-border/20 shadow-sm">
+                    <MarkdownMessage content={msg.content} />
+                  </div>
+                )}
+                {msg.card_blocks?.map((block, i) => (
+                  <CardBlock key={i} block={block} />
+                ))}
+                {msg.chart_blocks?.map((block, i) => (
+                  <ChartBlock key={i} block={block} />
+                ))}
               </div>
             )}
           </div>
@@ -235,7 +243,7 @@ export function AICopilotPanel({ onClose, fullPage = false }: AICopilotPanelProp
                   {stream.isStreaming && <span className="inline-block w-1 h-4 bg-brand-muted animate-pulse ml-0.5 align-text-bottom" />}
                 </div>
               )}
-              {stream.isStreaming && !stream.liveText && !stream.liveThinking && stream.toolCalls.length === 0 && (
+              {stream.isStreaming && !stream.liveText && (
                 <div className="px-3 py-2 rounded-2xl rounded-tl-sm bg-white border border-brand-border/20 shadow-sm">
                   <div className="flex gap-1">
                     {[0, 1, 2].map((i) => (
