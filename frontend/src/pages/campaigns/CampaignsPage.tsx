@@ -1,12 +1,10 @@
 import { useState, useEffect, type FormEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Plus, Target, Search, X, Calendar, CheckCircle2, XCircle, Building2 } from "lucide-react";
+import { Plus, Target, Search, Calendar, CheckCircle2, XCircle, Building2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
-import { Card } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
-import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { Card, Button, Badge, LoadingSpinner, Input, Textarea, DateTimeInput, Select, Alert, Modal } from "@/components/ui";
+import { useToast } from "@/hooks/useToast";
 import type { Campaign, Startup } from "@/types";
 
 export function CampaignsPage() {
@@ -258,6 +256,7 @@ function CreateCampaignModal({
   onClose: () => void;
   onCreated: () => void;
 }) {
+  const toast = useToast();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [startups, setStartups] = useState<Startup[]>([]);
@@ -292,11 +291,13 @@ function CreateCampaignModal({
         ...form,
         startup: Number(form.startup),
       });
+      toast.success("Campaign created successfully.");
       onCreated();
     } catch {
       setError(
         "Failed to create campaign. Make sure the startup is active and you are a member."
       );
+      toast.error("Failed to create campaign.");
       setLoading(false);
     }
   };
@@ -306,143 +307,111 @@ function CreateCampaignModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white rounded-2xl shadow-modal w-full max-w-xl mx-4 max-h-[90vh] overflow-y-auto animate-fade-in-scale">
-        <div className="flex items-center justify-between p-5 border-b border-brand-border/[0.1]">
-          <h2 className="text-base font-bold text-brand-text">
-            Create Campaign
-          </h2>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-xl hover:bg-brand-bg text-brand-muted transition-colors cursor-pointer"
-          >
-            <X className="w-5 h-5" />
-          </button>
+    <Modal open={true} onClose={onClose} title="Create Campaign">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {error && <Alert variant="error">{error}</Alert>}
+
+        <div>
+          <label className="block text-[13px] font-medium text-brand-text mb-1.5">
+            Startup *
+          </label>
+          {startups.length === 0 ? (
+            <p className="text-sm text-brand-muted px-4 py-3 rounded-xl bg-brand-bg/60 border border-brand-border/[0.12]">
+              No active startups available. Create and get a startup approved
+              first.
+            </p>
+          ) : (
+            <Select
+              options={startups.map((s) => ({ value: String(s.id), label: s.name }))}
+              value={form.startup}
+              onChange={(val) => updateField("startup", val)}
+              placeholder="Select a startup"
+            />
+          )}
         </div>
 
-        <form onSubmit={handleSubmit} className="p-5 space-y-4">
-          {error && (
-            <div className="px-4 py-3 rounded-xl bg-red-50 border border-red-100 text-red-700 text-sm">
-              {error}
-            </div>
-          )}
+        <div>
+          <label className="block text-[13px] font-medium text-brand-text mb-1.5">
+            Campaign Title *
+          </label>
+          <Input
+            type="text"
+            required
+            value={form.title}
+            onChange={(e) => updateField("title", e.target.value)}
+            placeholder="e.g. Series A Round"
+          />
+        </div>
 
+        <div>
+          <label className="block text-[13px] font-medium text-brand-text mb-1.5">
+            Description *
+          </label>
+          <Textarea
+            required
+            value={form.description}
+            onChange={(e) => updateField("description", e.target.value)}
+            placeholder="Describe your fundraising goals..."
+            rows={3}
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-[13px] font-medium text-brand-text mb-1.5">
-              Startup *
+              Funding Goal ($) *
             </label>
-            {startups.length === 0 ? (
-              <p className="text-sm text-brand-muted px-4 py-3 rounded-xl bg-brand-bg/60 border border-brand-border/[0.12]">
-                No active startups available. Create and get a startup approved
-                first.
-              </p>
-            ) : (
-              <select
-                required
-                value={form.startup}
-                onChange={(e) => updateField("startup", e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl bg-white border border-brand-border/30 text-brand-text text-sm outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all shadow-sm cursor-pointer"
-              >
-                <option value="">Select a startup</option>
-                {startups.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
-                  </option>
-                ))}
-              </select>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-[13px] font-medium text-brand-text mb-1.5">
-              Campaign Title *
-            </label>
-            <input
-              type="text"
+            <Input
+              type="number"
               required
-              value={form.title}
-              onChange={(e) => updateField("title", e.target.value)}
-              placeholder="e.g. Series A Round"
-              className="w-full px-4 py-2.5 rounded-xl bg-white border border-brand-border/30 text-brand-text placeholder:text-brand-muted/60 text-sm outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all shadow-sm"
+              min="1"
+              step="0.01"
+              value={form.funding_goal}
+              onChange={(e) => updateField("funding_goal", e.target.value)}
+              placeholder="100000"
             />
           </div>
-
           <div>
             <label className="block text-[13px] font-medium text-brand-text mb-1.5">
-              Description *
+              Equity Offered (%) *
             </label>
-            <textarea
+            <Input
+              type="number"
               required
-              value={form.description}
-              onChange={(e) => updateField("description", e.target.value)}
-              placeholder="Describe your fundraising goals..."
-              rows={3}
-              className="w-full px-4 py-2.5 rounded-xl bg-white border border-brand-border/30 text-brand-text placeholder:text-brand-muted/60 text-sm outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all resize-none shadow-sm"
+              min="0.01"
+              max="100"
+              step="0.01"
+              value={form.equity_offered}
+              onChange={(e) => updateField("equity_offered", e.target.value)}
+              placeholder="10"
             />
           </div>
+        </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-[13px] font-medium text-brand-text mb-1.5">
-                Funding Goal ($) *
-              </label>
-              <input
-                type="number"
-                required
-                min="1"
-                step="0.01"
-                value={form.funding_goal}
-                onChange={(e) => updateField("funding_goal", e.target.value)}
-                placeholder="100000"
-                className="w-full px-4 py-2.5 rounded-xl bg-white border border-brand-border/30 text-brand-text placeholder:text-brand-muted/60 text-sm outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all shadow-sm"
-              />
-            </div>
-            <div>
-              <label className="block text-[13px] font-medium text-brand-text mb-1.5">
-                Equity Offered (%) *
-              </label>
-              <input
-                type="number"
-                required
-                min="0.01"
-                max="100"
-                step="0.01"
-                value={form.equity_offered}
-                onChange={(e) => updateField("equity_offered", e.target.value)}
-                placeholder="10"
-                className="w-full px-4 py-2.5 rounded-xl bg-white border border-brand-border/30 text-brand-text placeholder:text-brand-muted/60 text-sm outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all shadow-sm"
-              />
-            </div>
-          </div>
+        <div>
+          <label className="block text-[13px] font-medium text-brand-text mb-1.5">
+            Deadline *
+          </label>
+          <DateTimeInput
+            required
+            value={form.deadline}
+            onChange={(e) => updateField("deadline", e.target.value)}
+          />
+        </div>
 
-          <div>
-            <label className="block text-[13px] font-medium text-brand-text mb-1.5">
-              Deadline *
-            </label>
-            <input
-              type="datetime-local"
-              required
-              value={form.deadline}
-              onChange={(e) => updateField("deadline", e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl bg-white border border-brand-border/30 text-brand-text text-sm outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all shadow-sm"
-            />
-          </div>
-
-          <div className="flex justify-end gap-3 pt-2">
-            <Button type="button" variant="secondary" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              loading={loading}
-              disabled={startups.length === 0}
-            >
-              Create Campaign
-            </Button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <div className="flex justify-end gap-3 pt-2">
+          <Button type="button" variant="secondary" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            loading={loading}
+            disabled={startups.length === 0}
+          >
+            Create Campaign
+          </Button>
+        </div>
+      </form>
+    </Modal>
   );
 }
