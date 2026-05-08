@@ -378,11 +378,14 @@ export interface QuestionOption {
 
 export interface QuestionDef {
   id: string;
-  type: "radio" | "checkbox" | "text" | "textarea";
+  type: "radio" | "checkbox" | "text" | "textarea" | "select" | "date" | "number" | "rating" | "slider";
   label: string;
   options?: string[];
   placeholder?: string;
   required?: boolean;
+  min?: number;
+  max?: number;
+  step?: number;
 }
 
 export interface QuestionForm {
@@ -398,6 +401,19 @@ export interface ToolCallState {
   result?: unknown;
 }
 
+export interface CardBlock {
+  card_type: "startup" | "campaign";
+  items: Startup[] | Campaign[];
+}
+
+export interface ChartBlock {
+  chart_type: "bar" | "line" | "pie" | "area";
+  title: string;
+  data: { label?: string; name?: string; value: number }[];
+  x_label?: string;
+  y_label?: string;
+}
+
 export interface AIStreamState {
   pendingUserContent: string | null;
   pendingMediaUrl: string | null;
@@ -407,6 +423,8 @@ export interface AIStreamState {
   liveText: string;
   toolCalls: ToolCallState[];
   questionForm: QuestionForm | null;
+  cardBlocks: CardBlock[];
+  chartBlocks: ChartBlock[];
   isStreaming: boolean;
   streamError: string | null;
 }
