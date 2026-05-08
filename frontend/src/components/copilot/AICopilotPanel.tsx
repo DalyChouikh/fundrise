@@ -10,6 +10,8 @@ import { FileUploadZone } from "./FileUploadZone";
 import { ExamplePrompts } from "./ExamplePrompts";
 import { QuestionForm } from "./QuestionForm";
 import { MarkdownMessage } from "./MarkdownMessage";
+import { CardBlock } from "./CardBlock";
+import { ChartBlock } from "./ChartBlock";
 import type {
   CopilotConversation,
   CopilotConversationDetail,
@@ -243,6 +245,21 @@ export function AICopilotPanel({ onClose, fullPage = false }: AICopilotPanelProp
             </div>
           </div>
         )}
+
+        {stream.cardBlocks.map((block, i) => (
+          <div key={i} className="flex justify-start w-full">
+            <div className="w-full max-w-[90%]">
+              <CardBlock block={block} />
+            </div>
+          </div>
+        ))}
+        {stream.chartBlocks.map((block, i) => (
+          <div key={i} className="flex justify-start w-full">
+            <div className="w-full max-w-[90%]">
+              <ChartBlock block={block} />
+            </div>
+          </div>
+        ))}
 
         {/* Question form */}
         {stream.questionForm && (
