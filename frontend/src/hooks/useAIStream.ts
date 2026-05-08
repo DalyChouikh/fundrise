@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabase";
-import type { AIStreamState, QuestionForm, ToolCallState } from "@/types";
+import type { AIStreamState, CardBlock, ChartBlock, QuestionForm, ToolCallState } from "@/types";
 
 const API_BASE = "/api";
 
@@ -23,6 +23,8 @@ const INITIAL_STATE: AIStreamState = {
   liveText: "",
   toolCalls: [],
   questionForm: null,
+  cardBlocks: [],
+  chartBlocks: [],
   isStreaming: false,
   streamError: null,
 };
@@ -131,6 +133,18 @@ export function useAIStream(
                     ),
                   }));
                   break;
+                case "card_block":
+                  setState((s) => ({
+                    ...s,
+                    cardBlocks: [...s.cardBlocks, data as unknown as CardBlock],
+                  }));
+                  break;
+                case "chart_block":
+                  setState((s) => ({
+                    ...s,
+                    chartBlocks: [...s.chartBlocks, data as unknown as ChartBlock],
+                  }));
+                  break;
                 case "question_form":
                   setState((s) => ({
                     ...s,
@@ -195,6 +209,8 @@ export function useAIStream(
         thinkingDuration: null,
         liveText: "",
         toolCalls: [],
+        cardBlocks: [],
+        chartBlocks: [],
         isStreaming: true,
         streamError: null,
       }));
