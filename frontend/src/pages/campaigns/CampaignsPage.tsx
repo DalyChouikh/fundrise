@@ -1,9 +1,11 @@
 import { useState, useEffect, type FormEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Plus, Target, Search, Calendar, CheckCircle2, XCircle, Building2 } from "lucide-react";
+import { Plus, Target, Search, Calendar, CheckCircle2, XCircle, Building2, SlidersHorizontal, Check, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
+import { cn } from "@/lib/cn";
 import { Card, Button, Badge, LoadingSpinner, Input, Textarea, DateTimeInput, Select, Alert, Modal } from "@/components/ui";
+import { FilterDrawer } from "@/components/ui/FilterDrawer";
 import { useToast } from "@/hooks/useToast";
 import type { Campaign, Startup } from "@/types";
 
@@ -14,6 +16,13 @@ export function CampaignsPage() {
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({
+    industries: [] as string[],
+    status: "",
+    minFunding: "",
+    maxFunding: "",
+  });
 
   // Auto-open create modal via ?action=create
   useEffect(() => {
@@ -41,11 +50,30 @@ export function CampaignsPage() {
     fetchCampaigns();
   }, []);
 
-  const filtered = campaigns.filter(
-    (c) =>
-      c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.startup_name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const availableIndustries = [...new Set(campaigns.map((c) => c.startup_industry).filter(Boolean))].sort();
+
+  const filtered = campaigns
+    .filter((c) =>
+      !filters.industries.length || filters.industries.includes(c.startup_industry)
+    )
+    .filter((c) => !filters.status || c.status === filters.status)
+    .filter((c) =>
+      !filters.minFunding || c.funding_percentage >= Number(filters.minFunding)
+    )
+    .filter((c) =>
+      !filters.maxFunding || c.funding_percentage <= Number(filters.maxFunding)
+    )
+    .filter(
+      (c) =>
+        c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        c.startup_name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+  const activeFilterCount =
+    filters.industries.length +
+    (filters.status ? 1 : 0) +
+    (filters.minFunding ? 1 : 0) +
+    (filters.maxFunding ? 1 : 0);
 
   const canCreate =
     profile?.role === "founder" || profile?.role === "team_member";
@@ -105,17 +133,66 @@ export function CampaignsPage() {
         )}
       </div>
 
-      {/* Search */}
-      <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-brand-border/30 text-brand-muted text-sm w-full max-w-sm shadow-sm focus-within:border-brand-blue/40 focus-within:ring-2 focus-within:ring-brand-blue/10 transition-all">
-        <Search className="w-4 h-4 flex-shrink-0" />
-        <input
-          type="text"
-          placeholder="Search by title or startup..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="bg-transparent outline-none w-full text-brand-text placeholder:text-brand-muted/60"
-        />
+      {/* Search + Filters row */}
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-brand-border/30 text-brand-muted text-sm flex-1 max-w-sm shadow-sm focus-within:border-brand-blue/40 focus-within:ring-2 focus-within:ring-brand-blue/10 transition-all">
+          <Search className="w-4 h-4 flex-shrink-0" />
+          <input
+            type="text"
+            placeholder="Search by title or startup..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="bg-transparent outline-none w-full text-brand-text placeholder:text-brand-muted/60"
+          />
+        </div>
+        <button
+          onClick={() => setShowFilters(true)}
+          className={cn(
+            "flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-medium transition-all shadow-sm cursor-pointer",
+            activeFilterCount > 0
+              ? "bg-brand-accent/[0.08] border-brand-accent/30 text-brand-accent"
+              : "bg-white border-brand-border/30 text-brand-muted hover:text-brand-text hover:border-brand-border/60"
+          )}
+        >
+          <SlidersHorizontal className="w-4 h-4" />
+          Filters
+          {activeFilterCount > 0 && (
+            <span className="bg-brand-accent text-white text-[11px] font-semibold px-1.5 py-0.5 rounded-full">
+              {activeFilterCount}
+            </span>
+          )}
+        </button>
       </div>
+
+      {/* Active filter chips */}
+      {activeFilterCount > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {filters.industries.map((ind) => (
+            <span key={ind} className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-accent/[0.08] text-brand-accent text-xs font-medium">
+              {ind}
+              <button onClick={() => setFilters((f) => ({ ...f, industries: f.industries.filter((i) => i !== ind) }))} className="hover:text-brand-accent/60 cursor-pointer"><X className="w-3 h-3" /></button>
+            </span>
+          ))}
+          {filters.status && (
+            <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-accent/[0.08] text-brand-accent text-xs font-medium">
+              {filters.status.replace("_", " ")}
+              <button onClick={() => setFilters((f) => ({ ...f, status: "" }))} className="hover:text-brand-accent/60 cursor-pointer"><X className="w-3 h-3" /></button>
+            </span>
+          )}
+          {filters.minFunding && (
+            <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-accent/[0.08] text-brand-accent text-xs font-medium">
+              ≥{filters.minFunding}% funded
+              <button onClick={() => setFilters((f) => ({ ...f, minFunding: "" }))} className="hover:text-brand-accent/60 cursor-pointer"><X className="w-3 h-3" /></button>
+            </span>
+          )}
+          {filters.maxFunding && (
+            <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-accent/[0.08] text-brand-accent text-xs font-medium">
+              ≤{filters.maxFunding}% funded
+              <button onClick={() => setFilters((f) => ({ ...f, maxFunding: "" }))} className="hover:text-brand-accent/60 cursor-pointer"><X className="w-3 h-3" /></button>
+            </span>
+          )}
+        </div>
+      )}
 
       {filtered.length === 0 ? (
         <Card>
@@ -235,6 +312,94 @@ export function CampaignsPage() {
           ))}
         </div>
       )}
+
+      {/* Filter Drawer */}
+      <FilterDrawer
+        open={showFilters}
+        onClose={() => setShowFilters(false)}
+        activeCount={activeFilterCount}
+        onClear={() => setFilters({ industries: [], status: "", minFunding: "", maxFunding: "" })}
+      >
+        {/* Industry filter */}
+        <div>
+          <p className="text-[13px] font-semibold text-brand-text mb-3">Industry</p>
+          {availableIndustries.length === 0 ? (
+            <p className="text-sm text-brand-muted">No industries available</p>
+          ) : (
+            <div className="space-y-2">
+              {availableIndustries.map((ind) => {
+                const checked = filters.industries.includes(ind);
+                return (
+                  <label key={ind} className="flex items-center gap-2.5 cursor-pointer group">
+                    <div className={cn("w-4 h-4 rounded border-2 flex items-center justify-center transition-colors", checked ? "border-brand-accent bg-brand-accent" : "border-brand-border group-hover:border-brand-accent/60")}>
+                      {checked && <Check className="w-2.5 h-2.5 text-white" />}
+                    </div>
+                    <span className="text-sm text-brand-text">{ind}</span>
+                    <input type="checkbox" className="sr-only" checked={checked}
+                      onChange={() => setFilters((f) => ({ ...f, industries: checked ? f.industries.filter((i) => i !== ind) : [...f.industries, ind] }))}
+                    />
+                  </label>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Status filter */}
+        <div>
+          <p className="text-[13px] font-semibold text-brand-text mb-3">Status</p>
+          <div className="space-y-2">
+            {[
+              { value: "", label: "All" },
+              { value: "active", label: "Active" },
+              { value: "pending_approval", label: "Pending approval" },
+              { value: "completed", label: "Completed" },
+              { value: "rejected", label: "Rejected" },
+            ].map((opt) => (
+              <label key={opt.value} className="flex items-center gap-2.5 cursor-pointer group">
+                <div className={cn("w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors", filters.status === opt.value ? "border-brand-accent bg-brand-accent" : "border-brand-border group-hover:border-brand-accent/60")}>
+                  {filters.status === opt.value && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                </div>
+                <span className="text-sm text-brand-text">{opt.label}</span>
+                <input type="radio" className="sr-only" checked={filters.status === opt.value}
+                  onChange={() => setFilters((f) => ({ ...f, status: opt.value }))}
+                />
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {/* Funding % range */}
+        <div>
+          <p className="text-[13px] font-semibold text-brand-text mb-3">Funding progress (%)</p>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[11px] text-brand-muted mb-1">Min</label>
+              <input
+                type="number"
+                min="0"
+                max="100"
+                value={filters.minFunding}
+                onChange={(e) => setFilters((f) => ({ ...f, minFunding: e.target.value }))}
+                placeholder="0"
+                className="w-full px-3 py-2 rounded-xl bg-white border border-brand-border/30 text-brand-text text-sm outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all shadow-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-[11px] text-brand-muted mb-1">Max</label>
+              <input
+                type="number"
+                min="0"
+                max="100"
+                value={filters.maxFunding}
+                onChange={(e) => setFilters((f) => ({ ...f, maxFunding: e.target.value }))}
+                placeholder="100"
+                className="w-full px-3 py-2 rounded-xl bg-white border border-brand-border/30 text-brand-text text-sm outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all shadow-sm"
+              />
+            </div>
+          </div>
+        </div>
+      </FilterDrawer>
 
       {showCreate && (
         <CreateCampaignModal
