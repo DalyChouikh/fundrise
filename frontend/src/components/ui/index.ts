@@ -18,3 +18,4 @@ export { ChartCard } from "./ChartCard";
 export { LoadingSpinner } from "./LoadingSpinner";
 export { DynamicIcon } from "./DynamicIcon";
 export { Logo } from "./Logo";
+export { Combobox } from "./Combobox";
