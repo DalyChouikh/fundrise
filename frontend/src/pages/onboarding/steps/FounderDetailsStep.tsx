@@ -1,3 +1,4 @@
+import { Input, Textarea } from "@/components/ui";
 import { LogoUpload } from "@/components/upload/LogoUpload";
 
 interface FounderDetailsStepProps {
@@ -14,9 +15,6 @@ export function FounderDetailsStep({
   data,
   onChange,
 }: FounderDetailsStepProps) {
-  const inputClass =
-    "w-full px-4 py-2.5 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text placeholder:text-brand-muted text-sm outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/10 transition-all";
-
   return (
     <div className="space-y-4">
       <LogoUpload
@@ -29,12 +27,11 @@ export function FounderDetailsStep({
         <label className="block text-sm font-medium text-brand-text mb-1.5">
           Description
         </label>
-        <textarea
+        <Textarea
           value={data.startup_description}
           onChange={(e) => onChange("startup_description", e.target.value)}
           placeholder="Describe what your startup does..."
           rows={4}
-          className="w-full px-4 py-2.5 rounded-xl bg-brand-bg border border-brand-border/60 text-brand-text placeholder:text-brand-muted text-sm outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/10 transition-all resize-none"
         />
       </div>
 
@@ -42,12 +39,11 @@ export function FounderDetailsStep({
         <label className="block text-sm font-medium text-brand-text mb-1.5">
           Website
         </label>
-        <input
+        <Input
           type="url"
           value={data.startup_website}
           onChange={(e) => onChange("startup_website", e.target.value)}
           placeholder="https://..."
-          className={inputClass}
         />
       </div>
     </div>
