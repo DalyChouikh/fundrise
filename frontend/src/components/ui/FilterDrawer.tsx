@@ -1,4 +1,5 @@
 import { type ReactNode, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { X, SlidersHorizontal } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { Button } from "./Button";
@@ -27,7 +28,7 @@ export function FilterDrawer({
     return () => document.removeEventListener("keydown", handler);
   }, [open, onClose]);
 
-  return (
+  return createPortal(
     <>
       {open && (
         <div
@@ -38,7 +39,7 @@ export function FilterDrawer({
 
       <div
         className={cn(
-          "fixed right-0 top-0 h-dvh w-80 bg-white shadow-xl z-50 flex flex-col transition-transform duration-300",
+          "fixed right-0 top-0 h-screen w-80 bg-white shadow-xl z-50 flex flex-col transition-transform duration-300",
           open ? "translate-x-0" : "translate-x-full"
         )}
       >
@@ -64,7 +65,7 @@ export function FilterDrawer({
           {children}
         </div>
 
-        <div className="px-5 py-4 border-t border-brand-border/[0.1] flex gap-3">
+        <div className="px-5 py-4 border-t border-brand-border/[0.1] flex gap-3 shrink-0">
           <Button
             type="button"
             variant="secondary"
@@ -79,6 +80,7 @@ export function FilterDrawer({
           </Button>
         </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 }
