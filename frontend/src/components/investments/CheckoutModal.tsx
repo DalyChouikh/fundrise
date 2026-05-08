@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { ArrowLeft, ChevronRight, CreditCard, MapPin } from "lucide-react";
 import { api } from "@/lib/api";
-import { Modal, Input, Alert } from "@/components/ui";
+import { Modal, Input, Alert, ConfirmDialog } from "@/components/ui";
 import { Button } from "@/components/ui/Button";
 import { CardPreview } from "@/components/investments/CardPreview";
 import { PasskeyConfirmDialog } from "@/components/passkey/PasskeyConfirmDialog";
@@ -460,28 +460,17 @@ export function CheckoutModal({ campaign, onClose, onSuccess }: CheckoutModalPro
 
       {dialogProps && <PasskeyConfirmDialog {...dialogProps} />}
 
-      {/* Close confirm overlay */}
-      {confirmClose && (
-        <div className="absolute inset-0 bg-white/90 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center gap-4 p-8 z-10">
-          <p className="text-sm font-medium text-brand-text text-center">
-            Are you sure? Your progress will be lost.
-          </p>
-          <div className="flex gap-3">
-            <button
-              onClick={() => setConfirmClose(false)}
-              className="px-4 py-2 rounded-xl text-sm font-medium text-brand-muted border border-[#E8E6E0] hover:bg-brand-bg transition-colors cursor-pointer"
-            >
-              Keep going
-            </button>
-            <button
-              onClick={onClose}
-              className="px-4 py-2 rounded-xl text-sm font-medium text-white bg-red-500 hover:bg-red-600 transition-colors cursor-pointer"
-            >
-              Yes, close
-            </button>
-          </div>
-        </div>
-      )}
+      <ConfirmDialog
+        open={confirmClose}
+        onClose={() => setConfirmClose(false)}
+        title="Close checkout?"
+        message="Are you sure? Your progress will be lost."
+        confirmLabel="Yes, close"
+        cancelLabel="Keep going"
+        onConfirm={onClose}
+        onCancel={() => setConfirmClose(false)}
+        danger={true}
+      />
     </Modal>
   );
 }
