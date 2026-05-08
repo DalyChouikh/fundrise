@@ -6,6 +6,8 @@ import { api } from "@/lib/api";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { Input, Textarea } from "@/components/ui";
+import { useToast } from "@/hooks/useToast";
 import { AvatarUpload } from "@/components/upload/AvatarUpload";
 import { PasskeyList } from "@/components/passkey/PasskeyList";
 import { PasskeyConfirmDialog } from "@/components/passkey/PasskeyConfirmDialog";
@@ -14,8 +16,8 @@ import { usePasskeyStepUp } from "@/hooks/usePasskeyStepUp";
 export function SettingsPage() {
   const { profile, refreshProfile, signOut } = useAuth();
   const navigate = useNavigate();
+  const toast = useToast();
   const [saving, setSaving] = useState(false);
-  const [success, setSuccess] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [form, setForm] = useState({
     full_name: profile?.full_name || "",
@@ -28,12 +30,10 @@ export function SettingsPage() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    setSuccess(false);
     try {
       await api.patch("/users/me/", form as unknown as Record<string, unknown>);
       await refreshProfile();
-      setSuccess(true);
-      setTimeout(() => setSuccess(false), 3000);
+      toast.success("Profile updated successfully.");
     } catch {
       // ignore
     } finally {
@@ -71,24 +71,17 @@ export function SettingsPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          {success && (
-            <div className="px-4 py-3 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-700 text-sm animate-fade-in">
-              Profile updated successfully.
-            </div>
-          )}
-
           <div>
             <label className="flex items-center gap-1.5 text-[13px] font-medium text-brand-text mb-1.5">
               <User className="w-4 h-4 text-brand-muted" />
               Full Name
             </label>
-            <input
+            <Input
               type="text"
               value={form.full_name}
               onChange={(e) =>
                 setForm((f) => ({ ...f, full_name: e.target.value }))
               }
-              className="w-full px-4 py-2.5 rounded-xl bg-white border border-brand-border/40 text-brand-text text-sm outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all shadow-sm"
             />
           </div>
 
@@ -96,14 +89,13 @@ export function SettingsPage() {
             <label className="text-[13px] font-medium text-brand-text mb-1.5 block">
               Bio
             </label>
-            <textarea
+            <Textarea
               value={form.bio}
               onChange={(e) =>
                 setForm((f) => ({ ...f, bio: e.target.value }))
               }
               placeholder="Tell us about yourself..."
               rows={3}
-              className="w-full px-4 py-2.5 rounded-xl bg-white border border-brand-border/40 text-brand-text placeholder:text-brand-muted/60 text-sm outline-none focus:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue/10 transition-all resize-none shadow-sm"
             />
           </div>
 
