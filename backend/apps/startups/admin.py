@@ -1,6 +1,15 @@
 from django.contrib import admin
 
-from .models import Startup, StartupMember, StartupFollow, StartupInvitation
+from .models import Industry, Startup, StartupMember, StartupFollow, StartupInvitation
+
+
+@admin.register(Industry)
+class IndustryAdmin(admin.ModelAdmin):
+    list_display = ["name", "is_active", "created_at"]
+    list_filter = ["is_active"]
+    search_fields = ["name"]
+    list_editable = ["is_active"]
+    ordering = ["name"]
 
 
 class StartupMemberInline(admin.TabularInline):

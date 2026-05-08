@@ -8,12 +8,14 @@ from apps.users.serializers import UserProfileMinimalSerializer
 class CampaignListSerializer(serializers.ModelSerializer):
     startup_name = serializers.CharField(source="startup.name", read_only=True)
     startup_logo_url = serializers.URLField(source="startup.logo_url", read_only=True, default="")
+    startup_industry = serializers.CharField(source="startup.industry", read_only=True)
     funding_percentage = serializers.ReadOnlyField()
 
     class Meta:
         model = Campaign
         fields = [
             "id", "title", "description", "startup", "startup_name", "startup_logo_url",
+            "startup_industry",
             "funding_goal", "current_funding", "funding_percentage",
             "equity_offered", "deadline", "status",
             "created_at", "updated_at",

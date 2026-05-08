@@ -6,6 +6,18 @@ from django.db.models import Q
 from apps.core.models import TimeStampedModel
 
 
+class Industry(TimeStampedModel):
+    name = models.CharField(max_length=100, unique=True)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["name"]
+        verbose_name_plural = "industries"
+
+    def __str__(self):
+        return self.name
+
+
 class Startup(TimeStampedModel):
     class Status(models.TextChoices):
         PENDING_APPROVAL = "pending_approval", "Pending Approval"

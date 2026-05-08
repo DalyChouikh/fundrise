@@ -337,26 +337,78 @@ def _count_users():
     return UserProfile.objects.count()
 
 
-def search_campaigns(user, query):
-    campaigns = (
-        Campaign.objects.filter(
-            status=Campaign.Status.ACTIVE,
-        )
-        .filter(Q(title__icontains=query) | Q(description__icontains=query))
-        .select_related("startup")[:10]
-    )
+def search_campaigns(user, query, industry=None):
+    qs = Campaign.objects.filter(
+        status=Campaign.Status.ACTIVE,
+    ).filter(Q(title__icontains=query) | Q(description__icontains=query))
+    if industry:
+        qs = qs.filter(startup__industry__icontains=industry)
+    campaigns = qs.select_related("startup")[:10]
     return {
         "results": [
             {
                 "id": c.id,
                 "title": c.title,
                 "startup_name": c.startup.name,
+                "startup_industry": c.startup.industry,
                 "funding_goal": str(c.funding_goal),
                 "current_funding": str(c.current_funding),
                 "funding_percentage": c.funding_percentage,
                 "deadline": str(c.deadline),
             }
             for c in campaigns
+        ]
+    }
+
+
+def search_startups(user, query, industry=None):
+    qs = Startup.objects.filter(
+        Q(name__icontains=query) | Q(description__icontains=query)
+    ).annotate(
+        members_count=Count("members"),
+        followers_count=Count("followers"),
+    )
+    if industry:
+        qs = qs.filter(industry__icontains=industry)
+    startups = qs[:10]
+    return {
+        "results": [
+            {
+                "id": s.id,
+                "name": s.name,
+                "industry": s.industry,
+                "location": s.location,
+                "status": s.status,
+                "members_count": s.members_count,
+                "followers_count": s.followers_count,
+            }
+            for s in startups
+        ]
+    }
+
+
+def list_startups(user, industry=None, status=None):
+    qs = Startup.objects.annotate(
+        members_count=Count("members"),
+        followers_count=Count("followers"),
+    )
+    if industry:
+        qs = qs.filter(industry__icontains=industry)
+    if status:
+        qs = qs.filter(status=status)
+    startups = qs[:20]
+    return {
+        "startups": [
+            {
+                "id": s.id,
+                "name": s.name,
+                "industry": s.industry,
+                "location": s.location,
+                "status": s.status,
+                "members_count": s.members_count,
+                "followers_count": s.followers_count,
+            }
+            for s in startups
         ]
     }
 
@@ -979,7 +1031,7 @@ TOOL_DEFINITIONS = [
         "type": "function",
         "function": {
             "name": "search_campaigns",
-            "description": "Search active campaigns by title or description keyword.",
+            "description": "Search active campaigns by title or description keyword. Optionally filter by industry.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -987,8 +1039,53 @@ TOOL_DEFINITIONS = [
                         "type": "string",
                         "description": "The search keyword to find matching campaigns",
                     },
+                    "industry": {
+                        "type": "string",
+                        "description": "Optional industry filter (e.g. 'FinTech', 'HealthTech'). Case-insensitive contains match.",
+                    },
                 },
                 "required": ["query"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "search_startups",
+            "description": "Search startups by name or description keyword. Optionally filter by industry.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "Keyword to search in startup name and description",
+                    },
+                    "industry": {
+                        "type": "string",
+                        "description": "Optional industry filter (e.g. 'FinTech'). Case-insensitive contains match.",
+                    },
+                },
+                "required": ["query"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "list_startups",
+            "description": "List and browse startups, optionally filtered by industry or status. Use when an investor asks to discover startups by category or status without a specific search keyword.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "industry": {
+                        "type": "string",
+                        "description": "Filter by industry (e.g. 'FinTech'). Optional.",
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "Filter by status: 'active', 'pending_approval', or 'suspended'. Optional.",
+                    },
+                },
             },
         },
     },
@@ -1391,6 +1488,8 @@ TOOL_REGISTRY = {
     "get_my_tasks": get_my_tasks,
     "get_platform_stats": get_platform_stats,
     "search_campaigns": search_campaigns,
+    "search_startups": search_startups,
+    "list_startups": list_startups,
     "get_notifications_summary": get_notifications_summary,
     "get_campaign_milestones": get_campaign_milestones,
     "get_kanban_board": get_kanban_board,

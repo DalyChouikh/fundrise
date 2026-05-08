@@ -86,6 +86,7 @@ export interface Campaign {
   startup: number;
   startup_name: string;
   startup_logo_url: string;
+  startup_industry: string;
   title: string;
   description: string;
   funding_goal: string;
